@@ -28,6 +28,9 @@ jobs:
         run: npm ci
       - name: Build desktop app with Tauri
         uses: tauri-apps/tauri-action@73fb865345c54760d875b94642314f8c0c894afa # v0.6.1
+        with:
+          # 让 action 把更新包(.sig/.zip)和 latest.json 传到 release,自动更新才有得查
+          tagName: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
