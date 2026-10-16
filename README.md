@@ -21,6 +21,12 @@ Decoded public key:
 To verify release files, you need to download [minisign](https://jedisct1.github.io/minisign/) tool and [decode](https://www.base64decode.org/) the *.sig* file before running:
 >  minisign -Vm ***RELEASE_FILE.msi.zip*** -P RWRflTUQD3RHFtn25QNANCmePR9+4LSK89kAKTMEEB4OKpOFpLMgc64z -x ***Decoded_SINGATURE.msi.zip.sig***
 
+## Code signing
+
+The Windows installer is currently **unsigned**: Windows SmartScreen may show an "unknown publisher" warning on first install — choose "More info → Run anyway". Every release ships with a SHA-256 checksum so the download can be verified.
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org/) — application submitted, pending approval. Once granted, Windows release builds will be Authenticode-signed in CI (the publisher shown by Windows will be "SignPath Foundation"); every release is approved by hand before it is signed, per the [SignPath Foundation terms](https://signpath.org/terms). Only the installer produced by GitHub Actions from this public repository is signed.
+
 ## Local development
 
 Firstly, to setup Rust, NodeJS and build tools follow [Tauri documentation](https://v2.tauri.app/start/prerequisites/).
