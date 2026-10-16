@@ -51,7 +51,7 @@
   "identifier": "in.cinny.app",
   "plugins": {
     "updater": {
-      "pubkey": "RWRzmmxaWVW4oaVfA+Rx1sgR0chHE0ycUq39LAFrJn0YI9p2HG3TYMGD",
+      "pubkey": "AQDgriRF4OLsZbrYXbQrSo89mU9mO8cOVtzoInaRkuC4XSrHoDHMzptD",
       "endpoints": [
         "https://github.com/zlj131419/cinny-desktop-zh/releases/download/release/latest.json"
       ]
