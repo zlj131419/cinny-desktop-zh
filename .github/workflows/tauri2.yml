@@ -27,7 +27,7 @@ jobs:
       - name: Install tauri dependencies
         run: npm ci
       - name: Build desktop app with Tauri
-        uses: tauri-apps/tauri-action@73fb865345c54760d875b94642314f8c0c894afa # v0.6.1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         with:
           # 让 action 把更新包(.sig/.zip)和 latest.json 传到 release,自动更新才有得查
           tagName: ${{ github.ref_name }}
