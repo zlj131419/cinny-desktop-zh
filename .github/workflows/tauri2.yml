@@ -29,6 +29,8 @@ jobs:
         uses: tauri-apps/tauri-action@73fb865345c54760d875b94642314f8c0c894afa # v0.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: "RWRzmmxaWVW4oaVfA+Rx1sgR0chHE0ycUq39LAFrJn0YI9p2HG3TYMGD+5/Y/ZMfQpu7hzzdjo3yTLKGF1ggCW6Z3Ye0H1O5Vxs="
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           NODE_OPTIONS: "--max_old_space_size=4096"
       - name: Get app version (windows)
         run: |
