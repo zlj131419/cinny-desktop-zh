@@ -64,13 +64,13 @@ function FeaturedRow({
         >
           <Box grow="Yes" direction="Column" gap="100">
             <Text size="B400" truncate>
-              {roomSummary?.name ?? entry.room_id}
+              {roomSummary?.name ?? entry.name ?? entry.room_id}
             </Text>
             <Text size="T200" truncate style={{ opacity: 0.7 }}>
               {entry.kind === 'space'
                 ? t('pages:client.explore.spaces')
                 : t('pages:client.explore.rooms')}{' '}
-              · {entry.room_id}
+              · {roomSummary?.topic ?? entry.topic ?? entry.room_id}
             </Text>
             {actionState.status === AsyncStatus.Error && (
               <Text size="T200" style={{ color: color.Critical.Main }}>

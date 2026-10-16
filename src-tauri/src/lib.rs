@@ -112,15 +112,18 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             let window_builder = window_builder.title_bar_style(TitleBarStyle::Transparent);
 
-            // 点 X 不退出，改为隐藏到托盘
-            let window_builder = window_builder.on_window_event(|window, event| {
-                if let WindowEvent::CloseRequested { api, .. } = event {
-                    let _ = window.hide();
-                    api.prevent_close();
-                }
-            });
+            let main_window = window_builder.build()?;
 
-            window_builder.build()?;
+            // 点 X 不退出，改为隐藏到托盘（v2 的 Builder 没有 on_window_event，用 Window 的）
+            {
+                let w = main_window.clone();
+                let _ = main_window.on_window_event(move |event| {
+                    if let WindowEvent::CloseRequested { api, .. } = event {
+                        let _ = w.hide();
+                        api.prevent_close();
+                    }
+                });
+            }
 
             // 系统托盘：左键单击恢复窗口，右键菜单显示/退出
             let app_handle = app.handle();
