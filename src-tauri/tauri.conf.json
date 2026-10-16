@@ -49,7 +49,14 @@
   "mainBinaryName": "cinny",
   "version": "4.12.7",
   "identifier": "in.cinny.app",
-  "plugins": {},
+  "plugins": {
+    "updater": {
+      "pubkey": "RWRzmmxaWVW4oaVfA+Rx1sgR0chHE0ycUq39LAFrJn0YI9p2HG3TYMGD",
+      "endpoints": [
+        "https://github.com/zlj131419/cinny-desktop-zh/releases/download/release/latest.json"
+      ]
+    }
+  },
   "app": {
     "security": {
       "csp": "default-src 'self' blob: data: filesystem: ws: wss: http: https: tauri:; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: data: filesystem: ws: wss: http: https: tauri:; style-src 'self' 'unsafe-inline' blob: data: filesystem: http: https:; img-src 'self' data: blob: filesystem: http: https:; connect-src 'self' blob: ipc: ws: wss: http: https: http://ipc.localhost"
