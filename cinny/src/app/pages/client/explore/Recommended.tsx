@@ -41,10 +41,10 @@ function FeaturedEntryCards({
             <RoomCard
               roomIdOrAlias={entry.room_id}
               allRooms={allRooms}
-              avatarUrl={roomSummary?.avatar_url}
-              name={roomSummary?.name}
-              topic={roomSummary?.topic}
-              memberCount={roomSummary?.num_joined_members}
+              avatarUrl={roomSummary?.avatar_url ?? entry.avatar_url}
+              name={roomSummary?.name ?? entry.name}
+              topic={roomSummary?.topic ?? entry.topic}
+              memberCount={roomSummary?.num_joined_members ?? entry.member_count}
               onView={onView}
               renderTopicViewer={renderTopicViewer}
             />

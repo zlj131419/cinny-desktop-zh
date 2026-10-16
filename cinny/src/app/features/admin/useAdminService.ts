@@ -9,6 +9,11 @@ export type FeaturedEntry = {
   kind: FeaturedKind;
   added_by?: string;
   added_at?: number;
+  // 服务端经 Synapse admin API 补齐的展示字段（未加入房间也能显示名字）
+  name?: string;
+  topic?: string;
+  avatar_url?: string;
+  member_count?: number;
 };
 
 export type BlockedEntry = {
