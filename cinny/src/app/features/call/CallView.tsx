@@ -1,0 +1,181 @@
+import React, { RefObject, useRef } from 'react';
+import { Badge, Box, color, Header, Scroll, Text, toRem } from 'folds';
+import { useTranslation } from 'react-i18next';
+import { useCallEmbed, useCallJoined, useCallEmbedPlacementSync } from '../../hooks/useCallEmbed';
+import { ContainerColor } from '../../styles/ContainerColor.css';
+import { PrescreenControls } from './PrescreenControls';
+import { usePowerLevelsContext } from '../../hooks/usePowerLevels';
+import { useRoom } from '../../hooks/useRoom';
+import { useRoomCreators } from '../../hooks/useRoomCreators';
+import { useRoomPermissions } from '../../hooks/useRoomPermissions';
+import { useMatrixClient } from '../../hooks/useMatrixClient';
+import { StateEvent } from '../../../types/matrix/room';
+import { useCallMembers, useCallSession } from '../../hooks/useCall';
+import { CallMemberRenderer } from './CallMemberCard';
+import * as css from './styles.css';
+import { CallControls } from './CallControls';
+import { useLivekitSupport } from '../../hooks/useLivekitSupport';
+import { webRTCSupported } from '../../utils/rtc';
+
+function LivekitServerMissingMessage() {
+  const { t } = useTranslation();
+  return (
+    <Text style={{ margin: 'auto', color: color.Critical.Main }} size="L400" align="Center">
+      {t('features:call.your_homeserver_does_not_support_calling')}
+    </Text>
+  );
+}
+
+function WebRTCMissingError() {
+  const { t } = useTranslation();
+  return (
+    <Text style={{ margin: 'auto', color: color.Critical.Main }} size="L400" align="Center">
+      {t('features:call.your_browser_does_not_support_webrtc')}
+    </Text>
+  );
+}
+
+function JoinMessage({
+  hasParticipant,
+  livekitSupported,
+  rtcSupported,
+}: {
+  hasParticipant?: boolean;
+  livekitSupported?: boolean;
+  rtcSupported?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  if (rtcSupported === false) {
+    return <WebRTCMissingError />;
+  }
+
+  if (livekitSupported === false) {
+    return <LivekitServerMissingMessage />;
+  }
+
+  if (hasParticipant) return null;
+
+  return (
+    <Text style={{ margin: 'auto' }} size="L400" align="Center">
+      {t('features:call.voice_chat_empty')}
+    </Text>
+  );
+}
+
+function NoPermissionMessage() {
+  const { t } = useTranslation();
+  return (
+    <Text style={{ margin: 'auto' }} size="L400" align="Center">
+      {t('features:call.you_dont_have_permission')}
+    </Text>
+  );
+}
+
+function AlreadyInCallMessage() {
+  const { t } = useTranslation();
+  return (
+    <Text style={{ margin: 'auto', color: color.Warning.Main }} size="L400" align="Center">
+      {t('features:call.already_in_another_call')}
+    </Text>
+  );
+}
+
+function CallPrescreen() {
+  const { t } = useTranslation();
+  const mx = useMatrixClient();
+  const room = useRoom();
+  const livekitSupported = useLivekitSupport();
+  const rtcSupported = webRTCSupported();
+
+  const powerLevels = usePowerLevelsContext();
+  const creators = useRoomCreators(room);
+
+  const permissions = useRoomPermissions(creators, powerLevels);
+  const hasPermission = permissions.stateEvent(
+    StateEvent.GroupCallMemberPrefix,
+    mx.getSafeUserId()
+  );
+
+  const callSession = useCallSession(room);
+  const callMembers = useCallMembers(callSession);
+  const hasParticipant = callMembers.length > 0;
+
+  const callEmbed = useCallEmbed();
+  const inOtherCall = callEmbed && callEmbed.roomId !== room.roomId;
+
+  const canJoin = hasPermission && livekitSupported && rtcSupported;
+
+  return (
+    <Scroll variant="Surface" hideTrack>
+      <Box className={css.CallViewContent} alignItems="Center" justifyContent="Center">
+        <Box style={{ maxWidth: toRem(382), width: '100%' }} direction="Column" gap="100">
+          {hasParticipant && (
+            <Header size="300">
+              <Box grow="Yes" alignItems="Center">
+                <Text size="L400">{t('features:call.participant')}</Text>
+              </Box>
+              <Badge variant="Critical" fill="Solid" size="400">
+                <Text as="span" size="L400" truncate>
+                  {callMembers.length} {t('features:call.live')}
+                </Text>
+              </Badge>
+            </Header>
+          )}
+          <CallMemberRenderer members={callMembers} />
+          <PrescreenControls canJoin={canJoin} />
+          <Box className={css.PrescreenMessage} alignItems="Center">
+            {!inOtherCall &&
+              (hasPermission ? (
+                <JoinMessage
+                  hasParticipant={hasParticipant}
+                  livekitSupported={livekitSupported}
+                  rtcSupported={rtcSupported}
+                />
+              ) : (
+                <NoPermissionMessage />
+              ))}
+            {inOtherCall && <AlreadyInCallMessage />}
+          </Box>
+        </Box>
+      </Box>
+    </Scroll>
+  );
+}
+
+type CallJoinedProps = {
+  containerRef: RefObject<HTMLDivElement>;
+  joined: boolean;
+};
+function CallJoined({ joined, containerRef }: CallJoinedProps) {
+  const callEmbed = useCallEmbed();
+
+  return (
+    <Box grow="Yes" direction="Column">
+      <Box grow="Yes" ref={containerRef} />
+      {callEmbed && joined && <CallControls callEmbed={callEmbed} />}
+    </Box>
+  );
+}
+
+export function CallView() {
+  const room = useRoom();
+  const callContainerRef = useRef<HTMLDivElement>(null);
+  useCallEmbedPlacementSync(callContainerRef);
+
+  const callEmbed = useCallEmbed();
+  const callJoined = useCallJoined(callEmbed);
+
+  const currentJoined = callEmbed?.roomId === room.roomId && callJoined;
+
+  return (
+    <Box
+      className={ContainerColor({ variant: 'Surface' })}
+      style={{ minWidth: toRem(280) }}
+      grow="Yes"
+    >
+      {!currentJoined && <CallPrescreen />}
+      <CallJoined joined={currentJoined} containerRef={callContainerRef} />
+    </Box>
+  );
+}

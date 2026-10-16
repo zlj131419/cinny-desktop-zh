@@ -1,0 +1,13 @@
+experiment
+dist
+node_modules
+devAssets
+
+.DS_Store
+.idea
+.trae
+.cursor
+
+.vscode/i18n-ally-reviews.yml
+yarn.lock
+dist.zip
