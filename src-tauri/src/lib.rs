@@ -6,6 +6,11 @@
 // mod menu;
 
 use tauri::{webview::{NewWindowResponse, WebviewWindowBuilder}, WebviewUrl, TitleBarStyle};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager, WindowEvent,
+};
 use tauri_plugin_opener::OpenerExt;
 
 #[cfg(feature = "updater")]
@@ -106,8 +111,54 @@ pub fn run() {
 
             #[cfg(target_os = "macos")]
             let window_builder = window_builder.title_bar_style(TitleBarStyle::Transparent);
-            
+
+            // 点 X 不退出，改为隐藏到托盘
+            let window_builder = window_builder.on_window_event(|window, event| {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            });
+
             window_builder.build()?;
+
+            // 系统托盘：左键单击恢复窗口，右键菜单显示/退出
+            let app_handle = app.handle();
+            if let Some(icon) = app_handle.default_window_icon().cloned() {
+                let show_item = MenuItem::with_id(app_handle, "tray-show", "显示窗口", true, None::<&str>)?;
+                let quit_item = MenuItem::with_id(app_handle, "tray-quit", "退出", true, None::<&str>)?;
+                let tray_menu = Menu::with_items(app_handle, &[&show_item, &quit_item])?;
+                TrayIconBuilder::new()
+                    .icon(icon)
+                    .tooltip("Cinny")
+                    .menu(&tray_menu)
+                    .show_menu_on_left_click(false)
+                    .on_menu_event(|app, event| match event.id.as_ref() {
+                        "tray-show" => {
+                            if let Some(w) = app.get_webview_window("main") {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                            }
+                        }
+                        "tray-quit" => app.exit(0),
+                        _ => {}
+                    })
+                    .on_tray_icon_event(|tray, event| {
+                        if let TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } = event
+                        {
+                            let app = tray.app_handle();
+                            if let Some(w) = app.get_webview_window("main") {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                            }
+                        }
+                    })
+                    .build(app_handle)?;
+            }
             Ok(())
         })
         .run(context)
