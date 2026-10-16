@@ -173,7 +173,8 @@ export const RoomCard = as<'div', RoomCardProps>(
     );
 
     const fallbackName = getMxIdLocalPart(roomIdOrAlias) ?? roomIdOrAlias;
-    const fallbackTopic = roomIdOrAlias;
+    // 如果 topic 拿不到，不要用房间 ID 充数，直接不显示简介
+    const fallbackTopic = undefined;
 
     const avatar = joinedRoom
       ? getRoomAvatarUrl(mx, joinedRoom, 96, useAuthentication)

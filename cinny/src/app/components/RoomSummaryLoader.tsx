@@ -16,12 +16,47 @@ type RoomSummaryLoaderProps = {
 export function RoomSummaryLoader({ roomIdOrAlias, children }: RoomSummaryLoaderProps) {
   const mx = useMatrixClient();
 
-  const fetchSummary = useCallback(() => mx.getRoomSummary(roomIdOrAlias), [mx, roomIdOrAlias]);
+  const fetchSummary = useCallback(async () => {
+    try {
+      const summary = await mx.getRoomSummary(roomIdOrAlias);
+      // 如果 summary 没有名字，尝试用 state API 兜底
+      if (!summary?.name) {
+        try {
+          const nameContent = await mx.getStateEvent(roomIdOrAlias, 'm.room.name', '');
+          const topicContent = await mx.getStateEvent(roomIdOrAlias, 'm.room.topic', '').catch(() => undefined);
+          return {
+            ...summary,
+            name: (nameContent as any)?.name || summary?.name,
+            topic: (topicContent as any)?.topic || summary?.topic,
+          };
+        } catch {
+          // state API 也失败就返回原始 summary
+        }
+      }
+      return summary;
+    } catch {
+      // getRoomSummary 失败时，尝试直接读 state
+      try {
+        const nameContent = await mx.getStateEvent(roomIdOrAlias, 'm.room.name', '');
+        const topicContent = await mx.getStateEvent(roomIdOrAlias, 'm.room.topic', '').catch(() => undefined);
+        return {
+          room_id: roomIdOrAlias,
+          name: (nameContent as any)?.name,
+          topic: (topicContent as any)?.topic,
+        } as IRoomSummary;
+      } catch {
+        return undefined;
+      }
+    }
+  }, [mx, roomIdOrAlias]);
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: [roomIdOrAlias, `summary`],
     queryFn: fetchSummary,
   });
+
+  // 数据没加载完之前不渲染，避免先闪房间 ID
+  if (isLoading) return null;
 
   return children(data);
 }

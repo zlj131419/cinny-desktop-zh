@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { Avatar, Box, config, Icon, IconButton, Icons, IconSrc, MenuItem, Text } from 'folds';
 import { JoinRule } from 'matrix-js-sdk';
 import { PageNav, PageNavContent, PageNavHeader, PageRoot } from '../../components/page';
@@ -24,37 +25,39 @@ type SpaceSettingsMenuItem = {
   icon: IconSrc;
 };
 
-const useSpaceSettingsMenuItems = (): SpaceSettingsMenuItem[] =>
-  useMemo(
+const useSpaceSettingsMenuItems = (): SpaceSettingsMenuItem[] => {
+  const { t } = useTranslation();
+  return useMemo(
     () => [
       {
         page: SpaceSettingsPage.GeneralPage,
-        name: 'General',
+        name: t('features:space-settings._general'),
         icon: Icons.Setting,
       },
       {
         page: SpaceSettingsPage.MembersPage,
-        name: 'Members',
+        name: t('features:space-settings._members'),
         icon: Icons.User,
       },
       {
         page: SpaceSettingsPage.PermissionsPage,
-        name: 'Permissions',
+        name: t('features:space-settings._permissions'),
         icon: Icons.Lock,
       },
       {
         page: SpaceSettingsPage.EmojisStickersPage,
-        name: 'Emojis & Stickers',
+        name: t('features:space-settings._emojis_stickers'),
         icon: Icons.Smile,
       },
       {
         page: SpaceSettingsPage.DeveloperToolsPage,
-        name: 'Developer Tools',
+        name: t('features:space-settings._developer_tools'),
         icon: Icons.Terminal,
       },
     ],
-    []
+    [t]
   );
+};
 
 type SpaceSettingsProps = {
   initialPage?: SpaceSettingsPage;

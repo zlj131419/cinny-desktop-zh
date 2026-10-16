@@ -120,6 +120,22 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
     const value = evt.currentTarget.value.trim();
     if (isUserId(value)) {
       setValidUserId(value);
+    } else if (value && !value.includes(' ') && !value.includes(':')) {
+      // 输入纯用户名（如 guanjia），自动补全为本服完整 ID（如 @guanjia:chat.xxqw.net）
+      const localServer = getMxIdServer(mx.getUserId() ?? '') ?? '';
+      const localPart = value.startsWith('@') ? value.slice(1) : value;
+      const fullId = `@${localPart}:${localServer}`;
+      if (localServer && isUserId(fullId)) {
+        setValidUserId(fullId);
+      } else {
+        setValidUserId(undefined);
+      }
+      // 同时搜索已有联系人，提供快捷选择
+      if (localPart) {
+        search(localPart);
+      } else {
+        resetSearch();
+      }
     } else {
       setValidUserId(undefined);
       const term = getMxIdLocalPart(value) ?? (value.startsWith('@') ? value.slice(1) : value);

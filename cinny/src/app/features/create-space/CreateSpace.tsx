@@ -249,18 +249,6 @@ export function CreateSpaceForm({ defaultAccess, space, onCreate }: CreateSpaceF
         )}
       </Box>
 
-      {error && (
-        <Box style={{ color: color.Critical.Main }} alignItems="Center" gap="200">
-          <Icon src={Icons.Warning} filled size="100" />
-          <Text size="T300" style={{ color: color.Critical.Main }}>
-            <b>
-              {error instanceof MatrixError && error.name === ErrorCode.M_LIMIT_EXCEEDED
-                ? t('features:create-space.server_rate_limited', { minutes: millisecondsToMinutes((error.data.retry_after_ms as number | undefined) ?? 0) })
-                : error.message}
-            </b>
-          </Text>
-        </Box>
-      )}
       <Box shrink="No" direction="Column" gap="200">
         <Button
           type="submit"

@@ -25,7 +25,7 @@ To verify release files, you need to download [minisign](https://jedisct1.github
 
 The Windows installer is currently **unsigned**: Windows SmartScreen may show an "unknown publisher" warning on first install — choose "More info → Run anyway". Every release ships with a SHA-256 checksum so the download can be verified.
 
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org/) — application submitted, pending approval. Once granted, Windows release builds will be Authenticode-signed in CI (the publisher shown by Windows will be "SignPath Foundation"); every release is approved by hand before it is signed, per the [SignPath Foundation terms](https://signpath.org/terms). Only the installer produced by GitHub Actions from this public repository is signed.
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org/) — application being prepared; will be submitted by the project owner. Once granted, Windows release builds will be Authenticode-signed in CI (the publisher shown by Windows will be "SignPath Foundation"); every release is approved by hand before it is signed, per the [SignPath Foundation terms](https://signpath.org/terms). Only the installer produced by GitHub Actions from this public repository is signed.
 
 ## Local development
 

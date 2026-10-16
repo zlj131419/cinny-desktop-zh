@@ -50,6 +50,14 @@ pub fn run() {
     }
 
     builder
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // 已有实例在运行：恢复主窗口，而不是开新窗口
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+                let _ = window.unminimize();
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_localhost::Builder::new(port).build())
         .plugin(tauri_plugin_window_state::Builder::default().build())

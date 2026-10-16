@@ -13,7 +13,7 @@ pub fn menu() -> tauri::menu::Menu {
         .build()
         .unwrap();
 
-    let edit_menu = SubmenuBuilder::new(app, "Edit")
+    let edit_menu = SubmenuBuilder::new(app, "编辑")
         .undo()
         .redo()
         .separator()
@@ -24,14 +24,14 @@ pub fn menu() -> tauri::menu::Menu {
         .build()
         .unwrap();
 
-    let view_menu = SubmenuBuilder::new(app, "View")
-        .fullscreen() // `.fullscreen()` works instead of `.enter_fullscreen()`
+    let view_menu = SubmenuBuilder::new(app, "视图")
+        .fullscreen()
         .build()
         .unwrap();
 
-    let window_menu = SubmenuBuilder::new(app, "Window")
+    let window_menu = SubmenuBuilder::new(app, "窗口")
         .minimize()
-        .build() // no `.zoom()` method directly available
+        .build()
         .unwrap();
 
     MenuBuilder::new(app)
