@@ -21,6 +21,7 @@ import { useRoomCreators } from '../../hooks/useRoomCreators';
 import { useRoomPermissions } from '../../hooks/useRoomPermissions';
 import { useMemberPowerCompare } from '../../hooks/useMemberPowerCompare';
 import { CreatorChip } from './CreatorChip';
+import { useIsDeactivated } from '../../features/admin/useDeactivated';
 import { getDirectCreatePath, withSearchParam } from '../../pages/pathUtils';
 import { DirectCreateSearchParams } from '../../pages/paths';
 
@@ -61,6 +62,9 @@ export function UserRoomProfile({ userId }: UserRoomProfileProps) {
 
   const presence = useUserPresence(userId);
 
+  // 被停用的账号: 不显示正常资料,只显示风控提示
+  const deactivated = useIsDeactivated(userId);
+
   const handleMessage = () => {
     closeUserRoomProfile();
     const directSearchParam: DirectCreateSearchParams = {
@@ -76,6 +80,13 @@ export function UserRoomProfile({ userId }: UserRoomProfileProps) {
         avatarUrl={avatarUrl}
         presence={presence && presence.lastActiveTs !== 0 ? presence : undefined}
       />
+      {deactivated ? (
+        <Box direction="Column" gap="200" style={{ padding: config.space.S400 }}>
+          <Text size="T400" style={{ color: 'rgb(var(--folds-color-Critical-700))' }}>
+            <b>{t('components:user-profile.account_deactivated_notice')}</b>
+          </Text>
+        </Box>
+      ) : (
       <Box direction="Column" gap="500" style={{ padding: config.space.S400 }}>
         <Box direction="Column" gap="400">
           <Box gap="400" alignItems="Start">
@@ -139,6 +150,7 @@ export function UserRoomProfile({ userId }: UserRoomProfileProps) {
           canBan={canBanUser && membership !== Membership.Ban}
         />
       </Box>
+      )}
     </Box>
   );
 }

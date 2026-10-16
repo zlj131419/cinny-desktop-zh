@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { useAlive } from './useAlive';
 
 export enum AsyncStatus {
@@ -44,17 +43,8 @@ export const useAsync = <TData, TError, TArgs extends unknown[]>(
 
   const callback: AsyncCallback<TArgs, TData> = useCallback(
     async (...args) => {
-      queueMicrotask(() => {
-        // Warning: flushSync was called from inside a lifecycle method.
-        // React cannot flush when React is already rendering.
-        // Consider moving this call to a scheduler task or micro task.
-        flushSync(() => {
-          // flushSync because
-          // https://github.com/facebook/react/issues/26713#issuecomment-1872085134
-          onStateChange({
-            status: AsyncStatus.Loading,
-          });
-        });
+      onStateChange({
+        status: AsyncStatus.Loading,
       });
 
       reqNumberRef.current += 1;

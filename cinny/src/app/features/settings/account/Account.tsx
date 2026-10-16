@@ -4,6 +4,7 @@ import { Box, Text, IconButton, Icon, Icons, Scroll } from 'folds';
 import { Page, PageContent, PageHeader } from '../../../components/page';
 import { MatrixId } from './MatrixId';
 import { Profile } from './Profile';
+import { ChangePassword } from './ChangePassword';
 import { ContactInformation } from './ContactInfo';
 import { IgnoredUserList } from './IgnoredUserList';
 
@@ -33,6 +34,7 @@ export function Account({ requestClose }: AccountProps) {
           <PageContent>
             <Box direction="Column" gap="700">
               <Profile />
+              <ChangePassword />
               <MatrixId />
               <ContactInformation />
               <IgnoredUserList />

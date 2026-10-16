@@ -4,6 +4,7 @@ import {
   DIRECT_PATH,
   DIRECT_ROOM_PATH,
   EXPLORE_FEATURED_PATH,
+  EXPLORE_MANAGE_PATH,
   EXPLORE_PATH,
   EXPLORE_SERVER_PATH,
   HOME_CREATE_PATH,
@@ -146,6 +147,7 @@ export const getSpaceRoomPath = (
 
 export const getExplorePath = (): string => EXPLORE_PATH;
 export const getExploreFeaturedPath = (): string => EXPLORE_FEATURED_PATH;
+export const getExploreManagePath = (): string => EXPLORE_MANAGE_PATH;
 export const getExploreServerPath = (server: string): string => {
   const params = {
     server: encodeURIComponent(server),

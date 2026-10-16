@@ -12,6 +12,7 @@ import {
   RoomLocalAddresses,
   RoomPublishedAddresses,
   RoomPublish,
+  RoomRecommend,
   RoomUpgrade,
 } from '../../common-settings/general';
 import { useRoomCreators } from '../../../hooks/useRoomCreators';
@@ -54,6 +55,7 @@ export function General({ requestClose }: GeneralProps) {
                 <RoomHistoryVisibility permissions={permissions} />
                 <RoomEncryption permissions={permissions} />
                 <RoomPublish permissions={permissions} />
+                <RoomRecommend />
               </Box>
               <Box direction="Column" gap="100">
                 <Text size="L400">{t('features:room-settings.general.addresses')}</Text>

@@ -96,7 +96,11 @@ export const EventReaders = as<'div', EventReadersProps>(
                           userId={readerId}
                           src={avatarUrl ?? undefined}
                           alt={name}
-                          renderFallback={() => <Icon size="50" src={Icons.User} filled />}
+                          renderFallback={() => (
+                            <Text size="T200">
+                              <b>{name.charAt(0).toUpperCase()}</b>
+                            </Text>
+                          )}
                         />
                       </Avatar>
                     }

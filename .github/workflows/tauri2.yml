@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: 
+        with:
           submodules: true
       - name: Setup node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -23,16 +23,10 @@ jobs:
         run: cd cinny && npm ci
       - name: Install tauri dependencies
         run: npm ci
-      - name: Disble updater
-        run: git apply 0001-disable-tauri-updater.patch
       - name: Build desktop app with Tauri
         uses: tauri-apps/tauri-action@73fb865345c54760d875b94642314f8c0c894afa # v0.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: |
-            UNTRUSTED COMMENT: minisign secret key
-            AQDgriRF4OLsZRJY0VTMYBe3TdHFnFCEX7enryRPQKQNIJRTY7FIPzHDuthdtCtKjz2ZT2Y7xw5W3OgidpGS4LhdKsegMczOm0M=
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           NODE_OPTIONS: "--max_old_space_size=4096"
       - name: Get app version (windows)
         run: |

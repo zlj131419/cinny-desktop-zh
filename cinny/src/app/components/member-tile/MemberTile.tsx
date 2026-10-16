@@ -4,6 +4,7 @@ import { MatrixClient, Room, RoomMember } from 'matrix-js-sdk';
 import { getMemberDisplayName } from '../../utils/room';
 import { getMxIdLocalPart } from '../../utils/matrix';
 import { UserAvatar } from '../user-avatar';
+import { useIsDeactivated } from '../../features/admin/useDeactivated';
 import * as css from './style.css';
 
 const getName = (room: Room, member: RoomMember) =>
@@ -20,6 +21,8 @@ export const MemberTile = as<'button', MemberTileProps>(
   ({ as: AsMemberTile = 'button', mx, room, member, useAuthentication, after, ...props }, ref) => {
     const name = getName(room, member);
     const username = getMxIdLocalPart(member.userId);
+    // 被停用的账号名字显示灰色
+    const deactivated = useIsDeactivated(member.userId);
 
     const avatarMxcUrl = member.getMxcAvatarUrl();
     const avatarUrl = avatarMxcUrl
@@ -33,11 +36,15 @@ export const MemberTile = as<'button', MemberTileProps>(
             userId={member.userId}
             src={avatarUrl ?? undefined}
             alt={name}
-            renderFallback={() => <Icon size="300" src={Icons.User} filled />}
+            renderFallback={() => (
+              <Text size="T400">
+                <b>{name.charAt(0).toUpperCase()}</b>
+              </Text>
+            )}
           />
         </Avatar>
         <Box grow="Yes" as="span" direction="Column">
-          <Text as="span" size="T300" truncate>
+          <Text as="span" size="T300" truncate style={deactivated ? { opacity: 0.55 } : undefined}>
             <b>{name}</b>
           </Text>
           <Box alignItems="Center" justifyContent="SpaceBetween" gap="100">

@@ -18,6 +18,9 @@ export type ClientConfig = {
   };
 
   hashRouter?: HashRouterConfig;
+
+  adminServiceUrl?: string;
+  superAdmin?: string;
 };
 
 const ClientConfigContext = createContext<ClientConfig | null>(null);

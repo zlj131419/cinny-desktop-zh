@@ -1,5 +1,5 @@
 import { useMatch, useParams } from 'react-router-dom';
-import { getExploreFeaturedPath, getExplorePath } from '../../pages/pathUtils';
+import { getExploreFeaturedPath, getExploreManagePath, getExplorePath } from '../../pages/pathUtils';
 
 export const useExploreSelected = (): boolean => {
   const match = useMatch({
@@ -25,4 +25,14 @@ export const useExploreServer = (): string | undefined => {
   const { server } = useParams();
 
   return server;
+};
+
+export const useExploreManageSelected = (): boolean => {
+  const match = useMatch({
+    path: getExploreManagePath(),
+    caseSensitive: true,
+    end: false,
+  });
+
+  return !!match;
 };

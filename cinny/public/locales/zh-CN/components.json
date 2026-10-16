@@ -91,6 +91,7 @@
 	"your_browser_does_not_support_webrtc": "您的浏览器不支持 WebRTC，无法进行通话。",
 	"user-profile": {
 		"copy_server": "复制服务器",
+		"account_deactivated_notice": "该用户遭到风控，已被停止使用",
 		"explore_community": "探索社区",
 		"open_in_browser": "在浏览器中打开",
 		"copy_user_id": "复制用户ID",

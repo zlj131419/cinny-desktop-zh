@@ -94,7 +94,17 @@
 			"prevent_receiving": "Verhindern Sie das Empfangen von Nachrichten oder Einladungen von Benutzern, indem Sie deren Benutzer-ID hinzufügen.",
 			"users": "Benutzer",
 			"unnamed": "Unbenannt",
-			"block": "Blockieren"
+			"block": "Blockieren",
+			"change_password": "Passwort ändern",
+			"change_password_description": "Ändern Sie das Anmeldepasswort dieses Kontos. Andere Geräte bleiben angemeldet.",
+			"current_password": "Aktuelles Passwort",
+			"new_password": "Neues Passwort",
+			"confirm_new_password": "Neues Passwort bestätigen",
+			"change": "Ändern",
+			"passwords_do_not_match": "Die neuen Passwörter stimmen nicht überein.",
+			"incorrect_current_password": "Das aktuelle Passwort ist falsch.",
+			"password_change_failed": "Passwort konnte nicht geändert werden.",
+			"password_changed_success": "Passwort erfolgreich geändert."
 		},
 		"notifications": {
 			"notifications": "Benachrichtigungen",
@@ -355,7 +365,12 @@
 			"open_new_room": "Neuen Raum öffnen",
 			"this_space_has_been_replaced": "Dieser Raum wurde ersetzt!",
 			"this_room_has_been_replaced": "Dieser Raum wurde ersetzt!",
-			"current_version": "Aktuelle Version: {{version}}."
+			"current_version": "Aktuelle Version: {{version}}.",
+			"recommend_to_explore": "Zum Entdecken empfehlen",
+			"recommend_to_explore_desc": "Wenn aktiviert, erscheint dieser Raum/Space in der Empfehlungsliste auf der Entdecken-Seite.",
+			"recommend_blocked_by_admin": "Vom Superadministrator von Empfehlungen ausgeschlossen; kann nicht angezeigt werden.",
+			"recommend_load_failed": "Empfehlungsstatus konnte nicht geladen werden.",
+			"recommend_failed": "Vorgang fehlgeschlagen: "
 		},
 		"permissions": {
 			"75": "75",

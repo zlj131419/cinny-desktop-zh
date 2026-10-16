@@ -76,6 +76,16 @@
         },
         "account": {
             "account": "Account",
+            "change_password": "Change password",
+            "change_password_description": "Change the login password of this account. Other devices stay signed in after the change.",
+            "current_password": "Current password",
+            "new_password": "New password",
+            "confirm_new_password": "Confirm new password",
+            "change": "Change",
+            "passwords_do_not_match": "The new passwords do not match.",
+            "incorrect_current_password": "The current password is incorrect.",
+            "password_change_failed": "Failed to change password.",
+            "password_changed_success": "Password changed successfully.",
             "matrix_id": "Matrix ID",
             "copy": "Copy",
             "profile": "Profile",
@@ -355,7 +365,12 @@
             "open_new_room": "Open New Room",
             "this_space_has_been_replaced": "This space has been replaced!",
             "this_room_has_been_replaced": "This room has been replaced!",
-            "current_version": "Current version: {{version}}."
+            "current_version": "Current version: {{version}}.",
+            "recommend_to_explore": "Recommend to explore",
+            "recommend_to_explore_desc": "When enabled, this room/space appears in the recommended list on the explore page.",
+            "recommend_blocked_by_admin": "Blocked from recommendations by the super admin; cannot be shown.",
+            "recommend_load_failed": "Failed to load recommendation status.",
+            "recommend_failed": "Operation failed: "
         },
         "permissions": {
             "75": "75",

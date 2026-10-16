@@ -3,6 +3,7 @@ import React, { ReactEventHandler, ReactNode, useState } from 'react';
 import classNames from 'classnames';
 import * as css from './UserAvatar.css';
 import colorMXID from '../../../util/colorMXID';
+import { useIsDeactivated } from '../../features/admin/useDeactivated';
 
 type UserAvatarProps = {
   className?: string;
@@ -13,6 +14,9 @@ type UserAvatarProps = {
 };
 export function UserAvatar({ className, userId, src, alt, renderFallback }: UserAvatarProps) {
   const [error, setError] = useState(false);
+  const deactivated = useIsDeactivated(userId);
+  // 被停用的账号头像显示灰色
+  const greyStyle = deactivated ? { filter: 'grayscale(1)', opacity: 0.55 } : undefined;
 
   const handleLoad: ReactEventHandler<HTMLImageElement> = (evt) => {
     evt.currentTarget.setAttribute('data-image-loaded', 'true');
@@ -21,7 +25,7 @@ export function UserAvatar({ className, userId, src, alt, renderFallback }: User
   if (!src || error) {
     return (
       <AvatarFallback
-        style={{ backgroundColor: colorMXID(userId), color: color.Surface.Container }}
+        style={{ backgroundColor: colorMXID(userId), color: color.Surface.Container, ...greyStyle }}
         className={classNames(css.UserAvatar, className)}
       >
         {renderFallback()}
@@ -32,6 +36,7 @@ export function UserAvatar({ className, userId, src, alt, renderFallback }: User
   return (
     <AvatarImage
       className={classNames(css.UserAvatar, className)}
+      style={greyStyle}
       src={src}
       alt={alt}
       onError={() => setError(true)}

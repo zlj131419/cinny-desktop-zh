@@ -91,6 +91,7 @@
 	"your_browser_does_not_support_webrtc": "Ihr Browser unterstützt kein WebRTC, das für Anrufe erforderlich ist.",
 	"user-profile": {
 		"copy_server": "Server kopieren",
+		"account_deactivated_notice": "Dieser Benutzer wurde aus Sicherheitsgründen eingeschränkt und deaktiviert.",
 		"explore_community": "Community erkunden",
 		"open_in_browser": "Im Browser öffnen",
 		"copy_user_id": "Benutzer-ID kopieren",

@@ -64,12 +64,14 @@ import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { useRecentEmoji } from '../../../hooks/useRecentEmoji';
 import * as css from './styles.css';
 import { EventReaders } from '../../../components/event-readers';
+import { useRoomEventReaders } from '../../../hooks/useRoomEventReaders';
 import { TextViewer } from '../../../components/text-viewer';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { EmojiBoard } from '../../../components/emoji-board';
 import { ReactionViewer } from '../reaction-viewer';
 import { MessageEditor } from './MessageEditor';
 import { UserAvatar } from '../../../components/user-avatar';
+import { useIsDeactivated } from '../../admin/useDeactivated';
 import { copyToClipboard } from '../../../utils/dom';
 import { stopPropagation } from '../../../utils/keyboard';
 import { getMatrixToRoomEvent } from '../../../plugins/matrix-to';
@@ -230,6 +232,105 @@ export const MessageReadReceiptItem = as<
           {t('features:room.message.read_receipts')}
         </Text>
       </MenuItem>
+    </>
+  );
+});
+
+export const MessageReadReceiptBadge = as<
+  'button',
+  {
+    room: Room;
+    eventId: string;
+  }
+>(({ room, eventId, ...props }, ref) => {
+  const { t } = useTranslation();
+  const mx = useMatrixClient();
+  const useAuthentication = useMediaAuthentication();
+  const [open, setOpen] = useState(false);
+  const readers = useRoomEventReaders(room, eventId);
+  // exclude self
+  const otherReaders = readers.filter((readerId) => readerId !== mx.getUserId());
+
+  if (otherReaders.length === 0) return null;
+
+  const handleClose = () => setOpen(false);
+
+  const getName = (userId: string) =>
+    getMemberDisplayName(room, userId) ?? getMxIdLocalPart(userId) ?? userId;
+  const names = otherReaders.map(getName);
+  // show max 4 avatars, rest as +N
+  const visibleReaders = otherReaders.slice(0, 4);
+  const extraCount = otherReaders.length - visibleReaders.length;
+
+  return (
+    <>
+      <Overlay open={open} backdrop={<OverlayBackdrop />}>
+        <OverlayCenter>
+          <FocusTrap
+            focusTrapOptions={{
+              initialFocus: false,
+              onDeactivate: handleClose,
+              clickOutsideDeactivates: true,
+              escapeDeactivates: stopPropagation,
+            }}
+          >
+            <Modal variant="Surface" size="300">
+              <EventReaders room={room} eventId={eventId} requestClose={handleClose} />
+            </Modal>
+          </FocusTrap>
+        </OverlayCenter>
+      </Overlay>
+      <Box
+        as="button"
+        direction="Row"
+        alignItems="Center"
+        gap="100"
+        onClick={(evt) => {
+          evt.stopPropagation();
+          setOpen(true);
+        }}
+        title={`${t('features:room.message.read_receipts')}: ${names.join(', ')}`}
+        style={{ cursor: 'pointer' }}
+        {...props}
+        ref={ref}
+      >
+        <Box direction="Row" alignItems="Center" style={{ marginRight: config.space.S100 }}>
+          {visibleReaders.map((readerId, index) => {
+            const avatarMxc = getMemberAvatarMxc(room, readerId);
+            const avatarUrl = avatarMxc
+              ? mxcUrlToHttp(mx, avatarMxc, useAuthentication, 32, 32, 'crop') ?? undefined
+              : undefined;
+            const displayName = getName(readerId);
+            return (
+              <Avatar
+                key={readerId}
+                size="200"
+                style={{
+                  marginLeft: index > 0 ? '-6px' : 0,
+                  border: `2px solid ${color.Surface.Container}`,
+                  zIndex: visibleReaders.length - index,
+                }}
+              >
+                <UserAvatar
+                  userId={readerId}
+                  src={avatarUrl}
+                  alt={displayName}
+                  renderFallback={() => (
+                    <Text size="T200">
+                      <b>{displayName.charAt(0).toUpperCase()}</b>
+                    </Text>
+                  )}
+                />
+              </Avatar>
+            );
+          })}
+          {extraCount > 0 && (
+            <Text as="span" size="T200" priority="300" style={{ marginLeft: '2px' }}>
+              +{extraCount}
+            </Text>
+          )}
+        </Box>
+      </Box>
     </>
   );
 });
@@ -731,6 +832,8 @@ export const Message = as<'div', MessageProps>(
     const senderDisplayName =
       getMemberDisplayName(room, senderId) ?? getMxIdLocalPart(senderId) ?? senderId;
     const senderAvatarMxc = getMemberAvatarMxc(room, senderId);
+    // 被停用的账号名字显示灰色
+    const senderDeactivated = useIsDeactivated(senderId);
 
     const tagColor = memberPowerTag?.color
       ? accessibleTagColors?.get(memberPowerTag.color)
@@ -752,7 +855,7 @@ export const Message = as<'div', MessageProps>(
         <Box alignItems="Center" gap="200">
           <Username
             as="button"
-            style={{ color: usernameColor }}
+            style={{ color: senderDeactivated ? undefined : usernameColor, opacity: senderDeactivated ? 0.55 : undefined }}
             data-user-id={senderId}
             onContextMenu={onUserClick}
             onClick={onUsernameClick}
@@ -784,6 +887,9 @@ export const Message = as<'div', MessageProps>(
             hour24Clock={hour24Clock}
             dateFormatString={dateFormatString}
           />
+          {!hideReadReceipts && mEvent.getId() && (
+            <MessageReadReceiptBadge room={room} eventId={mEvent.getId()!} />
+          )}
         </Box>
       </Box>
     );
@@ -807,7 +913,11 @@ export const Message = as<'div', MessageProps>(
                 : undefined
             }
             alt={senderDisplayName}
-            renderFallback={() => <Icon size="200" src={Icons.User} filled />}
+            renderFallback={() => (
+              <Text size="T400">
+                <b>{senderDisplayName.charAt(0).toUpperCase()}</b>
+              </Text>
+            )}
           />
         </Avatar>
       </AvatarBase>
@@ -1135,7 +1245,12 @@ export const Message = as<'div', MessageProps>(
           </CompactLayout>
         )}
         {messageLayout === MessageLayout.Bubble && (
-          <BubbleLayout before={avatarJSX} header={headerJSX} onContextMenu={handleContextMenu}>
+          <BubbleLayout
+            before={avatarJSX}
+            header={headerJSX}
+            onContextMenu={handleContextMenu}
+            alignRight={senderId === mx.getUserId()}
+          >
             {msgContentJSX}
           </BubbleLayout>
         )}

@@ -91,6 +91,7 @@
 	"your_browser_does_not_support_webrtc": "Your browser does not support WebRTC, which is required for calling.",
 	"user-profile": {
 		"copy_server": "Copy Server",
+		"account_deactivated_notice": "This user has been restricted and deactivated due to risk control.",
 		"explore_community": "Explore Community",
 		"open_in_browser": "Open in Browser",
 		"copy_user_id": "Copy User ID",

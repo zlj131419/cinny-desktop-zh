@@ -10,6 +10,7 @@ import {
   RoomLocalAddresses,
   RoomPublishedAddresses,
   RoomPublish,
+  RoomRecommend,
   RoomUpgrade,
 } from '../../common-settings/general';
 import { useRoomCreators } from '../../../hooks/useRoomCreators';
@@ -50,6 +51,7 @@ export function General({ requestClose }: GeneralProps) {
                 <Text size="L400">{t('features:space-settings.general.options')}</Text>
                 <RoomJoinRules permissions={permissions} />
                 <RoomPublish permissions={permissions} />
+                <RoomRecommend />
               </Box>
               <Box direction="Column" gap="100">
                 <Text size="L400">{t('features:space-settings.general.addresses')}</Text>

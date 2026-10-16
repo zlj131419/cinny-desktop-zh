@@ -61,9 +61,11 @@ export const SPACE_SEARCH_PATH = `/:spaceIdOrAlias/${_SEARCH_PATH}`;
 export const SPACE_ROOM_PATH = `/:spaceIdOrAlias/${_ROOM_PATH}`;
 
 export const _FEATURED_PATH = 'featured/';
+export const _MANAGE_PATH = 'manage/';
 export const _SERVER_PATH = ':server/';
 export const EXPLORE_PATH = '/explore/';
 export const EXPLORE_FEATURED_PATH = `/explore/${_FEATURED_PATH}`;
+export const EXPLORE_MANAGE_PATH = `/explore/${_MANAGE_PATH}`;
 
 export type ExploreServerPathSearchParams = {
   limit?: string;

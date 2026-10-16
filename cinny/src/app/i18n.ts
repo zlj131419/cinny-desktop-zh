@@ -34,7 +34,7 @@ i18n
   // for all options read: https://www.i18next.com/overview/configuration-options
   .init<HttpBackendOptions>({
     debug: false,
-    fallbackLng: 'en-US',
+    fallbackLng: 'zh-CN',
     supportedLngs: SUPPORTED_LANGUAGES.map(lang => lang.code),
     ns: NAMESPACES,
     interpolation: {

@@ -26,10 +26,12 @@ import {
   NavItemContent,
   NavLink,
 } from '../../../components/nav';
-import { getExploreFeaturedPath, getExploreServerPath } from '../../pathUtils';
+import { getExploreFeaturedPath, getExploreManagePath, getExploreServerPath } from '../../pathUtils';
 import { useClientConfig } from '../../../hooks/useClientConfig';
+import { useAdminService } from '../../../features/admin/useAdminService';
 import {
   useExploreFeaturedSelected,
+  useExploreManageSelected,
   useExploreServer,
 } from '../../../hooks/router/useExploreSelected';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
@@ -168,7 +170,9 @@ export function Explore() {
     clientConfig.featuredCommunities?.servers?.filter((server) => server !== userServer) ?? [];
 
   const featuredSelected = useExploreFeaturedSelected();
+  const manageSelected = useExploreManageSelected();
   const selectedServer = useExploreServer();
+  const { enabled: adminEnabled, isSuperAdmin } = useAdminService();
 
   return (
     <PageNav>
@@ -194,13 +198,33 @@ export function Explore() {
                     </Avatar>
                     <Box as="span" grow="Yes">
                       <Text as="span" size="Inherit" truncate>
-                        {t('pages:client.explore.featured_by_client')}
+                        {adminEnabled
+                          ? t('pages:client.explore.recommended')
+                          : t('pages:client.explore.featured_by_client')}
                       </Text>
                     </Box>
                   </Box>
                 </NavItemContent>
               </NavLink>
             </NavItem>
+            {adminEnabled && isSuperAdmin && (
+              <NavItem variant="Background" radii="400" aria-selected={manageSelected}>
+                <NavLink to={getExploreManagePath()}>
+                  <NavItemContent>
+                    <Box as="span" grow="Yes" alignItems="Center" gap="200">
+                      <Avatar size="200" radii="400">
+                        <Icon src={Icons.ShieldUser} size="100" filled={manageSelected} />
+                      </Avatar>
+                      <Box as="span" grow="Yes">
+                        <Text as="span" size="Inherit" truncate>
+                          {t('pages:client.explore.admin_manage')}
+                        </Text>
+                      </Box>
+                    </Box>
+                  </NavItemContent>
+                </NavLink>
+              </NavItem>
+            )}
             {userServer && (
               <NavItem
                 variant="Background"

@@ -43,6 +43,11 @@ export function ExploreTab() {
       navigate(getExploreFeaturedPath());
       return;
     }
+    // Admin recommend service enabled: default to the recommended list.
+    if (clientConfig.adminServiceUrl?.trim()) {
+      navigate(getExploreFeaturedPath());
+      return;
+    }
     const userId = mx.getUserId();
     const userServer = userId ? getMxIdServer(userId) : undefined;
     if (userServer) {
