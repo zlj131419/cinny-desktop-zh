@@ -67,10 +67,10 @@ pub fn run() {
                         let should_update = handle
                             .dialog()
                             .message(format!(
-                                "Version {} is available.\n\nWould you like to update now?",
+                                "发现新版本 {}\n\n现在更新吗？",
                                 version
                             ))
-                            .title("Update Available")
+                            .title("发现新版本")
                             .kind(MessageDialogKind::Info)
                             .buttons(MessageDialogButtons::YesNo)
                             .blocking_show();
