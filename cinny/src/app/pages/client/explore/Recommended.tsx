@@ -4,7 +4,6 @@ import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { RoomCard, RoomCardGrid } from '../../../components/room-card';
 import { allRoomsAtom } from '../../../state/room-list/roomList';
-import { RoomSummaryLoader } from '../../../components/RoomSummaryLoader';
 import {
   Page,
   PageContent,
@@ -33,23 +32,23 @@ function FeaturedEntryCards({
   onView: (roomId: string) => void;
   renderTopicViewer: (name: string, topic: string, requestClose: () => void) => React.ReactNode;
 }) {
+  // 直接用服务端补齐的名字/简介/头像/人数，同步渲染，不再异步调 summary 接口，
+  // 避免首次打开时先闪一下房间 ID。
+  // 已加入的房间 RoomCard 内部会用本地实时名字覆盖。
   return (
     <RoomCardGrid>
       {entries.map((entry) => (
-        <RoomSummaryLoader key={entry.room_id} roomIdOrAlias={entry.room_id}>
-          {(roomSummary) => (
-            <RoomCard
-              roomIdOrAlias={entry.room_id}
-              allRooms={allRooms}
-              avatarUrl={roomSummary?.avatar_url ?? entry.avatar_url}
-              name={roomSummary?.name ?? entry.name}
-              topic={roomSummary?.topic ?? entry.topic}
-              memberCount={roomSummary?.num_joined_members ?? entry.member_count}
-              onView={onView}
-              renderTopicViewer={renderTopicViewer}
-            />
-          )}
-        </RoomSummaryLoader>
+        <RoomCard
+          key={entry.room_id}
+          roomIdOrAlias={entry.room_id}
+          allRooms={allRooms}
+          avatarUrl={entry.avatar_url}
+          name={entry.name ?? entry.room_id}
+          topic={entry.topic}
+          memberCount={entry.member_count}
+          onView={onView}
+          renderTopicViewer={renderTopicViewer}
+        />
       ))}
     </RoomCardGrid>
   );

@@ -7,6 +7,7 @@ import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../../room-settings/styles.css';
 import { SettingTile } from '../../../components/setting-tile';
 import { useRoom } from '../../../hooks/useRoom';
+import { useRoomCreators } from '../../../hooks/useRoomCreators';
 import { useRoomDirectoryVisibility } from '../../../hooks/useRoomDirectoryVisibility';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { StateEvent } from '../../../../types/matrix/room';
@@ -27,6 +28,9 @@ export function RoomPublish({ permissions }: RoomPublishProps) {
     StateEvent.RoomCanonicalAlias,
     mx.getSafeUserId()
   );
+  // 只有创建者可以操作公开到目录的开关，其余人灰色禁用
+  const creators = useRoomCreators(room);
+  const isCreator = creators.has(mx.getSafeUserId());
   const joinRuleEvent = useStateEvent(room, StateEvent.RoomJoinRules);
   const content = joinRuleEvent?.getContent<RoomJoinRulesEventContent>();
   const rule: ExtendedJoinRules = (content?.join_rule as ExtendedJoinRules) ?? JoinRule.Invite;
@@ -61,7 +65,7 @@ export function RoomPublish({ permissions }: RoomPublishProps) {
               <Switch
                 value={visibilityState.data}
                 onChange={toggleVisibility}
-                disabled={!canEditCanonical || !validRule}
+                disabled={!isCreator || !canEditCanonical || !validRule}
               />
             )}
           </Box>

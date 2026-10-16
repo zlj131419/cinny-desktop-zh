@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Spinner, Switch, Text, color } from 'folds';
-import { readPowerLevel } from '../../../hooks/usePowerLevels';
+import { JoinRule } from 'matrix-js-sdk';
 import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../../room-settings/styles.css';
 import { SettingTile } from '../../../components/setting-tile';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { useRoom } from '../../../hooks/useRoom';
-import { usePowerLevels } from '../../../hooks/usePowerLevels';
 import { useRoomCreators } from '../../../hooks/useRoomCreators';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useAdminService } from '../../admin/useAdminService';
@@ -16,12 +15,14 @@ export function RoomRecommend() {
   const { t } = useTranslation();
   const mx = useMatrixClient();
   const room = useRoom();
-  const powerLevels = usePowerLevels(room);
   const creators = useRoomCreators(room);
   const { enabled, fetchFeatured, recommend, unrecommend } = useAdminService();
 
   const me = mx.getSafeUserId();
-  const isRoomAdmin = creators.has(me) || readPowerLevel.user(powerLevels, me) >= 50;
+  // 只有创建者可以操作开关，其余人看到灰色禁用状态
+  const isCreator = creators.has(me);
+  // 只有公开房间才允许推荐到探索页
+  const isPublicRoom = room.getJoinRule() === JoinRule.Public;
 
   const [featuredState, loadFeatured] = useAsyncCallback(fetchFeatured);
   const [toggleState, toggleRecommend] = useAsyncCallback(
@@ -35,12 +36,12 @@ export function RoomRecommend() {
   );
 
   useEffect(() => {
-    if (enabled && isRoomAdmin) {
+    if (enabled) {
       loadFeatured();
     }
-  }, [enabled, isRoomAdmin, loadFeatured]);
+  }, [enabled, loadFeatured]);
 
-  if (!enabled || !isRoomAdmin) return null;
+  if (!enabled) return null;
 
   const data = featuredState.status === AsyncStatus.Success ? featuredState.data : undefined;
   const entries = [...(data?.spaces ?? []), ...(data?.rooms ?? [])];
@@ -50,10 +51,20 @@ export function RoomRecommend() {
   const loading =
     featuredState.status === AsyncStatus.Loading || toggleState.status === AsyncStatus.Loading;
 
+  const canToggle = isCreator && isPublicRoom && !isBlocked;
+
   const handleChange = () => {
-    if (loading || isBlocked) return;
+    if (loading || !canToggle) return;
     toggleRecommend(!isRecommended).then(() => loadFeatured());
   };
+
+  const description = isBlocked
+    ? t('features:common-settings.general.recommend_blocked_by_admin')
+    : !isCreator
+      ? t('features:common-settings.general.recommend_creator_only')
+      : !isPublicRoom
+        ? t('features:common-settings.general.recommend_need_public')
+        : t('features:common-settings.general.recommend_to_explore_desc');
 
   return (
     <SequenceCard
@@ -64,16 +75,12 @@ export function RoomRecommend() {
     >
       <SettingTile
         title={t('features:common-settings.general.recommend_to_explore')}
-        description={
-          isBlocked
-            ? t('features:common-settings.general.recommend_blocked_by_admin')
-            : t('features:common-settings.general.recommend_to_explore_desc')
-        }
+        description={description}
         after={
           <Box gap="200" alignItems="Center">
             {loading && <Spinner variant="Secondary" />}
             {featuredState.status === AsyncStatus.Success && !loading && (
-              <Switch value={isRecommended} onChange={handleChange} disabled={isBlocked} />
+              <Switch value={isRecommended} onChange={handleChange} disabled={!canToggle} />
             )}
           </Box>
         }

@@ -368,6 +368,8 @@
 			"current_version": "Aktuelle Version: {{version}}.",
 			"recommend_to_explore": "Zum Entdecken empfehlen",
 			"recommend_to_explore_desc": "Wenn aktiviert, erscheint dieser Raum/Space in der Empfehlungsliste auf der Entdecken-Seite.",
+			"recommend_creator_only": "Nur der Raumersteller kann diesen Schalter bedienen.",
+			"recommend_need_public": "Der Raum muss öffentlich sein, um empfohlen werden zu können.",
 			"recommend_blocked_by_admin": "Vom Superadministrator von Empfehlungen ausgeschlossen; kann nicht angezeigt werden.",
 			"recommend_load_failed": "Empfehlungsstatus konnte nicht geladen werden.",
 			"recommend_failed": "Vorgang fehlgeschlagen: "
