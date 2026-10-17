@@ -42,6 +42,7 @@ export interface Settings {
 
   showNotifications: boolean;
   isNotificationSounds: boolean;
+  notificationSoundId: string;
 
   hour24Clock: boolean;
   dateFormatString: string;
@@ -76,6 +77,7 @@ const defaultSettings: Settings = {
 
   showNotifications: true,
   isNotificationSounds: true,
+  notificationSoundId: 'default',
 
   hour24Clock: false,
   dateFormatString: 'D MMM YYYY',

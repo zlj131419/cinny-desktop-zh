@@ -40,6 +40,16 @@ export function JoinBeforeNavigate({
     return <Navigate to="/" replace />;
   }
 
+  // 已加入的房间（比如刚接受邀请）：直接进房间，不显示预览/报错卡
+  // 解决接受邀请后因 room list atom 未同步而误进预览页的问题
+  const joinedRoom = isRoomId(roomIdOrAlias) ? mx.getRoom(roomIdOrAlias) : undefined;
+  if (joinedRoom && joinedRoom.getMyMembership() === 'join') {
+    const targetPath = joinedRoom.isSpaceRoom()
+      ? `/${joinedRoom.roomId}/`
+      : `/home/${joinedRoom.roomId}/`;
+    return <Navigate to={targetPath} replace />;
+  }
+
   return (
     <Page>
       <PageHeader balance>

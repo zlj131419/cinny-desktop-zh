@@ -11,6 +11,7 @@ import { getNotificationState, usePermissionState } from '../../../hooks/usePerm
 import { useEmailNotifications } from '../../../hooks/useEmailNotifications';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
+import { NOTIFICATION_SOUNDS, getNotificationSoundSrc } from './notificationSounds';
 
 function EmailNotification() {
   const { t } = useTranslation();
@@ -94,6 +95,15 @@ export function SystemNotification() {
     settingsAtom,
     'isNotificationSounds'
   );
+  const [notificationSoundId, setNotificationSoundId] = useSetting(
+    settingsAtom,
+    'notificationSoundId'
+  );
+
+  const previewSound = (src: string) => {
+    const el = new Audio(src);
+    el.play().catch(() => {});
+  };
 
   const requestNotificationPermission = () => {
     window.Notification.requestPermission();
@@ -122,7 +132,7 @@ export function SystemNotification() {
             )
           }
           after={
-            notifPermission === 'prompt' ? (
+            notifPermission !== 'granted' ? (
               <Button size="300" radii="300" onClick={requestNotificationPermission}>
                 <Text size="B300">{t('features:settings.notifications.enable')}</Text>
               </Button>
@@ -147,6 +157,35 @@ export function SystemNotification() {
           description={t('features:settings.notifications.play_sound_when_new')}
           after={<Switch value={isNotificationSounds} onChange={setIsNotificationSounds} />}
         />
+        {isNotificationSounds && (
+          <SettingTile
+            title="提示音"
+            description="选择新消息的提示声音"
+            after={
+              <select
+                value={notificationSoundId}
+                onChange={(e) => {
+                  setNotificationSoundId(e.target.value);
+                  previewSound(getNotificationSoundSrc(e.target.value));
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--bg-surface-border)',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--tc-surface-high)',
+                  fontSize: '14px',
+                }}
+              >
+                {NOTIFICATION_SOUNDS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            }
+          />
+        )}
       </SequenceCard>
       <SequenceCard
         className={SequenceCardStyle}

@@ -7,7 +7,7 @@ import { roomToUnreadAtom, unreadEqual, unreadInfoToUnread } from '../../state/r
 import LogoSVG from '../../../../public/res/svg/cinny.svg';
 import LogoUnreadSVG from '../../../../public/res/svg/cinny-unread.svg';
 import LogoHighlightSVG from '../../../../public/res/svg/cinny-highlight.svg';
-import NotificationSound from '../../../../public/sound/notification.ogg';
+import { getNotificationSoundSrc } from '../../features/settings/notifications/notificationSounds';
 import InviteSound from '../../../../public/sound/invite.ogg';
 import { notificationPermission, setFavicon } from '../../utils/dom';
 import { useSetting } from '../../state/hooks/settings';
@@ -24,9 +24,33 @@ import {
 } from '../../utils/room';
 import { NotificationType, UnreadInfo } from '../../../types/matrix/room';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
+// 解锁浏览器音频自动播放：首次用户交互时静音触发一次播放
+let audioUnlocked = false;
+const unlockAudio = () => {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  document.querySelectorAll('audio').forEach((el) => {
+    const origMuted = el.muted;
+    el.muted = true;
+    el.play()
+      .then(() => el.pause())
+      .catch(() => {})
+      .finally(() => {
+        el.muted = origMuted;
+        el.currentTime = 0;
+      });
+  });
+  window.removeEventListener('pointerdown', unlockAudio);
+  window.removeEventListener('keydown', unlockAudio);
+};
 import { useSelectedRoom } from '../../hooks/router/useSelectedRoom';
 import { useInboxNotificationsSelected } from '../../hooks/router/useInbox';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointerdown', unlockAudio);
+  window.addEventListener('keydown', unlockAudio);
+}
 
 function SystemEmojiFeature() {
   const [twitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
@@ -87,6 +111,7 @@ function InviteNotifications() {
   const navigate = useNavigate();
   const [showNotifications] = useSetting(settingsAtom, 'showNotifications');
   const [notificationSound] = useSetting(settingsAtom, 'isNotificationSounds');
+  const [notificationSoundId] = useSetting(settingsAtom, 'notificationSoundId');
 
   const notify = useCallback(
     (count: number) => {
@@ -107,7 +132,10 @@ function InviteNotifications() {
 
   const playSound = useCallback(() => {
     const audioElement = audioRef.current;
-    audioElement?.play();
+    if (!audioElement) return;
+    audioElement.currentTime = 0;
+    const p = audioElement.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -139,6 +167,7 @@ function MessageNotifications() {
   const useAuthentication = useMediaAuthentication();
   const [showNotifications] = useSetting(settingsAtom, 'showNotifications');
   const [notificationSound] = useSetting(settingsAtom, 'isNotificationSounds');
+  const [notificationSoundId] = useSetting(settingsAtom, 'notificationSoundId');
 
   const navigate = useNavigate();
   const notificationSelected = useInboxNotificationsSelected();
@@ -156,10 +185,12 @@ function MessageNotifications() {
       roomId: string;
       eventId: string;
     }) => {
+      // 权限未 granted 时不发，避免抛错或静默失败
+      if (window.Notification?.permission !== 'granted') return;
       const noti = new window.Notification(roomName, {
         icon: roomAvatar,
         badge: roomAvatar,
-        body: `${t('pages:client.new_inbox_notification_from')} ${username}`,
+        body: t('pages:client.new_inbox_notification_from', { username }),
         silent: true,
       });
 
@@ -177,7 +208,10 @@ function MessageNotifications() {
 
   const playSound = useCallback(() => {
     const audioElement = audioRef.current;
-    audioElement?.play();
+    if (!audioElement) return;
+    audioElement.currentTime = 0;
+    const p = audioElement.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -250,9 +284,7 @@ function MessageNotifications() {
 
   return (
     // eslint-disable-next-line jsx-a11y/media-has-caption
-    <audio ref={audioRef} style={{ display: 'none' }}>
-      <source src={NotificationSound} type="audio/ogg" />
-    </audio>
+    <audio ref={audioRef} style={{ display: 'none' }} src={getNotificationSoundSrc(notificationSoundId)} />
   );
 }
 
