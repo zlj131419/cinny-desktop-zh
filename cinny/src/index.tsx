@@ -1,4 +1,8 @@
 /* eslint-disable import/first */
+import { initTauriNotificationShim } from './tauriNotificationShim';
+
+initTauriNotificationShim();
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { enableMapSet } from 'immer';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Button, Icon, Icons, Text, config, toRem } from 'folds';
 import { useTranslation } from 'react-i18next';
 import { Page, PageHero, PageHeroSection } from '../../components/page';
-import SiyuIcon from '../../../../public/res/siyu-icon.png';
+import SiyuIcon from '../../../../public/res/siyu-icon-140.png';
 import { SiyuSlogan } from '../../components/SiyuSlogan';
 
 export function WelcomePage() {
