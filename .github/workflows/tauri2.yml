@@ -91,6 +91,23 @@ jobs:
           cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+      - name: Inject Firebase into Android Gradle files
+        run: |
+          # 项目级 build.gradle：加 google-services 插件
+          PG="src-tauri/gen/android/build.gradle"
+          if ! grep -q "com.google.gms.google-services" "$PG"; then
+            sed -i "s|id 'com.android.application' version|id 'com.google.gms.google-services' version '4.5.0' apply false\n  id 'com.android.application' version|" "$PG"
+          fi
+          # 应用级 build.gradle：应用插件 + Firebase BoM + messaging
+          AG="src-tauri/gen/android/app/build.gradle"
+          if ! grep -q "com.google.gms.google-services" "$AG"; then
+            sed -i "s|id 'com.android.application'|id 'com.android.application'\n  id 'com.google.gms.google-services'|" "$AG"
+          fi
+          if ! grep -q "firebase-bom" "$AG"; then
+            sed -i "s|^dependencies {|dependencies {\n  implementation platform('com.google.firebase:firebase-bom:35.0.2')\n  implementation 'com.google.firebase:firebase-messaging'|" "$AG"
+          fi
+          echo "--- project build.gradle plugins ---"
+          grep -A3 "plugins {" "$PG" | head -8
       - name: Build Android APK
         run: |
           npx shx cp config.json cinny/ && tauri android build --apk --target aarch64
