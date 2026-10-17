@@ -91,8 +91,12 @@ jobs:
         run: cargo install tauri-cli --version "^2" --locked
       - name: Init Android project (first run)
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "NDK_HOME=$NDK_HOME"
+          echo "JAVA_HOME=$JAVA_HOME"
+          ls $ANDROID_HOME/ndk/ || echo "no ndk dir"
           if [ ! -d "src-tauri/gen/android" ]; then
-            npx shx cp config.json cinny/ && tauri android init
+            npx shx cp config.json cinny/ && tauri android init --ci 2>&1 || (echo "INIT FAILED" && exit 1)
           fi
           cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
         env:
