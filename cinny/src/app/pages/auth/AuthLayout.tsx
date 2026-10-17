@@ -12,6 +12,7 @@ import {
 import classNames from 'classnames';
 
 import { AuthFooter } from './AuthFooter';
+import { SiyuSlogan } from '../../components/SiyuSlogan';
 import * as css from './styles.css';
 import * as PatternsCss from '../../styles/Patterns.css';
 import {
@@ -204,6 +205,7 @@ export function AuthLayout() {
             )}
           </Box>
         </Box>
+        <SiyuSlogan />
         <AuthFooter />
       </Box>
     </Scroll>

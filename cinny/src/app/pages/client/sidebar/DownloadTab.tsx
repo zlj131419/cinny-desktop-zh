@@ -7,7 +7,12 @@ export function DownloadTab() {
   const { t } = useTranslation();
 
   const open = () => {
-    window.open('/public/download.html', '_blank', 'noopener');
+    // 桌面端（Tauri）用绝对地址，避免解析成 localhost
+    const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+    const url = isTauri
+      ? 'https://chat.xxqw.net/public/download.html'
+      : '/public/download.html';
+    window.open(url, '_blank', 'noopener');
   };
 
   return (

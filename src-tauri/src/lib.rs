@@ -110,7 +110,7 @@ pub fn run() {
 
             let app_handle = app.handle().clone();
             let window_builder = WebviewWindowBuilder::new(app, "main".to_string(), window_url)
-                .title("Cinny")
+                .title("私语 Siyu")
                 .disable_drag_drop_handler()
                 .on_new_window(move |url, _features| {
                     let _ = app_handle.opener().open_url(url.as_str(), None::<&str>);
@@ -141,7 +141,7 @@ pub fn run() {
                 let tray_menu = Menu::with_items(app_handle, &[&show_item, &quit_item])?;
                 TrayIconBuilder::new()
                     .icon(icon)
-                    .tooltip("Cinny")
+                    .tooltip("私语 Siyu")
                     .menu(&tray_menu)
                     .show_menu_on_left_click(false)
                     .on_menu_event(|app, event| match event.id.as_ref() {

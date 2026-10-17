@@ -3,6 +3,7 @@ import { Box, Button, Icon, Icons, Text, config, toRem } from 'folds';
 import { useTranslation } from 'react-i18next';
 import { Page, PageHero, PageHeroSection } from '../../components/page';
 import SiyuIcon from '../../../../public/res/siyu-icon.png';
+import { SiyuSlogan } from '../../components/SiyuSlogan';
 
 export function WelcomePage() {
   const { t } = useTranslation();
@@ -42,6 +43,7 @@ export function WelcomePage() {
           </PageHero>
         </PageHeroSection>
       </Box>
+      <SiyuSlogan />
     </Page>
   );
 }

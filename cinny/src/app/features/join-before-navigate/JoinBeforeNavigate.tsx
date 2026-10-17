@@ -1,10 +1,12 @@
 import React from 'react';
 import { Box, Icon, IconButton, Icons, Scroll, Text, toRem } from 'folds';
 import { useAtomValue } from 'jotai';
+import { Navigate } from 'react-router-dom';
 import { RoomCard } from '../../components/room-card';
 import { RoomTopicViewer } from '../../components/room-topic-viewer';
 import { Page, PageHeader } from '../../components/page';
 import { RoomSummaryLoader } from '../../components/RoomSummaryLoader';
+import { isRoomAlias, isRoomId } from '../../utils/matrix';
 import { useRoomNavigate } from '../../hooks/useRoomNavigate';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
 import { allRoomsAtom } from '../../state/room-list/roomList';
@@ -29,6 +31,14 @@ export function JoinBeforeNavigate({
     }
     navigateRoom(roomId, eventId);
   };
+
+  // roomIdOrAlias 根本不是合法的房间 ID（!xxx:server）或别名（#xxx:server）
+  // （比如被恢复出来的 "public"），直接回首页，不进预览/加房流程。
+  // 否则 summary 与 join 都会失败，用户会被钉死在这张错误卡片上，
+  // 刷新或重新登录又会把这个死路由恢复出来。
+  if (!isRoomId(roomIdOrAlias) && !isRoomAlias(roomIdOrAlias)) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <Page>
@@ -56,7 +66,12 @@ export function JoinBeforeNavigate({
         <Scroll hideTrack visibility="Hover" size="0">
           <Box style={{ height: '100%' }} grow="Yes" alignItems="Center" justifyContent="Center">
             <RoomSummaryLoader roomIdOrAlias={roomIdOrAlias}>
-              {(summary) => (
+              {(summary) => {
+                // 房间信息加载失败，直接回首页，不展示错误页
+                if (!summary) {
+                  return <Navigate to="/" replace />;
+                }
+                return (
                 <RoomCard
                   style={{ maxWidth: toRem(364), width: '100%' }}
                   roomIdOrAlias={roomIdOrAlias}
@@ -72,7 +87,8 @@ export function JoinBeforeNavigate({
                   )}
                   onView={handleView}
                 />
-              )}
+                );
+              }}
             </RoomSummaryLoader>
           </Box>
         </Scroll>
