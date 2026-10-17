@@ -47,7 +47,7 @@
   },
   "productName": "Siyu",
   "mainBinaryName": "siyu",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "identifier": "net.xxqw.siyu",
   "plugins": {
     "updater": {

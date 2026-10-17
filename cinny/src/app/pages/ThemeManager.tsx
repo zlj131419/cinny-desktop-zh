@@ -11,6 +11,20 @@ import {
 import { useSetting } from '../state/hooks/settings';
 import { settingsAtom } from '../state/settings';
 
+/**
+ * 同步 Tauri 原生窗口（标题栏）的明暗主题
+ * 使标题栏跟随应用内主题变色
+ */
+const syncTauriWindowTheme = (kind: ThemeKind) => {
+  try {
+    const tauri = (window as any).__TAURI__;
+    const win = tauri?.window?.getCurrentWindow?.();
+    win?.setTheme?.(kind === ThemeKind.Dark ? 'dark' : 'light');
+  } catch {
+    // 非桌面端忽略
+  }
+};
+
 export function UnAuthRouteThemeManager() {
   const systemThemeKind = useSystemThemeKind();
 
@@ -23,6 +37,7 @@ export function UnAuthRouteThemeManager() {
     if (systemThemeKind === ThemeKind.Light) {
       document.body.classList.add(...LightTheme.classNames);
     }
+    syncTauriWindowTheme(systemThemeKind);
   }, [systemThemeKind]);
 
   return null;
@@ -43,6 +58,7 @@ export function AuthRouteThemeManager({ children }: { children: ReactNode }) {
     } else {
       document.body.style.filter = '';
     }
+    syncTauriWindowTheme(activeTheme.kind);
   }, [activeTheme, monochromeMode]);
 
   return <ThemeContextProvider value={activeTheme}>{children}</ThemeContextProvider>;
