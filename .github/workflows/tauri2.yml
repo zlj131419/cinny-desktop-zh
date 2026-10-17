@@ -92,17 +92,32 @@ jobs:
       - name: Init Android project (first run)
         run: |
           set -x
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          which tauri && tauri --version
-          ls "$ANDROID_HOME/ndk/" || echo "no ndk dir"
-          npx shx cp config.json cinny/
-          echo "config.json copied"
-          ls -la src-tauri/gen/ 2>&1 || echo "no gen dir yet"
-          tauri android init
-          echo "init exit: $?"
-          ls -la src-tauri/gen/android/ 2>&1 | head -5
-          cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
-          echo "google-services copied"
+          {
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "NDK_HOME=$NDK_HOME"
+            echo "JAVA_HOME=$JAVA_HOME"
+            which tauri && tauri --version
+            ls "$ANDROID_HOME/ndk/" || echo "no ndk dir"
+            ls "$ANDROID_HOME/build-tools/" 2>/dev/null || echo "no build-tools"
+            ls "$ANDROID_HOME/platforms/" 2>/dev/null || echo "no platforms"
+            npx shx cp config.json cinny/
+            echo "config.json copied"
+            tauri android init
+            echo "init exit: $?"
+            ls -la src-tauri/gen/android/ 2>&1 | head -10
+          } 2>&1 | tee /tmp/android-init.log
+          tail -50 /tmp/android-init.log
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
+      - name: Upload init log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-init-log
+          path: /tmp/android-init.log
+      - name: Copy google-services.json
+        if: success()
+        run: cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
       - name: Inject Firebase into Android Gradle files
