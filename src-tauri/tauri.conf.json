@@ -53,7 +53,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/zlj131419/cinny-desktop-zh/releases/latest/download/latest.json"
+        "https://github.com/zlj131419/siyu/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJGMUI1RTc3RjNENkRCOTEKUldTUjI5YnpkMTRiTDc4RmpTVHJpdXl4c1l0MWJ4VVp2eVZlR1BMWXlZS3dacy9BdzdvQmVpQ1QK",
       "windows": {
