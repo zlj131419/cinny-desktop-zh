@@ -28,6 +28,7 @@ import { Membership, StateEvent } from '../../types/matrix/room';
 import { getStateEvent } from '../utils/room';
 import { splitWithSpace } from '../utils/common';
 import { createRoomEncryptionState } from '../components/create-room';
+import { useAdminService } from '../features/admin/useAdminService';
 
 export const SHRUG = '¯\\_(ツ)_/¯';
 export const TABLEFLIP = '(╯°□°)╯︵ ┻━┻';
@@ -173,6 +174,7 @@ export type CommandRecord = Record<Command, CommandContent>;
 export const useCommands = (mx: MatrixClient, room: Room): CommandRecord => {
   const { navigateRoom } = useRoomNavigate();
   const { t } = useTranslation();
+  const { userExists } = useAdminService();
 
   const commands: CommandRecord = useMemo(
     () => ({
@@ -260,7 +262,27 @@ export const useCommands = (mx: MatrixClient, room: Room): CommandRecord => {
           const users = parseUsers(content);
           const flagToContent = parseFlags(flags);
           const reason = flagToContent.r;
-          users.map((id) => mx.invite(room.roomId, id, reason));
+          // 只邀请本服存在的用户
+          for (const id of users) {
+            let exists = false;
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              exists = await userExists(id);
+            } catch {
+              try {
+                // eslint-disable-next-line no-await-in-loop
+                await mx.getProfileInfo(id);
+                exists = true;
+              } catch {
+                exists = false;
+              }
+            }
+            if (!exists) {
+              throw new Error('该用户在本服务器不存在，无法邀请');
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await mx.invite(room.roomId, id, reason);
+          }
         },
       },
       [Command.DisInvite]: {

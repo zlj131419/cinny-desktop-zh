@@ -6,6 +6,7 @@ import { CutoutCard } from '../cutout-card';
 import { SettingTile } from '../setting-tile';
 import { AsyncStatus, useAsyncCallback } from '../../hooks/useAsyncCallback';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
+import { useAdminService } from '../../features/admin/useAdminService';
 import { BreakWord } from '../../styles/Text.css';
 import { useSetting } from '../../state/hooks/settings';
 import { settingsAtom } from '../../state/settings';
@@ -223,6 +224,7 @@ export function UserModeration({ userId, canKick, canBan, canInvite }: UserModer
   const mx = useMatrixClient();
   const room = useRoom();
   const reasonInputRef = useRef<HTMLInputElement>(null);
+  const { userExists } = useAdminService();
 
   const getReason = useCallback((): string | undefined => {
     const reason = reasonInputRef.current?.value.trim() || undefined;
@@ -246,8 +248,23 @@ export function UserModeration({ userId, canKick, canBan, canInvite }: UserModer
 
   const [inviteState, invite] = useAsyncCallback<undefined, Error, []>(
     useCallback(async () => {
+      // 邀请前校验用户存在（仅本服）
+      let exists = false;
+      try {
+        exists = await userExists(userId);
+      } catch {
+        try {
+          await mx.getProfileInfo(userId);
+          exists = true;
+        } catch {
+          exists = false;
+        }
+      }
+      if (!exists) {
+        throw new Error('该用户在本服务器不存在，无法邀请');
+      }
       await mx.invite(room.roomId, userId, getReason());
-    }, [mx, room, userId, getReason])
+    }, [mx, room, userId, getReason, t, userExists])
   );
 
   const disabled =

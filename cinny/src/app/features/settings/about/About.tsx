@@ -5,7 +5,7 @@ import { Page, PageContent, PageHeader } from '../../../components/page';
 import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '../../../components/setting-tile';
-import CinnySVG from '../../../../../public/res/svg/cinny.svg';
+import SiyuIcon from '../../../../../public/res/siyu-icon.png';
 import { clearCacheAndReload } from '../../../../client/initMatrix';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 
@@ -40,46 +40,17 @@ export function About({ requestClose }: AboutProps) {
                 <Box shrink="No">
                   <img
                     style={{ width: toRem(60), height: toRem(60) }}
-                    src={CinnySVG}
-                    alt="Cinny logo"
+                    src={SiyuIcon}
+                    alt="私语 Siyu"
                   />
                 </Box>
                 <Box direction="Column" gap="300">
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
-                      <Text size="H3">Cinny</Text>
-                      <Text size="T200">v4.12.7</Text>
+                      <Text size="H3">私语 Siyu</Text>
+                      <Text size="T200">v1.0.0</Text>
                     </Box>
                     <Text>{t('features:settings.about.yet_another_matrix')}</Text>
-                  </Box>
-
-                  <Box gap="200" wrap="Wrap">
-                    <Button
-                      as="a"
-                      href="https://github.com/cinnyapp/cinny"
-                      rel="noreferrer noopener"
-                      target="_blank"
-                      variant="Secondary"
-                      fill="Soft"
-                      size="300"
-                      radii="300"
-                      before={<Icon src={Icons.Code} size="100" filled />}
-                    >
-                      <Text size="B300">{t('features:settings.about.source_code')}</Text>
-                    </Button>
-                    <Button
-                      as="a"
-                      href="https://cinny.in/#sponsor"
-                      rel="noreferrer noopener"
-                      target="_blank"
-                      variant="Critical"
-                      fill="Soft"
-                      size="300"
-                      radii="300"
-                      before={<Icon src={Icons.Heart} size="100" filled />}
-                    >
-                      <Text size="B300">{t('features:settings.about.support')}</Text>
-                    </Button>
                   </Box>
                 </Box>
               </Box>

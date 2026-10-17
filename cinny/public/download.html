@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>下载私语 Siyu 桌面客户端</title>
+<link rel="shortcut icon" href="./favicon.ico" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #1a1b3a 0%, #2d1b4e 50%, #1a2a6c 100%);
+    min-height: 100vh; color: #fff;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 60px 20px;
+  }
+  .logo { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+  h1 { font-size: 32px; margin-bottom: 8px; }
+  .slogan { color: rgba(255,255,255,.7); margin-bottom: 48px; font-size: 15px; }
+  .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .card {
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px; padding: 32px; width: 260px; text-align: center;
+    backdrop-filter: blur(10px); transition: transform .2s;
+  }
+  .card:hover { transform: translateY(-4px); background: rgba(255,255,255,.12); }
+  .card .os { font-size: 40px; margin-bottom: 12px; }
+  .card h2 { font-size: 20px; margin-bottom: 8px; }
+  .card p { color: rgba(255,255,255,.6); font-size: 13px; margin-bottom: 20px; min-height: 36px; }
+  .btn {
+    display: inline-block; padding: 12px 32px; border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+    text-decoration: none; font-size: 15px; font-weight: 600;
+  }
+  .btn:hover { opacity: .9; }
+  .btn.secondary { background: rgba(255,255,255,.15); }
+  .note { margin-top: 48px; color: rgba(255,255,255,.5); font-size: 13px; text-align: center; line-height: 1.8; }
+  .note a { color: #a78bfa; }
+  .web-link { margin-top: 24px; }
+</style>
+</head>
+<body>
+  <img class="logo" src="./res/siyu-icon.png" alt="私语 Siyu" />
+  <h1>私语 Siyu</h1>
+  <p class="slogan">聊天，本该如此安全 —— 选择你的平台下载桌面客户端</p>
+  <div class="cards">
+    <div class="card">
+      <div class="os">🪟</div>
+      <h2>Windows</h2>
+      <p>Windows 10 / 11 64位<br/>v1.0.11-zh</p>
+      <a class="btn" href="https://github.com/zlj131419/cinny-desktop-zh/releases/download/v1.0.11-zh/Cinny_desktop-x86_64.msi">下载 MSI</a>
+      <div style="margin-top:10px"><a class="btn secondary" style="padding:8px 24px;font-size:13px" href="https://github.com/zlj131419/cinny-desktop-zh/releases/download/v1.0.11-zh/Cinny_4.12.12_x64-setup.exe">下载 EXE</a></div>
+    </div>
+    <div class="card">
+      <div class="os">🍎</div>
+      <h2>macOS</h2>
+      <p>Apple Silicon / Intel<br/>敬请期待</p>
+      <a class="btn secondary" href="https://github.com/zlj131419/cinny-desktop-zh/releases" target="_blank" rel="noreferrer">查看 releases</a>
+    </div>
+    <div class="card">
+      <div class="os">🐧</div>
+      <h2>Linux</h2>
+      <p>AppImage / deb<br/>敬请期待</p>
+      <a class="btn secondary" href="https://github.com/zlj131419/cinny-desktop-zh/releases" target="_blank" rel="noreferrer">查看 releases</a>
+    </div>
+  </div>
+  <div class="cards" style="margin-top:20px">
+    <div class="card">
+      <div class="os">📱</div>
+      <h2>手机 / 平板</h2>
+      <p>用浏览器打开本站<br/>添加到主屏幕即为 App</p>
+      <a class="btn secondary" href="../">打开网页版</a>
+    </div>
+    <div class="card">
+      <div class="os">🌐</div>
+      <h2>网页版</h2>
+      <p>免安装，打开即用<br/>支持 PWA 安装</p>
+      <a class="btn secondary" href="../">打开网页版</a>
+    </div>
+  </div>
+  <p class="note">
+    桌面客户端支持自动更新，新版本发布会自动提示升级。<br/>
+    所有版本均可在 <a href="https://github.com/zlj131419/cinny-desktop-zh/releases" target="_blank" rel="noreferrer">GitHub Releases</a> 查看完整列表。
+  </p>
+</body>
+</html>

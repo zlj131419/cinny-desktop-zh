@@ -1,6 +1,6 @@
 {
 	"auth": {
-		"cinny": "Cinny",
+		"cinny": "私语",
 		"homeserver": "主服务器",
 		"looking_for_homeserver": "正在查找主服务器...",
 		"failed_to_find_homeserver": "未能找到主服务器。",
@@ -78,8 +78,8 @@
 		}
 	},
 	"client": {
-		"welcome_to_cinny": "欢迎使用 Cinny",
-		"yet_another_matrix_client": "又一个 Matrix 客户端。",
+		"welcome_to_cinny": "欢迎使用私语",
+		"yet_another_matrix_client": "私语 Siyu，一款属于自己的聊天软件。聊天，本该如此安全。",
 		"source_code": "源代码",
 		"support": "支持",
 		"connecting_to_server": "正在连接到服务器",
@@ -248,7 +248,8 @@
 			"join_with_address": "使用地址加入",
 			"build_a_space_for_your_community": "为您的社区建立一个空间。",
 			"become_a_part_of_existing_community": "成为现有社区的一部分。",
-			"search": "搜索"
+			"search": "搜索",
+			"download_client": "下载客户端"
 		}
 	},
 	"heating_up": "正在预热",

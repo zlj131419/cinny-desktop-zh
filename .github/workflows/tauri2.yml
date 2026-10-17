@@ -52,3 +52,55 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             src-tauri/target/release/bundle/msi/Cinny_desktop-x86_64.msi
+
+  # Android (APK)
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Setup node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".node-version"
+          package-manager-cache: false
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+      - name: Setup Java
+        uses: actions/setup-java@1b269f145ac87b0db2454a3fcd8f7e8d90d0a0c8b3b4 # v5.1.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@9fc6bdae91185d414d4f7a9a0fbfb2d46b85c0a20 # v3.2.4
+      - name: Install NDK
+        run: sdkmanager "ndk;27.0.12077973"
+      - name: Install cinny dependencies
+        run: cd cinny && npm ci
+      - name: Install tauri dependencies
+        run: npm ci
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Init Android project (first run)
+        run: |
+          if [ ! -d "src-tauri/gen/android" ]; then
+            npx shx cp config.json cinny/ && tauri android init
+          fi
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+      - name: Build Android APK
+        run: |
+          npx shx cp config.json cinny/ && tauri android build --apk --target aarch64
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+          NODE_OPTIONS: "--max_old_space_size=4096"
+      - name: Upload APK to release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk

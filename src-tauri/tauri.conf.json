@@ -45,10 +45,10 @@
     "beforeDevCommand": "cd cinny && npm start",
     "devUrl": "http://localhost:8080"
   },
-  "productName": "Cinny",
+  "productName": "私语",
   "mainBinaryName": "cinny",
-  "version": "4.12.12",
-  "identifier": "in.cinny.app",
+  "version": "1.0.0",
+  "identifier": "net.xxqw.siyu",
   "plugins": {
     "updater": {
       "active": true,

@@ -64,7 +64,7 @@ const defaultSettings: Settings = {
   isPeopleDrawer: true,
   memberSortFilterIndex: 0,
   enterForNewline: false,
-  messageLayout: 0,
+  messageLayout: MessageLayout.Bubble,
   messageSpacing: '400',
   hideMembershipEvents: false,
   hideNickAvatarEvents: true,
@@ -86,9 +86,15 @@ const defaultSettings: Settings = {
 export const getSettings = () => {
   const settings = localStorage.getItem(STORAGE_KEY);
   if (settings === null) return defaultSettings;
+  const parsed = JSON.parse(settings) as Settings;
+  // 迁移：v22 之前默认是 Modern(0)，现在默认 Bubble(2)。
+  // 如果用户存的是旧默认值 0，视为未显式选择，升级为 Bubble。
+  if (parsed.messageLayout === MessageLayout.Modern) {
+    parsed.messageLayout = MessageLayout.Bubble;
+  }
   return {
     ...defaultSettings,
-    ...(JSON.parse(settings) as Settings),
+    ...parsed,
   };
 };
 

@@ -1,9 +1,9 @@
 {
-  "name": "Cinny",
-  "short_name": "Cinny",
-  "description": "Yet another matrix client",
+  "name": "私语 Siyu",
+  "short_name": "私语",
+  "description": "私语 Siyu，一款属于自己的聊天软件。聊天，本该如此安全。",
   "dir": "auto",
-  "lang": "en-US",
+  "lang": "zh-CN",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "./",

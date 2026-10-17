@@ -47,13 +47,13 @@ export type AdminJob = {
 
 const REQUEST_TIMEOUT_MS = 15000;
 
-async function request<T>(url: string, options?: { method?: string; body?: unknown }): Promise<T> {
+async function request<T>(url: string, options?: { method?: string; body?: unknown; headers?: Record<string, string> }): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
       method: options?.method ?? 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(options?.headers ?? {}) },
       body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
@@ -150,12 +150,38 @@ export function useAdminService() {
     [baseUrl]
   );
 
+  const isRoomCreator = useCallback(
+    async (roomId: string): Promise<boolean> => {
+      if (!baseUrl) throw new Error('admin_service_disabled');
+      const accessToken = mx.getAccessToken() ?? '';
+      const data = await request<{ is_creator: boolean }>(
+        `${baseUrl}/api/rooms/is_creator?room_id=${encodeURIComponent(roomId)}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      return !!data.is_creator;
+    },
+    [baseUrl, mx]
+  );
+
   const getUserStatus = useCallback(
     async (userId: string): Promise<UserStatusResponse> => {
       if (!baseUrl) throw new Error('admin_service_disabled');
       return request<UserStatusResponse>(
         `${baseUrl}/api/users/status?user_id=${encodeURIComponent(userId)}`
       );
+    },
+    [baseUrl]
+  );
+
+  const userExists = useCallback(
+    async (userId: string): Promise<boolean> => {
+      if (!baseUrl) throw new Error('admin_service_disabled');
+      const data = await request<{ exists: boolean }>(
+        `${baseUrl}/api/users/exists?user_id=${encodeURIComponent(userId)}`
+      );
+      return !!data.exists;
     },
     [baseUrl]
   );
@@ -175,6 +201,8 @@ export function useAdminService() {
       deleteUser,
       getJob,
       getUserStatus,
+      isRoomCreator,
+      userExists,
     }),
     [
       baseUrl,
@@ -190,6 +218,7 @@ export function useAdminService() {
       deleteUser,
       getJob,
       getUserStatus,
+      isRoomCreator,
     ]
   );
 }

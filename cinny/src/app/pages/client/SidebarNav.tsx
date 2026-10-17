@@ -17,6 +17,7 @@ import {
   SettingsTab,
   UnverifiedTab,
   SearchTab,
+  DownloadTab,
 } from './sidebar';
 import { CreateTab } from './sidebar/CreateTab';
 
@@ -45,6 +46,7 @@ export function SidebarNav() {
           <>
             <SidebarStackSeparator />
             <SidebarStack>
+              <DownloadTab />
               <SearchTab />
               <UnverifiedTab />
               <InboxTab />

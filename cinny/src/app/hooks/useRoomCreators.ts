@@ -10,18 +10,27 @@ export const getRoomCreators = (createEvent: MatrixEvent): Set<string> => {
 
   const creators: Set<string> = new Set();
 
-  if (!creatorsSupported(createContent.room_version)) return creators;
+  // v12+ 有明确的 creator 概念
+  if (creatorsSupported(createContent.room_version)) {
+    if (createEvent.event.sender) {
+      creators.add(createEvent.event.sender);
+    }
 
-  if (createEvent.event.sender) {
-    creators.add(createEvent.event.sender);
+    if ('additional_creators' in createContent && Array.isArray(createContent.additional_creators)) {
+      createContent.additional_creators.forEach((creator) => {
+        if (typeof creator === 'string') {
+          creators.add(creator);
+        }
+      });
+    }
+
+    return creators;
   }
 
-  if ('additional_creators' in createContent && Array.isArray(createContent.additional_creators)) {
-    createContent.additional_creators.forEach((creator) => {
-      if (typeof creator === 'string') {
-        creators.add(creator);
-      }
-    });
+  // v11 及以下：只用 create 事件的 sender 作为创建者，不掺 power_levels
+  // （服务端 _db_room_creator 只认真正的创建者，PL100 的管理员不算）
+  if (createEvent.event.sender) {
+    creators.add(createEvent.event.sender);
   }
 
   return creators;

@@ -40,6 +40,7 @@ import { useAsyncSearch, UseAsyncSearchOptions } from '../../hooks/useAsyncSearc
 import { highlightText, makeHighlightRegex } from '../../plugins/react-custom-html-parser';
 import { AsyncStatus, useAsyncCallback } from '../../hooks/useAsyncCallback';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
+import { useAdminService } from '../../features/admin/useAdminService';
 import { BreakWord } from '../../styles/Text.css';
 import { useAlive } from '../../hooks/useAlive';
 import { useTranslation } from 'react-i18next';
@@ -60,10 +61,12 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
   const mx = useMatrixClient();
   const alive = useAlive();
   const { t } = useTranslation();
+  const { userExists } = useAdminService();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const directUsers = useDirectUsers();
   const [validUserId, setValidUserId] = useState<string>();
+  const [nonLocalHint, setNonLocalHint] = useState(false);
 
   const filteredUsers = useMemo(
     () =>
@@ -85,9 +88,26 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
   const [inviteState, invite] = useAsyncCallback<void, Error, [string, string | undefined]>(
     useCallback(
       async (userId, reason) => {
+        // 先验证用户在本服存在，不存在则拒绝邀请
+        // 直接调服务端接口（走 admin API 查库）；失败时回退 getProfileInfo
+        let exists = false;
+        try {
+          exists = await userExists(userId);
+        } catch {
+          // 服务端不可用，回退到 getProfileInfo
+          try {
+            await mx.getProfileInfo(userId);
+            exists = true;
+          } catch {
+            exists = false;
+          }
+        }
+        if (!exists) {
+          throw new Error('该用户在本服务器不存在，无法邀请');
+        }
         await mx.invite(room.roomId, userId, reason);
       },
-      [mx, room]
+      [mx, room, t, userExists]
     )
   );
 
@@ -96,6 +116,7 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
   const handleReset = () => {
     if (inputRef.current) inputRef.current.value = '';
     setValidUserId(undefined);
+    setNonLocalHint(false);
     resetSearch();
   };
 
@@ -118,11 +139,20 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
 
   const handleSearchChange: ChangeEventHandler<HTMLInputElement> = (evt) => {
     const value = evt.currentTarget.value.trim();
+    const localServer = getMxIdServer(mx.getUserId() ?? '') ?? '';
     if (isUserId(value)) {
-      setValidUserId(value);
+      // 只允许邀请本服务器会员：完整 ID 的 server 部分必须等于本服
+      const targetServer = getMxIdServer(value);
+      if (targetServer && localServer && targetServer === localServer) {
+        setValidUserId(value);
+        setNonLocalHint(false);
+      } else {
+        setValidUserId(undefined);
+        setNonLocalHint(true);
+      }
     } else if (value && !value.includes(' ') && !value.includes(':')) {
+      setNonLocalHint(false);
       // 输入纯用户名（如 guanjia），自动补全为本服完整 ID（如 @guanjia:chat.xxqw.net）
-      const localServer = getMxIdServer(mx.getUserId() ?? '') ?? '';
       const localPart = value.startsWith('@') ? value.slice(1) : value;
       const fullId = `@${localPart}:${localServer}`;
       if (localServer && isUserId(fullId)) {
@@ -138,6 +168,7 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
       }
     } else {
       setValidUserId(undefined);
+      setNonLocalHint(false);
       const term = getMxIdLocalPart(value) ?? (value.startsWith('@') ? value.slice(1) : value);
       if (term) {
         search(term);
@@ -219,6 +250,11 @@ export function InviteUserPrompt({ room, requestClose }: InviteUserProps) {
                       autoComplete="off"
                       required
                     />
+                    {nonLocalHint && (
+                      <Text size="T200" style={{ color: color.Critical.Main }}>
+                        {t('components:invite-user-prompt.only_local_server')}
+                      </Text>
+                    )}
                     {result && result.items.length > 0 && (
                       <FocusTrap
                         focusTrapOptions={{

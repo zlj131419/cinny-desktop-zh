@@ -7,20 +7,15 @@ export function AuthFooter() {
   const { t } = useTranslation();
   return (
     <Box className={css.AuthFooter} justifyContent="Center" gap="400" wrap="Wrap">
-      <Text as="a" size="T300" href="https://cinny.in" target="_blank" rel="noreferrer">
-        {t('pages:auth.about')}
-      </Text>
+      <Text size="T300">私语 Siyu v1.0.0</Text>
       <Text
         as="a"
         size="T300"
-        href="https://github.com/ajbura/cinny/releases"
+        href="https://github.com/zlj131419/cinny-desktop-zh/releases/latest"
         target="_blank"
         rel="noreferrer"
       >
-        v4.12.7
-      </Text>
-      <Text as="a" size="T300" href="https://twitter.com/cinnyapp" target="_blank" rel="noreferrer">
-        {t('pages:auth.twitter')}
+        下载桌面客户端
       </Text>
       <Text as="a" size="T300" href="https://matrix.org" target="_blank" rel="noreferrer">
         {t('pages:auth.powered_by_matrix')}

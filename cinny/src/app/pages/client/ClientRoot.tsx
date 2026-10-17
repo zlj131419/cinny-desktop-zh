@@ -132,7 +132,14 @@ const useLogoutListener = (mx?: MatrixClient) => {
     const handleLogout: HttpApiEventHandlerMap[HttpApiEvent.SessionLoggedOut] = async () => {
       mx?.stopClient();
       await mx?.clearStores();
+      // 保留用户偏好设置（主题/语言/布局等），只清除会话相关数据
+      const keepKeys = ['settings', 'i18nextLng'];
+      const kept: Record<string, string | null> = {};
+      for (const k of keepKeys) kept[k] = window.localStorage.getItem(k);
       window.localStorage.clear();
+      for (const k of keepKeys) {
+        if (kept[k] !== null) window.localStorage.setItem(k, kept[k] as string);
+      }
       window.location.reload();
     };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, color, Spinner, Switch, Text } from 'folds';
 import { JoinRule, MatrixError } from 'matrix-js-sdk';
@@ -7,7 +7,7 @@ import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../../room-settings/styles.css';
 import { SettingTile } from '../../../components/setting-tile';
 import { useRoom } from '../../../hooks/useRoom';
-import { useRoomCreators } from '../../../hooks/useRoomCreators';
+import { useIsRoomCreator } from '../../../hooks/useIsRoomCreator';
 import { useRoomDirectoryVisibility } from '../../../hooks/useRoomDirectoryVisibility';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { StateEvent } from '../../../../types/matrix/room';
@@ -29,8 +29,8 @@ export function RoomPublish({ permissions }: RoomPublishProps) {
     mx.getSafeUserId()
   );
   // 只有创建者可以操作公开到目录的开关，其余人灰色禁用
-  const creators = useRoomCreators(room);
-  const isCreator = creators.has(mx.getSafeUserId());
+  // 用服务端判断（有数据库兜底），比客户端可靠
+  const { isCreator, loading: creatorLoading } = useIsRoomCreator(room);
   const joinRuleEvent = useStateEvent(room, StateEvent.RoomJoinRules);
   const content = joinRuleEvent?.getContent<RoomJoinRulesEventContent>();
   const rule: ExtendedJoinRules = (content?.join_rule as ExtendedJoinRules) ?? JoinRule.Invite;
@@ -38,6 +38,14 @@ export function RoomPublish({ permissions }: RoomPublishProps) {
   const { visibilityState, setVisibility } = useRoomDirectoryVisibility(room.roomId);
 
   const [toggleState, toggleVisibility] = useAsyncCallback(setVisibility);
+  // 403 无权限后直接禁用开关，避免反复点报错
+  const [permDenied, setPermDenied] = useState(false);
+
+  const handleToggle = useCallback(() => {
+    toggleVisibility(!visibilityState.data).catch((e) => {
+      if ((e as MatrixError)?.httpStatus === 403) setPermDenied(true);
+    });
+  }, [toggleVisibility, visibilityState.data]);
 
   const loading =
     visibilityState.status === AsyncStatus.Loading || toggleState.status === AsyncStatus.Loading;
@@ -64,8 +72,8 @@ export function RoomPublish({ permissions }: RoomPublishProps) {
             {!loading && visibilityState.status === AsyncStatus.Success && (
               <Switch
                 value={visibilityState.data}
-                onChange={toggleVisibility}
-                disabled={!isCreator || !canEditCanonical || !validRule}
+                onChange={handleToggle}
+                disabled={!isCreator || !canEditCanonical || !validRule || permDenied || creatorLoading}
               />
             )}
           </Box>

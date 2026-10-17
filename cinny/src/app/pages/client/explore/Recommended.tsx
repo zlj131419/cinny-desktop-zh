@@ -35,6 +35,7 @@ function FeaturedEntryCards({
   // 直接用服务端补齐的名字/简介/头像/人数，同步渲染，不再异步调 summary 接口，
   // 避免首次打开时先闪一下房间 ID。
   // 已加入的房间 RoomCard 内部会用本地实时名字覆盖。
+  // 服务端没给名字时不拿 room_id 充数，RoomCard 会用本地房间名或隐藏。
   return (
     <RoomCardGrid>
       {entries.map((entry) => (
@@ -43,7 +44,7 @@ function FeaturedEntryCards({
           roomIdOrAlias={entry.room_id}
           allRooms={allRooms}
           avatarUrl={entry.avatar_url}
-          name={entry.name ?? entry.room_id}
+          name={entry.name}
           topic={entry.topic}
           memberCount={entry.member_count}
           onView={onView}

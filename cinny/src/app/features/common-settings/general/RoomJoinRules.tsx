@@ -54,7 +54,7 @@ export function RoomJoinRules({ permissions }: RoomJoinRulesProps) {
   const subspacesScope = useRecursiveChildSpaceScopeFactory(mx, roomIdToParents);
   const subspaces = useSpaceChildren(allRoomsAtom, space?.roomId ?? '', subspacesScope);
 
-  const canEdit = permissions.stateEvent(StateEvent.RoomHistoryVisibility, mx.getSafeUserId());
+  const canEdit = permissions.stateEvent(StateEvent.RoomJoinRules, mx.getSafeUserId());
 
   const joinRuleEvent = useStateEvent(room, StateEvent.RoomJoinRules);
   const content = joinRuleEvent?.getContent<RoomJoinRulesEventContent>();

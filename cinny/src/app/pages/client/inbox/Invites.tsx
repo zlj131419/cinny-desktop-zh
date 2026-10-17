@@ -179,6 +179,13 @@ function InviteCard({
       if (dmUserId) {
         await addRoomIdToMDirect(mx, invite.roomId, dmUserId);
       }
+      // 等房间同步到本地再跳转，避免竞态进 JoinBeforeNavigate 错误页
+      // 最多等 10 秒，每 200ms 查一次
+      for (let i = 0; i < 50; i += 1) {
+        if (mx.getRoom(invite.roomId)) break;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => { setTimeout(r, 200); });
+      }
       onNavigate(invite.roomId, invite.isSpace);
     }, [mx, invite, userId, onNavigate])
   );

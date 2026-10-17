@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Button, Icon, Icons, Text, config, toRem } from 'folds';
 import { useTranslation } from 'react-i18next';
 import { Page, PageHero, PageHeroSection } from '../../components/page';
-import CinnySVG from '../../../../public/res/svg/cinny.svg';
+import SiyuIcon from '../../../../public/res/siyu-icon.png';
 
 export function WelcomePage() {
   const { t } = useTranslation();
@@ -17,47 +17,27 @@ export function WelcomePage() {
       >
         <PageHeroSection>
           <PageHero
-            icon={<img width="70" height="70" src={CinnySVG} alt="Cinny Logo" />}
+            icon={<img width="70" height="70" src={SiyuIcon} alt="私语 Siyu" />}
             title={t('pages:client.welcome_to_cinny')}
             subTitle={
               <span>
                 {t('pages:client.yet_another_matrix_client')}{' '}
-                <a
-                  href="https://github.com/cinnyapp/cinny/releases"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  v4.12.7
-                </a>
+                <span>v1.0.0</span>
               </span>
             }
           >
-            <Box justifyContent="Center">
-              <Box grow="Yes" style={{ maxWidth: toRem(300) }} direction="Column" gap="300">
-                <Button
-                  as="a"
-                  href="https://github.com/cinnyapp/cinny"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  before={<Icon size="200" src={Icons.Code} />}
-                >
-                  <Text as="span" size="B400" truncate>
-                    {t('pages:client.source_code')}
-                  </Text>
-                </Button>
-                <Button
-                  as="a"
-                  href="https://cinny.in/#sponsor"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  fill="Soft"
-                  before={<Icon size="200" src={Icons.Heart} />}
-                >
-                  <Text as="span" size="B400" truncate>
-                    {t('pages:client.support')}
-                  </Text>
-                </Button>
-              </Box>
+            <Box justifyContent="Center" style={{ marginTop: config.space.S400 }}>
+              <Button
+                as="a"
+                href="https://github.com/zlj131419/cinny-desktop-zh/releases/latest"
+                target="_blank"
+                rel="noreferrer noopener"
+                before={<Icon size="200" src={Icons.Download} />}
+              >
+                <Text as="span" size="B400" truncate>
+                  下载桌面客户端
+                </Text>
+              </Button>
             </Box>
           </PageHero>
         </PageHeroSection>

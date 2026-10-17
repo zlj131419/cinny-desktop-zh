@@ -50,7 +50,11 @@ export function UserRoomProfile({ userId }: UserRoomProfileProps) {
   const canKickUser = permissions.action('kick', myUserId) && hasMorePower(myUserId, userId);
   const canBanUser = permissions.action('ban', myUserId) && hasMorePower(myUserId, userId);
   const canUnban = permissions.action('ban', myUserId);
-  const canInvite = permissions.action('invite', myUserId);
+  // 只允许邀请本服务器会员
+  const localServer = getMxIdServer(myUserId);
+  const targetServer = getMxIdServer(userId);
+  const isLocalUser = !!localServer && !!targetServer && localServer === targetServer;
+  const canInvite = permissions.action('invite', myUserId) && isLocalUser;
 
   const member = room.getMember(userId);
   const membership = useMembership(room, userId);

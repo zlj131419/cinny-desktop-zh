@@ -1,6 +1,6 @@
 {
 	"auth": {
-		"cinny": "Cinny",
+		"cinny": "Siyu",
 		"homeserver": "Homeserver",
 		"looking_for_homeserver": "Suche nach Homeserver...",
 		"failed_to_find_homeserver": "Homeserver konnte nicht gefunden werden.",
@@ -78,8 +78,8 @@
 		}
 	},
 	"client": {
-		"welcome_to_cinny": "Willkommen bei Cinny",
-		"yet_another_matrix_client": "Noch ein Matrix-Client.",
+		"welcome_to_cinny": "Willkommen bei Siyu",
+		"yet_another_matrix_client": "Siyu, deine eigene Chat-App.",
 		"source_code": "Quellcode",
 		"support": "Support",
 		"connecting_to_server": "Verbinde mit Server",
@@ -247,7 +247,8 @@
 			"join_with_address": "Mit Adresse beitreten",
 			"build_a_space_for_your_community": "Erstellen Sie einen Raum für Ihre Community.",
 			"become_a_part_of_existing_community": "Werden Sie Teil einer bestehenden Community.",
-			"search": "Suchen"
+			"search": "Suchen",
+			"download_client": "Client herunterladen"
 		}
 	},
 	"heating_up": "Wird aufgewärmt",

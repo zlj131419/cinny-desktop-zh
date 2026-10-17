@@ -7,7 +7,7 @@ import { SequenceCardStyle } from '../../room-settings/styles.css';
 import { SettingTile } from '../../../components/setting-tile';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { useRoom } from '../../../hooks/useRoom';
-import { useRoomCreators } from '../../../hooks/useRoomCreators';
+import { useIsRoomCreator } from '../../../hooks/useIsRoomCreator';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useAdminService } from '../../admin/useAdminService';
 
@@ -15,12 +15,10 @@ export function RoomRecommend() {
   const { t } = useTranslation();
   const mx = useMatrixClient();
   const room = useRoom();
-  const creators = useRoomCreators(room);
+  // 用服务端判断创建者（有数据库兜底），比客户端可靠
+  const { isCreator, loading: creatorLoading } = useIsRoomCreator(room);
   const { enabled, fetchFeatured, recommend, unrecommend } = useAdminService();
 
-  const me = mx.getSafeUserId();
-  // 只有创建者可以操作开关，其余人看到灰色禁用状态
-  const isCreator = creators.has(me);
   // 只有公开房间才允许推荐到探索页
   const isPublicRoom = room.getJoinRule() === JoinRule.Public;
 
@@ -49,9 +47,11 @@ export function RoomRecommend() {
   const isRecommended = entries.some((e) => e.room_id === room.roomId) && !isBlocked;
 
   const loading =
-    featuredState.status === AsyncStatus.Loading || toggleState.status === AsyncStatus.Loading;
+    featuredState.status === AsyncStatus.Loading ||
+    toggleState.status === AsyncStatus.Loading ||
+    creatorLoading;
 
-  const canToggle = isCreator && isPublicRoom && !isBlocked;
+  const canToggle = isCreator && isPublicRoom && !isBlocked && !creatorLoading;
 
   const handleChange = () => {
     if (loading || !canToggle) return;

@@ -20,6 +20,15 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'de-DE', name: 'German', nativeName: 'Deutsch' }
 ] as const;
 
+// 硬默认中文：只认 localStorage 里用户显式存过的，否则一律 zh-CN
+const getInitialLng = (): string => {
+  try {
+    const saved = localStorage.getItem('i18nextLng');
+    if (saved && SUPPORTED_LANGUAGES.some((l) => l.code === saved)) return saved;
+  } catch { /* ignore */ }
+  return 'zh-CN';
+};
+
 i18n
   // i18next-http-backend
   // loads translations from your server
@@ -34,6 +43,7 @@ i18n
   // for all options read: https://www.i18next.com/overview/configuration-options
   .init<HttpBackendOptions>({
     debug: false,
+    lng: getInitialLng(),
     fallbackLng: 'zh-CN',
     supportedLngs: SUPPORTED_LANGUAGES.map(lang => lang.code),
     ns: NAMESPACES,
@@ -44,7 +54,8 @@ i18n
       loadPath: `${trimTrailingSlash(import.meta.env.BASE_URL)}/public/locales/{{lng}}/{{ns}}.json`,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // 只用用户显式选择（localStorage），默认中文简体，不跟随浏览器语言
+      order: ['localStorage'],
       caches: ['localStorage'],
     },
   });
