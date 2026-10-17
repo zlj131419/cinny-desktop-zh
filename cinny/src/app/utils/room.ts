@@ -236,10 +236,13 @@ export const roomHaveUnread = (mx: MatrixClient, room: Room) => {
 export const getUnreadInfo = (room: Room): UnreadInfo => {
   const total = room.getUnreadNotificationCount(NotificationCountType.Total);
   const highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
+  // matrix-js-sdk 未同步完成时返回 -1，按 0 处理，避免界面显示 -1
+  const safeTotal = total < 0 ? 0 : total;
+  const safeHighlight = highlight < 0 ? 0 : highlight;
   return {
     roomId: room.roomId,
-    highlight,
-    total: highlight > total ? highlight : total,
+    highlight: safeHighlight,
+    total: safeHighlight > safeTotal ? safeHighlight : safeTotal,
   };
 };
 

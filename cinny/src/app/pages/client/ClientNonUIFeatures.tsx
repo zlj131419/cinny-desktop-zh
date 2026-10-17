@@ -3,7 +3,7 @@ import React, { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomEvent, RoomEventHandlerMap } from 'matrix-js-sdk';
 import { useTranslation } from 'react-i18next';
-import { roomToUnreadAtom, unreadEqual, unreadInfoToUnread } from '../../state/room/roomToUnread';
+import { roomToUnreadAtom } from '../../state/room/roomToUnread';
 import LogoSVG from '../../../../public/res/svg/cinny.svg';
 import LogoUnreadSVG from '../../../../public/res/svg/cinny-unread.svg';
 import LogoHighlightSVG from '../../../../public/res/svg/cinny-highlight.svg';
@@ -19,10 +19,9 @@ import { getInboxInvitesPath, getInboxNotificationsPath } from '../pathUtils';
 import {
   getMemberDisplayName,
   getNotificationType,
-  getUnreadInfo,
   isNotificationEvent,
 } from '../../utils/room';
-import { NotificationType, UnreadInfo } from '../../../types/matrix/room';
+import { NotificationType } from '../../../types/matrix/room';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
 // 解锁浏览器音频自动播放：首次用户交互时静音触发一次播放
 let audioUnlocked = false;
@@ -162,7 +161,7 @@ function MessageNotifications() {
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const notifRef = useRef<Notification>();
-  const unreadCacheRef = useRef<Map<string, UnreadInfo>>(new Map());
+  const unreadCacheRef = useRef<Map<string, string>>(new Map());
   const mx = useMatrixClient();
   const useAuthentication = useMediaAuthentication();
   const [showNotifications] = useSetting(settingsAtom, 'showNotifications');
@@ -237,17 +236,11 @@ function MessageNotifications() {
       const sender = mEvent.getSender();
       const eventId = mEvent.getId();
       if (!sender || !eventId || mEvent.getSender() === mx.getUserId()) return;
-      const unreadInfo = getUnreadInfo(room);
-      const cachedUnreadInfo = unreadCacheRef.current.get(room.roomId);
-      unreadCacheRef.current.set(room.roomId, unreadInfo);
-
-      if (unreadInfo.total === 0) return;
-      if (
-        cachedUnreadInfo &&
-        unreadEqual(unreadInfoToUnread(cachedUnreadInfo), unreadInfoToUnread(unreadInfo))
-      ) {
-        return;
-      }
+      // 用事件去重代替未读计数判断：
+      // 未读计数有同步延迟，第一条消息时 total 可能还是 0，导致漏通知
+      const eventId_cached = unreadCacheRef.current.get(room.roomId + ':lastEvent');
+      if (eventId_cached === eventId) return;
+      unreadCacheRef.current.set(room.roomId + ':lastEvent', eventId);
 
       if (showNotifications && notificationPermission('granted')) {
         const avatarMxc =

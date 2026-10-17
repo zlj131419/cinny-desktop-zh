@@ -1,4 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { MouseEventHandler, useCallback, useState } from 'react';
+import { Icon, Icons, Menu, MenuItem, PopOut, Scroll, config } from 'folds';
+import { FocusTrap } from 'focus-trap-react';
+import { stopPropagation } from '../../../utils/keyboard';
+import { RectCords } from '../../../hooks/useRectCords';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
 import { IPusherRequest } from 'matrix-js-sdk';
@@ -12,6 +16,77 @@ import { useEmailNotifications } from '../../../hooks/useEmailNotifications';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { NOTIFICATION_SOUNDS, getNotificationSoundSrc } from './notificationSounds';
+
+function SoundSelector() {
+  const [notificationSoundId, setNotificationSoundId] = useSetting(
+    settingsAtom,
+    'notificationSoundId'
+  );
+  const [menuCords, setMenuCords] = useState<RectCords>();
+
+  const current = NOTIFICATION_SOUNDS.find((s) => s.id === notificationSoundId) ?? NOTIFICATION_SOUNDS[0];
+
+  const handleToggle: MouseEventHandler<HTMLButtonElement> = (evt) => {
+    if (menuCords) setMenuCords(undefined);
+    else setMenuCords(evt.currentTarget.getBoundingClientRect());
+  };
+
+  const handleSelect = (id: string) => {
+    setMenuCords(undefined);
+    setNotificationSoundId(id);
+    const el = new Audio(getNotificationSoundSrc(id));
+    el.play().catch(() => {});
+  };
+
+  return (
+    <>
+      <Button
+        size="300"
+        variant="Primary"
+        outlined
+        fill="Soft"
+        radii="300"
+        onClick={handleToggle}
+        after={<Icon size="300" src={Icons.ChevronBottom} />}
+      >
+        <Text size="T300">{current.name}</Text>
+      </Button>
+      <PopOut
+        anchor={menuCords}
+        offset={5}
+        position="Bottom"
+        align="End"
+        content={
+          <FocusTrap
+            focusTrapOptions={{
+              initialFocus: false,
+              onDeactivate: () => setMenuCords(undefined),
+              clickOutsideDeactivates: true,
+            }}
+          >
+            <Menu>
+              <Scroll style={{ maxHeight: '300px' }} variant="Surface" size="300" visibility="Hover" hideTrack>
+                <Box direction="Column" gap="100" style={{ padding: config.space.S100 }}>
+                  {NOTIFICATION_SOUNDS.map((s) => (
+                    <MenuItem
+                      key={s.id}
+                      size="300"
+                      variant={s.id === current.id ? 'Primary' : 'Surface'}
+                      radii="300"
+                      onClick={() => handleSelect(s.id)}
+                    >
+                      <Text size="T300" style={{ whiteSpace: 'nowrap' }}>{s.name}</Text>
+                    </MenuItem>
+                  ))}
+                </Box>
+              </Scroll>
+            </Menu>
+          </FocusTrap>
+        }
+      />
+    </>
+  );
+}
 
 function EmailNotification() {
   const { t } = useTranslation();
@@ -95,15 +170,7 @@ export function SystemNotification() {
     settingsAtom,
     'isNotificationSounds'
   );
-  const [notificationSoundId, setNotificationSoundId] = useSetting(
-    settingsAtom,
-    'notificationSoundId'
-  );
 
-  const previewSound = (src: string) => {
-    const el = new Audio(src);
-    el.play().catch(() => {});
-  };
 
   const requestNotificationPermission = () => {
     window.Notification.requestPermission();
@@ -161,29 +228,7 @@ export function SystemNotification() {
           <SettingTile
             title="提示音"
             description="选择新消息的提示声音"
-            after={
-              <select
-                value={notificationSoundId}
-                onChange={(e) => {
-                  setNotificationSoundId(e.target.value);
-                  previewSound(getNotificationSoundSrc(e.target.value));
-                }}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--bg-surface-border)',
-                  background: 'var(--bg-surface)',
-                  color: 'var(--tc-surface-high)',
-                  fontSize: '14px',
-                }}
-              >
-                {NOTIFICATION_SOUNDS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            }
+            after={<SoundSelector />}
           />
         )}
       </SequenceCard>
