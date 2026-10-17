@@ -77,10 +77,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install NDK
+      - name: Setup NDK
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "ndk;27.0.12077973"
+          ls $ANDROID_HOME/ndk/
+          NDK_VER=$(ls $ANDROID_HOME/ndk/ | sort -V | tail -1)
+          echo "NDK_VER=$NDK_VER" >> $GITHUB_ENV
+          echo "Using NDK $NDK_VER"
       - name: Install cinny dependencies
         run: cd cinny && npm ci
       - name: Install tauri dependencies
@@ -94,7 +96,7 @@ jobs:
           fi
           cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
         env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
       - name: Inject Firebase into Android Gradle files
         run: |
           项目级 build.gradle：加 google-services 插件
@@ -116,7 +118,7 @@ jobs:
         run: |
           npx shx cp config.json cinny/ && tauri android build --apk --target aarch64
         env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
           NODE_OPTIONS: "--max_old_space_size=4096"
       - name: Upload APK to release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
