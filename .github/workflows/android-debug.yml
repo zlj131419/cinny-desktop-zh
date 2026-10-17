@@ -13,3 +13,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Echo test
         run: echo "hello android"
+      - name: Setup Java
+        uses: actions/setup-java@1b269f145ac87b0db2454a3fcd8f7e8d90d0a0c8b3b4 # v5.1.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
