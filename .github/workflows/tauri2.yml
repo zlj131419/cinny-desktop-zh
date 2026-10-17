@@ -51,7 +51,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            src-tauri/target/release/bundle/msi/Cinny_desktop-x86_64.msi
+            src-tauri/target/release/bundle/msi/Siyu_desktop-x86_64.msi
 
   # Android (APK)
   android:
@@ -75,8 +75,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@9fc6bdae91185d414d4f7a9a0fbfb2d46b85c0a20 # v3.2.4
       - name: Install NDK
         run: sdkmanager "ndk;27.0.12077973"
       - name: Install cinny dependencies
@@ -90,6 +88,7 @@ jobs:
           if [ ! -d "src-tauri/gen/android" ]; then
             npx shx cp config.json cinny/ && tauri android init
           fi
+          cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
       - name: Build Android APK

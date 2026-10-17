@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "606120056659",
+    "project_id": "siyuol",
+    "storage_bucket": "siyuol.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:606120056659:android:082f7c587fa0ffcd96f3a6",
+        "android_client_info": {
+          "package_name": "net.xxqw.siyu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDb_ArpLr_1lbOEGP6AKlD7BJ-YbKEdoxk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
