@@ -91,21 +91,18 @@ jobs:
         run: cargo install tauri-cli --version "^2" --locked
       - name: Init Android project (first run)
         run: |
+          set -x
           echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "NDK_HOME=$NDK_HOME"
-          echo "JAVA_HOME=$JAVA_HOME"
-          which tauri
-          tauri --version
-          ls $ANDROID_HOME/ndk/ || echo "no ndk dir"
-          ls $ANDROID_HOME/cmdline-tools/ 2>/dev/null || echo "no cmdline-tools"
-          if [ ! -d "src-tauri/gen/android" ]; then
-            npx shx cp config.json cinny/
-            echo "=== running tauri android init ==="
-            tauri android init 2>&1 || echo "EXIT CODE: $?"
-            echo "=== gen dir ==="
-            ls -la src-tauri/gen/ 2>&1 || echo "no gen dir"
-          fi
+          which tauri && tauri --version
+          ls "$ANDROID_HOME/ndk/" || echo "no ndk dir"
+          npx shx cp config.json cinny/
+          echo "config.json copied"
+          ls -la src-tauri/gen/ 2>&1 || echo "no gen dir yet"
+          tauri android init
+          echo "init exit: $?"
+          ls -la src-tauri/gen/android/ 2>&1 | head -5
           cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
+          echo "google-services copied"
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
       - name: Inject Firebase into Android Gradle files
