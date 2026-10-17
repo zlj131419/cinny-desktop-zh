@@ -29,7 +29,7 @@ export function WelcomePage() {
             <Box justifyContent="Center" style={{ marginTop: config.space.S400 }}>
               <Button
                 as="a"
-                href="https://github.com/zlj131419/cinny-desktop-zh/releases/latest"
+                href="/public/download.html"
                 target="_blank"
                 rel="noreferrer noopener"
                 before={<Icon size="200" src={Icons.Download} />}

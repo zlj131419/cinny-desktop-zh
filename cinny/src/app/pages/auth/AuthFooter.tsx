@@ -11,7 +11,7 @@ export function AuthFooter() {
       <Text
         as="a"
         size="T300"
-        href="https://github.com/zlj131419/cinny-desktop-zh/releases/latest"
+        href="/public/download.html"
         target="_blank"
         rel="noreferrer"
       >

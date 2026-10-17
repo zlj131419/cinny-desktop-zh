@@ -7,7 +7,7 @@ export function DownloadTab() {
   const { t } = useTranslation();
 
   const open = () => {
-    window.open('./public/download.html', '_blank', 'noopener');
+    window.open('/public/download.html', '_blank', 'noopener');
   };
 
   return (
