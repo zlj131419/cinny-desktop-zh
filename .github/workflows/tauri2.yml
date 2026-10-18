@@ -22,6 +22,15 @@ jobs:
           package-manager-cache: false
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable # They use branch based releases
+      - name: Sync version from git tag
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          $conf = "src-tauri\tauri.conf.json"
+          $json = (Get-Content $conf -Raw) | ConvertFrom-Json
+          $json.version = $tag
+          $json | ConvertTo-Json -Depth 10 | Set-Content $conf -Encoding UTF8
+          echo "Synced tauri.conf.json version to: ${tag}"
+        shell: pwsh
       - name: Install cinny dependencies
         run: cd cinny && npm ci
       - name: Install tauri dependencies
