@@ -31,7 +31,7 @@ export function WelcomePage() {
             <Box justifyContent="Center" style={{ marginTop: config.space.S400 }}>
               <Button
                 as="a"
-                href="/public/download.html"
+                href="https://chat.xxqw.net/public/download.html"
                 target="_blank"
                 rel="noreferrer noopener"
                 before={<Icon size="200" src={Icons.Download} />}
