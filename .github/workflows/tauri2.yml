@@ -113,6 +113,15 @@ jobs:
             echo "config.json copied"
             npx tauri android init
             echo "init exit: $?"
+            # Fix Kotlin version: Tauri template uses old Kotlin, bump to 2.1.0
+            for f in src-tauri/gen/android/build.gradle.kts src-tauri/gen/android/app/build.gradle.kts; do
+              if [ -f "$f" ]; then
+                echo "Patching $f"
+                # Replace kotlin version 1.9.x with 2.1.0
+                sed -i -E 's/(kotlin[^"]*"[^"]*version[^"]*")[0-9]+\.[0-9]+\.[0-9]+/\12.1.0/g' "$f" || true
+                sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[0-9.]+"/id("org.jetbrains.kotlin.android") version "2.1.0"/g' "$f" || true
+              fi
+            done
             ls -la src-tauri/gen/android/ 2>&1 | head -10
           } 2>&1 | tee /tmp/android-init.log
           tail -50 /tmp/android-init.log
