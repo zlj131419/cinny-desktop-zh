@@ -19,6 +19,7 @@ use tauri_plugin_updater::UpdaterExt;
 #[cfg(all(feature = "updater", desktop))]
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     
     for key in ["NO_PROXY", "no_proxy"] {

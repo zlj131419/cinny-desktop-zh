@@ -8,9 +8,6 @@ import { SiyuSlogan } from '../../components/SiyuSlogan';
 
 export function WelcomePage() {
   const { t } = useTranslation();
-  // 桌面端（Tauri）用绝对地址，避免相对路径被解析成 localhost
-  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
-  const downloadUrl = isTauri ? 'https://chat.xxqw.net/public/download.html' : '/public/download.html';
 
   return (
     <Page>
@@ -34,7 +31,7 @@ export function WelcomePage() {
             <Box justifyContent="Center" style={{ marginTop: config.space.S400 }}>
               <Button
                 as="a"
-                href={downloadUrl}
+                href="/public/download.html"
                 target="_blank"
                 rel="noreferrer noopener"
                 before={<Icon size="200" src={Icons.Download} />}

@@ -98,6 +98,8 @@ jobs:
         run: cd cinny && npm ci
       - name: Install tauri dependencies
         run: npm ci
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@^2
       - name: Init Android project (first run)
         run: |
           set -x
@@ -105,13 +107,13 @@ jobs:
             echo "ANDROID_HOME=$ANDROID_HOME"
             echo "NDK_HOME=$NDK_HOME"
             echo "JAVA_HOME=$JAVA_HOME"
-            npx tauri --version
+            which tauri && tauri --version
             ls "$ANDROID_HOME/ndk/" || echo "no ndk dir"
             ls "$ANDROID_HOME/build-tools/" 2>/dev/null || echo "no build-tools"
             ls "$ANDROID_HOME/platforms/" 2>/dev/null || echo "no platforms"
             npx shx cp config.json cinny/
             echo "config.json copied"
-            npx tauri android init
+            tauri android init
             echo "init exit: $?"
             ls -la src-tauri/gen/android/ 2>&1 | head -10
           } 2>&1 | tee /tmp/android-init.log
@@ -211,7 +213,7 @@ jobs:
           grep -A8 "^plugins {" src-tauri/gen/android/app/build.gradle.kts | head -10
       - name: Build Android APK
         run: |
-          npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
+          npx shx cp config.json cinny/ && tauri android build --apk --target aarch64
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
       - name: Upload APK to release
