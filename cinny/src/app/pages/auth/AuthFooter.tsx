@@ -6,13 +6,16 @@ import { SIYU_VERSION } from '../../../version';
 
 export function AuthFooter() {
   const { t } = useTranslation();
+  // 桌面端（Tauri）用绝对地址，避免相对路径被解析成 localhost
+  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+  const downloadUrl = isTauri ? 'https://chat.xxqw.net/public/download.html' : '/public/download.html';
   return (
     <Box className={css.AuthFooter} justifyContent="Center" gap="400" wrap="Wrap">
       <Text size="T300">私语 Siyu v{SIYU_VERSION}</Text>
       <Text
         as="a"
         size="T300"
-        href="/public/download.html"
+        href={downloadUrl}
         target="_blank"
         rel="noreferrer"
       >
