@@ -6,16 +6,17 @@
 // mod menu;
 
 use tauri::{webview::{NewWindowResponse, WebviewWindowBuilder}, WebviewUrl, TitleBarStyle};
+#[cfg(desktop)]
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, WindowEvent,
 };
+use tauri::{Manager, WindowEvent};
 use tauri_plugin_opener::OpenerExt;
 
-#[cfg(feature = "updater")]
+#[cfg(all(feature = "updater", desktop))]
 use tauri_plugin_updater::UpdaterExt;
-#[cfg(feature = "updater")]
+#[cfg(all(feature = "updater", desktop))]
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 pub fn run() {
@@ -34,37 +35,44 @@ pub fn run() {
 
     let port: u16 = 44548;
     let context = tauri::generate_context!();
-    #[cfg(feature = "updater")]
     let mut builder = tauri::Builder::default();
-    #[cfg(not(feature = "updater"))]
-    let builder = tauri::Builder::default();
 
     // #[cfg(target_os = "macos")]
     // {
     //     builder = builder.menu(menu::menu());
     // }
 
-    #[cfg(feature = "updater")]
+    #[cfg(all(feature = "updater", desktop))]
     {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     }
 
-    builder
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // 已有实例在运行：恢复主窗口，而不是开新窗口
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.set_focus();
                 let _ = window.unminimize();
             }
-        }))
+        }));
+    }
+
+    builder = builder
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_localhost::Builder::new(port).build())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_localhost::Builder::new(port).build());
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+    }
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .setup(move |app| {
-            #[cfg(feature = "updater")]
+            #[cfg(all(feature = "updater", desktop))]
             {
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
@@ -134,8 +142,10 @@ pub fn run() {
                 });
             }
 
-            // 系统托盘：左键单击恢复窗口，右键菜单显示/退出
-            let app_handle = app.handle();
+            // 系统托盘：左键单击恢复窗口，右键菜单显示/退出（仅桌面端）
+            #[cfg(desktop)]
+            {
+                let app_handle = app.handle();
             if let Some(icon) = app_handle.default_window_icon().cloned() {
                 let show_item = MenuItem::with_id(app_handle, "tray-show", "显示窗口", true, None::<&str>)?;
                 let quit_item = MenuItem::with_id(app_handle, "tray-quit", "退出", true, None::<&str>)?;
@@ -170,6 +180,7 @@ pub fn run() {
                         }
                     })
                     .build(app_handle)?;
+                }
             }
             Ok(())
         })
