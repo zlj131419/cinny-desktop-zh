@@ -1,6 +1,7 @@
 import React, { MouseEventHandler, useCallback, useState } from 'react';
 import { Icon, Icons, Menu, MenuItem, PopOut, RectCords, Scroll, config } from 'folds';
-import { FocusTrap } from 'focus-trap-react';
+import FocusTrap from 'focus-trap-react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
 import { IPusherRequest } from 'matrix-js-sdk';
@@ -226,7 +227,17 @@ export function SystemNotification() {
           <SettingTile
             title="提示音"
             description="选择新消息的提示声音"
-            after={<SoundSelector />}
+            after={
+              <ErrorBoundary
+                fallbackRender={({ error }) => (
+                  <Text size="B300" style={{ color: 'red' }}>
+                    铃声选择器加载失败: {error?.message}
+                  </Text>
+                )}
+              >
+                <SoundSelector />
+              </ErrorBoundary>
+            }
           />
         )}
       </SequenceCard>
