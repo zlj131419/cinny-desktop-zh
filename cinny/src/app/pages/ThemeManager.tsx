@@ -16,13 +16,24 @@ import { settingsAtom } from '../state/settings';
  * 使标题栏跟随应用内主题变色
  */
 const syncTauriWindowTheme = (kind: ThemeKind) => {
-  try {
-    const tauri = (window as any).__TAURI__;
-    const win = tauri?.window?.getCurrentWindow?.();
-    win?.setTheme?.(kind === ThemeKind.Dark ? 'dark' : 'light');
-  } catch {
-    // 非桌面端忽略
-  }
+  const theme = kind === ThemeKind.Dark ? 'dark' : 'light';
+  const trySet = (attempts: number) => {
+    try {
+      const tauri = (window as any).__TAURI__;
+      const win = tauri?.window?.getCurrentWindow?.();
+      if (win?.setTheme) {
+        win.setTheme(theme)?.catch?.(() => {});
+        return;
+      }
+    } catch {
+      // 忽略
+    }
+    // __TAURI__ 可能延迟注入，最多重试 10 次
+    if (attempts < 10) {
+      setTimeout(() => trySet(attempts + 1), 500);
+    }
+  };
+  trySet(0);
 };
 
 export function UnAuthRouteThemeManager() {

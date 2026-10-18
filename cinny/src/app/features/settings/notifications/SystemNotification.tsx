@@ -1,8 +1,6 @@
 import React, { MouseEventHandler, useCallback, useState } from 'react';
-import { Icon, Icons, Menu, MenuItem, PopOut, Scroll, config } from 'folds';
+import { Icon, Icons, Menu, MenuItem, PopOut, RectCords, Scroll, config } from 'folds';
 import { FocusTrap } from 'focus-trap-react';
-import { stopPropagation } from '../../../utils/keyboard';
-import { RectCords } from '../../../hooks/useRectCords';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
 import { IPusherRequest } from 'matrix-js-sdk';

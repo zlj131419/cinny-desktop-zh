@@ -58,4 +58,18 @@ export function initTauriNotificationShim() {
 
   // 替换全局 Notification
   (window as any).Notification = TauriNotification;
+
+  // 劫持 navigator.permissions.query，让设置页的权限状态显示为 granted
+  // （Tauri webview 的 permissions API 默认返回 denied）
+  try {
+    const origQuery = navigator.permissions.query.bind(navigator.permissions);
+    (navigator.permissions as any).query = (desc: PermissionDescriptor) => {
+      if (desc?.name === 'notifications') {
+        return Promise.resolve({ state: 'granted' } as PermissionStatus);
+      }
+      return origQuery(desc);
+    };
+  } catch {
+    // 忽略
+  }
 }
