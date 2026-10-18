@@ -113,13 +113,23 @@ jobs:
             echo "config.json copied"
             npx tauri android init
             echo "init exit: $?"
-            # Fix Kotlin version: Tauri template uses old Kotlin, bump to 2.1.0
+            # Fix Kotlin metadata version: Firebase libs use Kotlin 2.1.0, template uses 1.9.x
+            # Patch version catalog if present (Tauri template uses libs.versions.toml)
+            if [ -f "src-tauri/gen/android/gradle/libs.versions.toml" ]; then
+              echo "Patching libs.versions.toml"
+              sed -i -E 's/^kotlin *= *"[^"]+"/kotlin = "2.1.0"/' src-tauri/gen/android/gradle/libs.versions.toml || true
+              grep -i kotlin src-tauri/gen/android/gradle/libs.versions.toml | head -5
+            fi
             for f in src-tauri/gen/android/build.gradle.kts src-tauri/gen/android/app/build.gradle.kts; do
               if [ -f "$f" ]; then
                 echo "Patching $f"
                 # Replace kotlin version 1.9.x with 2.1.0
                 sed -i -E 's/(kotlin[^"]*"[^"]*version[^"]*")[0-9]+\.[0-9]+\.[0-9]+/\12.1.0/g' "$f" || true
                 sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[0-9.]+"/id("org.jetbrains.kotlin.android") version "2.1.0"/g' "$f" || true
+                # Safety net: skip Kotlin metadata version check (Firebase libs are 2.1.0)
+                if ! grep -q "Xskip-metadata-version-check" "$f"; then
+                  printf '\ntasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {\n    kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"\n}\n' >> "$f"
+                fi
               fi
             done
             ls -la src-tauri/gen/android/ 2>&1 | head -10
