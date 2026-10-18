@@ -64,7 +64,7 @@ jobs:
           files: |
             src-tauri/target/release/bundle/msi/Siyu_desktop-x86_64.msi
 
-  # Android (APK) - 暂时禁用，单独调试
+  # Android (APK)
   android:
     runs-on: ubuntu-latest
     steps:
@@ -91,7 +91,8 @@ jobs:
           ls $ANDROID_HOME/ndk/
           NDK_VER=$(ls $ANDROID_HOME/ndk/ | sort -V | tail -1)
           echo "NDK_VER=$NDK_VER" >> $GITHUB_ENV
-          echo "Using NDK $NDK_VER"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VER" >> $GITHUB_ENV
+          echo "Using NDK $NDK_VER at $ANDROID_HOME/ndk/$NDK_VER"
       - name: Install cinny dependencies
         run: cd cinny && npm ci
       - name: Install tauri dependencies
@@ -116,8 +117,7 @@ jobs:
             ls -la src-tauri/gen/android/ 2>&1 | head -10
           } 2>&1 | tee /tmp/android-init.log
           tail -50 /tmp/android-init.log
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
+          grep -q "^init exit: 0$" /tmp/android-init.log || { echo "tauri android init FAILED"; exit 1; }
       - name: Upload init log
         if: always()
         uses: actions/upload-artifact@v4
@@ -127,16 +127,14 @@ jobs:
       - name: Copy google-services.json
         if: success()
         run: cp src-tauri/google-services.json src-tauri/gen/android/app/google-services.json
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
       - name: Inject Firebase into Android Gradle files
         run: |
-          项目级 build.gradle：加 google-services 插件
+          # 项目级 build.gradle：加 google-services 插件
           PG="src-tauri/gen/android/build.gradle"
           if ! grep -q "com.google.gms.google-services" "$PG"; then
             sed -i "s|id 'com.android.application' version|id 'com.google.gms.google-services' version '4.5.0' apply false\n  id 'com.android.application' version|" "$PG"
           fi
-          应用级 build.gradle：应用插件 + Firebase BoM + messaging
+          # 应用级 build.gradle：应用插件 + Firebase BoM + messaging
           AG="src-tauri/gen/android/app/build.gradle"
           if ! grep -q "com.google.gms.google-services" "$AG"; then
             sed -i "s|id 'com.android.application'|id 'com.android.application'\n  id 'com.google.gms.google-services'|" "$AG"
@@ -150,7 +148,6 @@ jobs:
         run: |
           npx shx cp config.json cinny/ && tauri android build --apk --target aarch64
         env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VER }}
           NODE_OPTIONS: "--max_old_space_size=4096"
       - name: Upload APK to release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
