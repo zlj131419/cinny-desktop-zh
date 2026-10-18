@@ -8,6 +8,7 @@ import { SettingTile } from '../../../components/setting-tile';
 import SiyuIcon from '../../../../../public/res/siyu-icon-140.png';
 import { clearCacheAndReload } from '../../../../client/initMatrix';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
+import { SIYU_VERSION } from '../../../../version';
 
 type AboutProps = {
   requestClose: () => void;
@@ -48,7 +49,7 @@ export function About({ requestClose }: AboutProps) {
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
                       <Text size="H3">私语 Siyu</Text>
-                      <Text size="T200">v1.0.0</Text>
+                      <Text size="T200">v{SIYU_VERSION}</Text>
                     </Box>
                     <Text>{t('features:settings.about.yet_another_matrix')}</Text>
                   </Box>

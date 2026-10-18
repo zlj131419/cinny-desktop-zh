@@ -3,6 +3,7 @@ import { Box, Button, Icon, Icons, Text, config, toRem } from 'folds';
 import { useTranslation } from 'react-i18next';
 import { Page, PageHero, PageHeroSection } from '../../components/page';
 import SiyuIcon from '../../../../public/res/siyu-icon-140.png';
+import { SIYU_VERSION } from '../../../version';
 import { SiyuSlogan } from '../../components/SiyuSlogan';
 
 export function WelcomePage() {
@@ -23,7 +24,7 @@ export function WelcomePage() {
             subTitle={
               <span>
                 {t('pages:client.yet_another_matrix_client')}{' '}
-                <span>v1.0.0</span>
+                <span>v{SIYU_VERSION}</span>
               </span>
             }
           >
