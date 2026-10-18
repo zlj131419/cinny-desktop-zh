@@ -7,8 +7,9 @@ permissions:
   contents: write
 
 jobs:
-  # Windows-x86_64
+  # Windows-x86_64 (formal releases only; skipped for prereleases used in Android iteration)
   windows-x86_64:
+    if: github.event.release.prerelease == false
     runs-on: windows-latest
     steps:
       - name: Checkout repository
