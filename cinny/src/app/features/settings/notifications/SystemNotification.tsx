@@ -1,6 +1,7 @@
 import React, { MouseEventHandler, useCallback, useState } from 'react';
 import { Icon, Icons, Menu, MenuItem, PopOut, RectCords, Scroll, config } from 'folds';
 import { FocusTrap } from 'focus-trap-react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
 import { IPusherRequest } from 'matrix-js-sdk';
@@ -21,6 +22,8 @@ function SoundSelector() {
     'notificationSoundId'
   );
   const [menuCords, setMenuCords] = useState<RectCords>();
+
+  if (NOTIFICATION_SOUNDS.length === 0) return null;
 
   const current = NOTIFICATION_SOUNDS.find((s) => s.id === notificationSoundId) ?? NOTIFICATION_SOUNDS[0];
 
@@ -226,7 +229,11 @@ export function SystemNotification() {
           <SettingTile
             title="提示音"
             description="选择新消息的提示声音"
-            after={<SoundSelector />}
+            after={
+              <ErrorBoundary fallback={<Text size="T200">声音列表加载失败</Text>}>
+                <SoundSelector />
+              </ErrorBoundary>
+            }
           />
         )}
       </SequenceCard>
