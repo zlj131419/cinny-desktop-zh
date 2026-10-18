@@ -1,6 +1,6 @@
 import React, { MouseEventHandler, useCallback, useState } from 'react';
 import { Icon, Icons, Menu, MenuItem, PopOut, RectCords, Scroll, config } from 'folds';
-import { FocusTrap } from 'focus-trap-react';
+import FocusTrap from 'focus-trap-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
