@@ -230,7 +230,11 @@ export function SystemNotification() {
             title="提示音"
             description="选择新消息的提示声音"
             after={
-              <ErrorBoundary fallback={<Text size="T200">声音列表加载失败</Text>}>
+              <ErrorBoundary
+                fallbackRender={({ error }) => (
+                  <Text size="T200">声音列表加载失败: {String((error as Error)?.message || error)}</Text>
+                )}
+              >
                 <SoundSelector />
               </ErrorBoundary>
             }
