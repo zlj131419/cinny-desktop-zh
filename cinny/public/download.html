@@ -27,6 +27,7 @@
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
     border-radius: 16px; padding: 32px; width: 260px; text-align: center;
     backdrop-filter: blur(10px); transition: transform .2s;
+    position: relative;
   }
   .card:hover { transform: translateY(-4px); background: rgba(255,255,255,.12); }
   .card .os { font-size: 40px; margin-bottom: 12px; }
@@ -42,19 +43,53 @@
   .note { margin-top: 48px; color: rgba(255,255,255,.5); font-size: 13px; text-align: center; line-height: 1.8; }
   .note a { color: #a78bfa; }
   .web-link { margin-top: 24px; }
+  /* 二维码悬停弹窗 */
+  .qr-trigger { cursor: pointer; position: relative; display: inline-block; }
+  .qr-popup {
+    display: none; position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%); margin-bottom: 12px;
+    background: #fff; padding: 12px; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4); z-index: 10;
+  }
+  .qr-popup img { width: 180px; height: 180px; display: block; }
+  .qr-popup p { color: #333; font-size: 12px; margin: 8px 0 0; min-height: auto; }
+  .qr-trigger:hover .qr-popup { display: block; }
+  .qr-hint { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 10px; }
 </style>
 </head>
 <body>
   <img class="logo" src="./res/siyu-icon.png" alt="私语 Siyu" />
   <h1>私语 Siyu</h1>
-  <p class="slogan">聊天，本该如此安全 —— 选择你的平台下载桌面客户端</p>
+  <p class="slogan">聊天，本该如此安全 —— 选择你的平台下载客户端</p>
   <div class="cards">
     <div class="card">
       <div class="os">🪟</div>
       <h2>Windows</h2>
-      <p>Windows 10 / 11 64位<br/>v1.0.11-zh</p>
-      <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.11-zh/Cinny_desktop-x86_64.msi">下载 MSI</a>
-      <div style="margin-top:10px"><a class="btn secondary" style="padding:8px 24px;font-size:13px" href="https://github.com/zlj131419/siyu/releases/download/v1.0.11-zh/Cinny_4.12.12_x64-setup.exe">下载 EXE</a></div>
+      <p>Windows 10 / 11 64位<br/>v1.0.27</p>
+      <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.27/Siyu_1.0.27_x64-setup.exe">下载 EXE</a>
+      <div style="margin-top:10px"><a class="btn secondary" style="padding:8px 24px;font-size:13px" href="https://github.com/zlj131419/siyu/releases/download/v1.0.27/Siyu_desktop-x86_64.msi">下载 MSI</a></div>
+      <div class="qr-hint">
+        <span class="qr-trigger">📱 扫码下载
+          <span class="qr-popup">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.27/Siyu_1.0.27_x64-setup.exe" alt="Windows 下载二维码" />
+            <p>扫码下载 Windows 版</p>
+          </span>
+        </span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="os">🤖</div>
+      <h2>Android</h2>
+      <p>Android 8.0 及以上<br/>v1.0.23</p>
+      <a class="btn" href="https://github.com/zlj131419/siyu/releases/tag/v1.0.23">下载 APK</a>
+      <div class="qr-hint">
+        <span class="qr-trigger">📱 扫码下载
+          <span class="qr-popup">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/tag/v1.0.23" alt="Android 下载二维码" />
+            <p>扫码打开下载页</p>
+          </span>
+        </span>
+      </div>
     </div>
     <div class="card">
       <div class="os">🍎</div>
@@ -70,12 +105,6 @@
     </div>
   </div>
   <div class="cards" style="margin-top:20px">
-    <div class="card">
-      <div class="os">📱</div>
-      <h2>手机 / 平板</h2>
-      <p>用浏览器打开本站<br/>添加到主屏幕即为 App</p>
-      <a class="btn secondary" href="../">打开网页版</a>
-    </div>
     <div class="card">
       <div class="os">🌐</div>
       <h2>网页版</h2>
