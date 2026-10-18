@@ -10,6 +10,8 @@ import { isRoomAlias, isRoomId } from '../../utils/matrix';
 import { useRoomNavigate } from '../../hooks/useRoomNavigate';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
 import { allRoomsAtom } from '../../state/room-list/roomList';
+import { mDirectAtom } from '../../state/mDirectList';
+import { getDirectRoomPath, getHomeRoomPath, getSpacePath } from '../../pages/pathUtils';
 import { ScreenSize, useScreenSizeContext } from '../../hooks/useScreenSize';
 import { BackRouteHandler } from '../../components/BackRouteHandler';
 
@@ -42,11 +44,19 @@ export function JoinBeforeNavigate({
 
   // 已加入的房间（比如刚接受邀请）：直接进房间，不显示预览/报错卡
   // 解决接受邀请后因 room list atom 未同步而误进预览页的问题
+  // 按房间类型路由：space→空间路径，DM→私聊路径，其他→首页路径
+  const mDirects = useAtomValue(mDirectAtom);
   const joinedRoom = isRoomId(roomIdOrAlias) ? mx.getRoom(roomIdOrAlias) : undefined;
   if (joinedRoom && joinedRoom.getMyMembership() === 'join') {
-    const targetPath = joinedRoom.isSpaceRoom()
-      ? `/${joinedRoom.roomId}/`
-      : `/home/${joinedRoom.roomId}/`;
+    let targetPath: string;
+    if (joinedRoom.isSpaceRoom()) {
+      targetPath = getSpacePath(joinedRoom.roomId);
+    } else {
+      const isDM = Object.values(mDirects).flat().includes(joinedRoom.roomId);
+      targetPath = isDM
+        ? getDirectRoomPath(joinedRoom.roomId)
+        : getHomeRoomPath(joinedRoom.roomId);
+    }
     return <Navigate to={targetPath} replace />;
   }
 
