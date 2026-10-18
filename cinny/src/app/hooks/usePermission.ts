@@ -27,14 +27,18 @@ export function usePermissionState(name: PermissionName, initialValue: Permissio
       .then((permStatus: PermissionStatus) => {
         permissionStatus = permStatus;
         handlePermissionChange.apply(permStatus);
-        permStatus.addEventListener('change', handlePermissionChange);
+        if (typeof permStatus.addEventListener === 'function') {
+          permStatus.addEventListener('change', handlePermissionChange);
+        }
       })
       .catch(() => {
         // Silence error since FF doesn't support microphone permission
       });
 
     return () => {
-      permissionStatus?.removeEventListener('change', handlePermissionChange);
+      if (permissionStatus && typeof permissionStatus.removeEventListener === 'function') {
+        permissionStatus.removeEventListener('change', handlePermissionChange);
+      }
     };
   }, [name]);
 
