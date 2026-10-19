@@ -25,6 +25,9 @@ import { useOpenUserRoomProfile } from '../../state/hooks/userRoomProfile';
 import { useSpaceOptionally } from '../../hooks/useSpace';
 import { getMouseEventCords } from '../../utils/dom';
 import { useTranslation } from 'react-i18next';
+import { timeHourMinute } from '../../utils/time';
+import { useSetting } from '../../state/hooks/settings';
+import { settingsAtom } from '../../state/settings';
 
 export type EventReadersProps = {
   room: Room;
@@ -39,6 +42,7 @@ export const EventReaders = as<'div', EventReadersProps>(
     const openProfile = useOpenUserRoomProfile();
     const space = useSpaceOptionally();
     const { t } = useTranslation();
+    const [hour24Clock] = useSetting(settingsAtom, 'hour24Clock');
 
     const getName = (userId: string) =>
       getMemberDisplayName(room, userId) ?? getMxIdLocalPart(userId) ?? userId;
@@ -61,7 +65,8 @@ export const EventReaders = as<'div', EventReadersProps>(
         <Box grow="Yes">
           <Scroll visibility="Hover" hideTrack size="300">
             <Box className={css.Content} direction="Column">
-              {latestEventReaders.map((readerId) => {
+              {latestEventReaders.map((reader) => {
+                const readerId = reader.userId;
                 const name = getName(readerId);
                 const avatarMxcUrl = room.getMember(readerId)?.getMxcAvatarUrl();
                 const avatarUrl = avatarMxcUrl
@@ -107,6 +112,9 @@ export const EventReaders = as<'div', EventReadersProps>(
                   >
                     <Text size="T400" truncate>
                       {name}
+                    </Text>
+                    <Text size="T200" style={{ color: config.color.Secondary }}>
+                      {timeHourMinute(reader.ts, hour24Clock)}
                     </Text>
                   </MenuItem>
                 );
