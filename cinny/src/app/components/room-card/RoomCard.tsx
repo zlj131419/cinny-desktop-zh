@@ -37,8 +37,8 @@ import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 
 type GridColumnCount = '1' | '2' | '3';
 const getGridColumnCount = (gridWidth: number): GridColumnCount => {
-  if (gridWidth <= 498) return '1';
-  if (gridWidth <= 748) return '2';
+  if (gridWidth <= 360) return '1';
+  if (gridWidth <= 900) return '2';
   return '3';
 };
 
