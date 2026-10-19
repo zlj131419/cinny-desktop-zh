@@ -156,3 +156,85 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     })
   );
 });
+
+/**
+ * Web Push 通知处理（PWA 后台推送）
+ * 推送网关 -> 浏览器推送服务 -> service worker -> 显示通知
+ */
+self.addEventListener('push', (event: PushEvent) => {
+  event.waitUntil(
+    (async () => {
+      let title = '私语 Siyu';
+      let body = '你有一条新消息';
+      let roomId: string | undefined;
+
+      try {
+        const data = event.data?.json();
+        // Matrix 推送网关格式
+        const notif = data?.notification;
+        if (notif) {
+          roomId = notif.room_id;
+          const sender = notif.sender_display_name || notif.sender || '有人';
+          if (notif.type === 'm.room.message' && notif.content) {
+            const content = notif.content;
+            body = content.body || content.msgtype || body;
+            // 只显示文本前 100 字
+            if (body.length > 100) body = body.slice(0, 100) + '…';
+          } else if (notif.type === 'm.room.encrypted') {
+            body = '加密消息';
+          } else {
+            body = notif.type || body;
+          }
+          title = `${sender}`;
+        } else if (data?.title) {
+          // 通用格式兜底
+          title = data.title;
+          body = data.body || body;
+          roomId = data.roomId;
+        }
+      } catch {
+        // 解析失败用默认文案
+      }
+
+      const options: NotificationOptions = {
+        body,
+        icon: '/public/siyu-icon-200.png',
+        badge: '/public/siyu-icon-200.png',
+        tag: roomId || 'siyu-message',
+        renotify: true,
+        data: { roomId },
+      };
+
+      await self.registration.showNotification(title, options);
+    })()
+  );
+});
+
+/**
+ * 点击通知打开对应房间
+ */
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  event.notification.close();
+  const roomId = event.notification.data?.roomId;
+
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+      // 已有窗口则聚焦
+      for (const client of clients) {
+        if ('focus' in client) {
+          await client.focus();
+          if (roomId) {
+            client.postMessage({ type: 'openRoom', roomId });
+          }
+          return;
+        }
+      }
+
+      // 没有窗口则打开新窗口
+      const url = roomId ? `/#/room/${encodeURIComponent(roomId)}` : '/';
+      await self.clients.openWindow(url);
+    })()
+  );
+});
