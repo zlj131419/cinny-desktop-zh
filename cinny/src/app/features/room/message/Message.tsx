@@ -249,7 +249,7 @@ export const MessageReadReceiptBadge = as<
   const [open, setOpen] = useState(false);
   const readers = useRoomEventReaders(room, eventId);
   // exclude self
-  const otherReaders = readers.filter((readerId) => readerId !== mx.getUserId());
+  const otherReaders = readers.filter((reader) => reader.userId !== mx.getUserId());
 
   if (otherReaders.length === 0) return null;
 
@@ -257,7 +257,7 @@ export const MessageReadReceiptBadge = as<
 
   const getName = (userId: string) =>
     getMemberDisplayName(room, userId) ?? getMxIdLocalPart(userId) ?? userId;
-  const names = otherReaders.map(getName);
+  const names = otherReaders.map((reader) => getName(reader.userId));
   // show max 4 avatars, rest as +N
   const visibleReaders = otherReaders.slice(0, 4);
   const extraCount = otherReaders.length - visibleReaders.length;
