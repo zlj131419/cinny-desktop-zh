@@ -105,6 +105,28 @@ const RoomNavItemMenu = forwardRef<HTMLDivElement, RoomNavItemMenuProps>(
       requestClose();
     };
 
+    const isFavourite = !!room.tags?.['m.favourite'];
+    const handleToggleFavourite = () => {
+      if (!room?.roomId) return;
+      if (isFavourite) {
+        mx.deleteRoomTag(room.roomId, 'm.favourite').catch(() => {});
+      } else {
+        mx.setRoomTag(room.roomId, 'm.favourite', {}).catch(() => {});
+      }
+      requestClose();
+    };
+
+    const isPinned = !!room.tags?.['com.siyu.pinned'];
+    const handleTogglePin = () => {
+      if (!room?.roomId) return;
+      if (isPinned) {
+        mx.deleteRoomTag(room.roomId, 'com.siyu.pinned').catch(() => {});
+      } else {
+        mx.setRoomTag(room.roomId, 'com.siyu.pinned', { order: 0 }).catch(() => {});
+      }
+      requestClose();
+    };
+
     return (
       <Menu ref={ref} style={{ maxWidth: toRem(160), width: '100vw' }}>
         {invitePrompt && room && (
@@ -174,6 +196,26 @@ const RoomNavItemMenu = forwardRef<HTMLDivElement, RoomNavItemMenuProps>(
           >
             <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
               {t('features:room-nav.copy_link')}
+            </Text>
+          </MenuItem>
+          <MenuItem
+            onClick={handleToggleFavourite}
+            size="300"
+            after={<Icon size="100" src={Icons.Star} filled={isFavourite} />}
+            radii="300"
+          >
+            <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+              {isFavourite ? '取消收藏' : '收藏'}
+            </Text>
+          </MenuItem>
+          <MenuItem
+            onClick={handleTogglePin}
+            size="300"
+            after={<Icon size="100" src={Icons.Pin} />}
+            radii="300"
+          >
+            <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+              {isPinned ? '取消置顶' : '置顶'}
             </Text>
           </MenuItem>
           <MenuItem
