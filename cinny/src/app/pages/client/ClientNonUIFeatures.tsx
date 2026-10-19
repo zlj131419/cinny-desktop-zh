@@ -115,8 +115,8 @@ function InviteNotifications() {
   const notify = useCallback(
     (count: number) => {
       const noti = new window.Notification(t('pages:client.invitation'), {
-        icon: LogoSVG,
-        badge: LogoSVG,
+        icon: '/public/siyu-icon-200.png',
+        badge: '/public/siyu-icon-200.png',
         body: `You have ${count} new invitation request.`,
         silent: true,
       });
