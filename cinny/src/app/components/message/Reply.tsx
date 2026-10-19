@@ -23,6 +23,9 @@ export const ReplyLayout = as<'div', ReplyLayoutProps>(
       className={classNames(css.Reply, className)}
       alignItems="Center"
       gap="100"
+      grow="Yes"
+      shrink="Yes"
+      style={{ minWidth: 0, flexBasis: 0 }}
       {...props}
       ref={ref}
     >
