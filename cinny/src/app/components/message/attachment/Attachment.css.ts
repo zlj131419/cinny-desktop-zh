@@ -29,6 +29,7 @@ export const AttachmentHeader = style({
 export const AttachmentBox = style([
   DefaultReset,
   {
+    minWidth: 0,
     maxWidth: '100%',
     width: '100%',
     maxHeight: toRem(600),
