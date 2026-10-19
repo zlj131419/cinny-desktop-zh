@@ -8,7 +8,7 @@ export const Attachment = recipe({
     color: color.SurfaceVariant.OnContainer,
     borderRadius: config.radii.R400,
     overflow: 'hidden',
-    minWidth: 0,
+    minWidth: toRem(200),
     width: '100%',
     maxWidth: 'min(100%, 25rem)',
   },
@@ -30,7 +30,7 @@ export const AttachmentHeader = style({
 export const AttachmentBox = style([
   DefaultReset,
   {
-    minWidth: 0,
+    minWidth: toRem(200),
     width: '100%',
     maxWidth: 'min(100%, 25rem)',
     maxHeight: toRem(600),
