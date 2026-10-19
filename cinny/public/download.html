@@ -21,8 +21,14 @@
   }
   .logo { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
   h1 { font-size: 32px; margin-bottom: 8px; }
-  .slogan { color: rgba(255,255,255,.7); margin-bottom: 48px; font-size: 15px; }
-  .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .tagline {
+    font-size: 42px; font-weight: 800; margin-bottom: 12px;
+    background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: 2px;
+  }
+  .slogan { color: rgba(255,255,255,.7); margin-bottom: 48px; font-size: 18px; }
+  .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1900px; }
   .card {
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
     border-radius: 16px; padding: 32px; width: 260px; text-align: center;
@@ -59,7 +65,8 @@
 <body>
   <img class="logo" src="./res/siyu-icon.png" alt="私语 Siyu" />
   <h1>私语 Siyu</h1>
-  <p class="slogan">聊天，本该如此安全 —— 选择你的平台下载桌面客户端</p>
+  <h2 class="tagline">聊天，本该如此安全</h2>
+  <p class="slogan">选择你的平台下载客户端</p>
   <div class="cards">
     <div class="card">
       <div class="os">🪟</div>
