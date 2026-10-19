@@ -33,8 +33,12 @@ export const AttachmentBox = style([
     minWidth: toRem(200),
     width: '100%',
     maxWidth: 'min(96%, 25rem)',
-    maxHeight: toRem(600),
     overflow: 'hidden',
+    '@media': {
+      'screen and (min-width: 768px)': {
+        maxHeight: toRem(600),
+      },
+    },
   },
 ]);
 
