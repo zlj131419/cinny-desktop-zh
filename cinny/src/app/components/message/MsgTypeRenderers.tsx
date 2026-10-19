@@ -195,34 +195,20 @@ export function MImage({ content, renderImageContent, outlined }: MImageProps) {
   if (typeof mxcUrl !== 'string') {
     return <BrokenContent />;
   }
-  // Telegram 式：JS 算出具体像素尺寸，避免 CSS 百分比循环依赖
-  // 盒子最大 576px 宽，不放大缩小图片
-  const imgW = imgInfo?.w || 0;
-  const imgH = imgInfo?.h || 0;
-  const BOX_W = 576;
-  const BOX_H = 600;
-  let dispW = BOX_W;
-  let dispH = BOX_H;
-  if (imgW > 0 && imgH > 0) {
-    if (imgW <= BOX_W && imgH <= BOX_H) {
-      // 小图不放大
-      dispW = imgW;
-      dispH = imgH;
-    } else if (imgW / imgH > BOX_W / BOX_H) {
-      dispW = BOX_W;
-      dispH = Math.round((imgH * BOX_W) / imgW);
-    } else {
-      dispH = BOX_H;
-      dispW = Math.round((imgW * BOX_H) / imgH);
-    }
-  }
+  // 定宽 36rem 做锚 + max-width 收窄 + aspect-ratio 按比例，三层各管一头
+  const imgW = imgInfo?.w || 400;
+  const imgH = imgInfo?.h || 400;
 
   return (
-    <Attachment outlined={outlined} style={{ width: toRem(dispW) }}>
+    <Attachment outlined={outlined} style={{ width: '36rem', maxWidth: '100%' }}>
       <AttachmentBox
         style={{
-          width: toRem(dispW),
-          height: toRem(dispH),
+          width: '100%',
+          aspectRatio: `${imgW} / ${imgH}`,
+          maxHeight: toRem(600),
+          minHeight: toRem(120),
+        }}
+          minHeight: toRem(120),
         }}
       >
         {renderImageContent({
