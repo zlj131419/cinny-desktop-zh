@@ -33,7 +33,22 @@ export const initClient = async (session: Session): Promise<MatrixClient> => {
   });
 
   await indexedDBStore.startup();
-  await mx.initRustCrypto();
+  // WASM 加载失败时重试（刷新打断下载会导致 "Response body loading was aborted"）
+  let rustCryptoError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await mx.initRustCrypto();
+      rustCryptoError = undefined;
+      break;
+    } catch (e) {
+      rustCryptoError = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      // 只有 WASM/网络相关错误才重试，其他错误直接抛出
+      if (!/wasm|aborted|network|fetch|compilation/i.test(msg)) throw e;
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  if (rustCryptoError) throw rustCryptoError;
 
   mx.setMaxListeners(50);
 
