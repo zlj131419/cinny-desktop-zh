@@ -6,7 +6,7 @@ import * as css from './Attachment.css';
 export const Attachment = as<'div', css.AttachmentVariants>(
   ({ className, outlined, ...props }, ref) => (
     <Box
-      display="InlineFlex"
+      display="Flex"
       direction="Column"
       className={classNames(css.Attachment({ outlined }), className)}
       {...props}
