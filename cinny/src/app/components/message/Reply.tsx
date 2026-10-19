@@ -101,7 +101,14 @@ export const Reply = as<'div', ReplyProps>(
     const bodyJSX = body ? scaleSystemEmoji(trimReplyFromBody(body)) : fallbackBody;
 
     return (
-      <Box direction="Row" gap="200" alignItems="Center" {...props} ref={ref}>
+      <Box
+        direction="Row"
+        gap="200"
+        alignItems="Center"
+        style={{ minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}
+        {...props}
+        ref={ref}
+      >
         {threadRootId && (
           <ThreadIndicator as="button" data-event-id={threadRootId} onClick={onClick} />
         )}
@@ -119,7 +126,7 @@ export const Reply = as<'div', ReplyProps>(
           onClick={onClick}
         >
           {replyEvent !== undefined ? (
-            <Text size="T300" truncate>
+            <Text size="T300" truncate style={{ wordBreak: 'break-word' }}>
               {badEncryption ? <MessageBadEncryptedContent /> : bodyJSX}
             </Text>
           ) : (
