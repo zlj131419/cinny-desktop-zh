@@ -8,8 +8,9 @@ export const Attachment = recipe({
     color: color.SurfaceVariant.OnContainer,
     borderRadius: config.radii.R400,
     overflow: 'hidden',
-    maxWidth: '100%',
-    width: toRem(400),
+    minWidth: 0,
+    width: '100%',
+    maxWidth: 'min(100%, 25rem)',
   },
   variants: {
     outlined: {
