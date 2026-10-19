@@ -1,12 +1,7 @@
 import { Room, RoomEvent, RoomEventHandlerMap } from 'matrix-js-sdk';
 import { useEffect, useState } from 'react';
 
-export type EventReader = {
-  userId: string;
-  ts: number;
-};
-
-const getEventReaders = (room: Room, evtId?: string): EventReader[] => {
+const getEventReaders = (room: Room, evtId?: string) => {
   if (!evtId) return [];
 
   // if eventId is locally generated
@@ -14,35 +9,18 @@ const getEventReaders = (room: Room, evtId?: string): EventReader[] => {
   if (!evtId.startsWith('$')) return [];
 
   const liveEvents = room.getLiveTimeline().getEvents();
-  const readers = new Map<string, number>();
+  const userIds: string[] = [];
 
   for (let i = liveEvents.length - 1; i >= 0; i -= 1) {
-    const event = liveEvents[i];
-    const userIds = room.getUsersReadUpTo(event);
-    
-    // 获取该事件的回执时间戳
-    const receipts = room.getReceiptsForEvent(event);
-    const tsMap = new Map<string, number>();
-    for (const receipt of receipts) {
-      if (receipt.type === 'm.read' || receipt.type === 'm.read.private') {
-        tsMap.set(receipt.userId, receipt.ts);
-      }
-    }
-    
-    for (const userId of userIds) {
-      if (!readers.has(userId)) {
-        readers.set(userId, tsMap.get(userId) ?? event.getTs());
-      }
-    }
-    
-    if (event.getId() === evtId) break;
+    userIds.splice(userIds.length, 0, ...room.getUsersReadUpTo(liveEvents[i]));
+    if (liveEvents[i].getId() === evtId) break;
   }
 
-  return [...readers.entries()].map(([userId, ts]) => ({ userId, ts }));
+  return [...new Set(userIds)];
 };
 
-export const useRoomEventReaders = (room: Room, eventId?: string): EventReader[] => {
-  const [readers, setReaders] = useState<EventReader[]>(() => getEventReaders(room, eventId));
+export const useRoomEventReaders = (room: Room, eventId?: string): string[] => {
+  const [readers, setReaders] = useState<string[]>(() => getEventReaders(room, eventId));
 
   useEffect(() => {
     setReaders(getEventReaders(room, eventId));
