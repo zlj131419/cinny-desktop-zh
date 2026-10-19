@@ -89,8 +89,12 @@ type InviteData = {
   isEncrypted: boolean;
 };
 
-const makeInviteData = (mx: MatrixClient, room: Room, useAuthentication: boolean): InviteData => {
-  const { t } = useTranslation();
+const makeInviteData = (
+  mx: MatrixClient,
+  room: Room,
+  useAuthentication: boolean,
+  t: (key: string) => string
+): InviteData => {
   const userId = mx.getSafeUserId();
   const direct = isDirectInvite(room, userId);
 
@@ -718,7 +722,7 @@ export function Invites() {
   const invitesData = allInviteIds
     .map((inviteId) => mx.getRoom(inviteId))
     .filter((inviteRoom) => !!inviteRoom)
-    .map((inviteRoom) => makeInviteData(mx, inviteRoom, useAuthentication));
+    .map((inviteRoom) => makeInviteData(mx, inviteRoom, useAuthentication, t));
 
   const [knownInvites, unknownInvites, spamInvites] = useMemo(() => {
     const known: InviteData[] = [];
