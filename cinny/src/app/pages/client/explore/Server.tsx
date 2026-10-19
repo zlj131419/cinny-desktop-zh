@@ -543,7 +543,7 @@ export function PublicRooms() {
                     ) : (
                       <Text size="H4">{t('pages:client.explore.popular_communities')}</Text>
                     )}
-                    <Box gap="200">
+                    <Box gap="200" wrap="Wrap">
                       {roomTypeFilters.map((filter) => (
                         <Chip
                           key={filter.title}
