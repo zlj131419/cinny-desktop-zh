@@ -208,8 +208,6 @@ export function MImage({ content, renderImageContent, outlined }: MImageProps) {
           maxHeight: toRem(600),
           minHeight: toRem(120),
         }}
-          minHeight: toRem(120),
-        }}
       >
         {renderImageContent({
           body: content.body || 'Image',
