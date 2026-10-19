@@ -140,6 +140,8 @@ export const BubbleBefore = style({
 
 export const BubbleContent = style({
   maxWidth: toRem(800),
+  minWidth: 0,
+  overflow: 'hidden',
   padding: config.space.S200,
   backgroundColor: color.SurfaceVariant.Container,
   color: color.SurfaceVariant.OnContainer,
