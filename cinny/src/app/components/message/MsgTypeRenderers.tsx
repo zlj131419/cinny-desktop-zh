@@ -199,7 +199,7 @@ export function MImage({ content, renderImageContent, outlined }: MImageProps) {
   const imgH = imgInfo?.h || 400;
 
   return (
-    <Attachment outlined={outlined}>
+    <Attachment outlined={outlined} style={{ maxWidth: 'min(100%, 36rem)' }}>
       <AttachmentBox
         style={{
           aspectRatio: `${imgW} / ${imgH}`,
