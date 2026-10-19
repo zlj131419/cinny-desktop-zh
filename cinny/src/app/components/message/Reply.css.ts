@@ -32,6 +32,8 @@ export const Reply = style({
 
 export const ReplyContent = style({
   opacity: config.opacity.P300,
+  minWidth: 0,
+  overflow: 'hidden',
 
   selectors: {
     [`${Reply}:hover &`]: {
