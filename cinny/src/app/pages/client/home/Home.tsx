@@ -44,11 +44,13 @@ import {
   useHomeSearchSelected,
 } from '../../../hooks/router/useHomeSelected';
 import { useHomeRooms } from './useHomeRooms';
+import { useAllRooms } from './useAllRooms';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { VirtualTile } from '../../../components/virtualizer';
 import { RoomNavCategoryButton, RoomNavItem } from '../../../features/room-nav';
 import { makeNavCategoryId } from '../../../state/closedNavCategories';
 import { roomToUnreadAtom } from '../../../state/room/roomToUnread';
+import { mDirectAtom } from '../../../state/mDirectList';
 import { useCategoryHandler } from '../../../hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '../../../hooks/useNavToActivePathMapper';
 import { PageNav, PageNavHeader, PageNavContent } from '../../../components/page';
@@ -202,7 +204,17 @@ export function Home() {
   const mx = useMatrixClient();
   useNavToActivePathMapper('home');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const rooms = useHomeRooms();
+  const orphanRooms = useHomeRooms();
+  const allRoomIds = useAllRooms();
+  const mDirects = useAtomValue(mDirectAtom);
+  const [viewMode, setViewMode] = useState<'space' | 'all'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'people' | 'rooms' | 'mentions'>('all');
+  // 确保 rooms 始终是有效字符串数组
+  const rooms = useMemo(() => {
+    const list = viewMode === 'all' ? allRoomIds : orphanRooms;
+    if (!Array.isArray(list)) return [];
+    return list.filter((id) => typeof id === 'string' && id.startsWith('!'));
+  }, [viewMode, allRoomIds, orphanRooms]);
   const notificationPreferences = useRoomsNotificationPreferencesContext();
   const roomToUnread = useAtomValue(roomToUnreadAtom);
   const navigate = useNavigate();
@@ -214,16 +226,69 @@ export function Home() {
   const [closedCategories, setClosedCategories] = useAtom(useClosedNavCategoriesAtom());
 
   const sortedRooms = useMemo(() => {
-    const items = Array.from(rooms).sort(
-      closedCategories.has(DEFAULT_CATEGORY_ID)
-        ? factoryRoomIdByActivity(mx)
-        : factoryRoomIdByAtoZ(mx)
-    );
-    if (closedCategories.has(DEFAULT_CATEGORY_ID)) {
-      return items.filter((rId) => roomToUnread.has(rId) || rId === selectedRoomId);
+    if (!mx || !Array.isArray(rooms)) return [];
+    let items = Array.from(rooms);
+    
+    // 筛选（带空检查）
+    try {
+      if (filter === 'unread' && roomToUnread) {
+        items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
+      } else if (filter === 'people' && mDirects) {
+        items = items.filter((rId) => typeof rId === 'string' && mDirects.has(rId));
+      } else if (filter === 'rooms' && mDirects) {
+        items = items.filter((rId) => typeof rId === 'string' && !mDirects.has(rId));
+      } else if (filter === 'mentions' && roomToUnread) {
+        items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
+      }
+    } catch {
+      // 筛选失败时返回原列表
     }
-    return items;
-  }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId]);
+    
+    // 排序：置顶 > 收藏 > 按活动时间（带空检查）
+    const getRoomSafe = (rId: string) => {
+      try {
+        if (typeof rId !== 'string') return null;
+        return mx.getRoom(rId);
+      } catch {
+        return null;
+      }
+    };
+    
+    const isPinned = (rId: string) => {
+      const room = getRoomSafe(rId);
+      return !!(room?.tags?.['com.siyu.pinned']);
+    };
+    const isFav = (rId: string) => {
+      const room = getRoomSafe(rId);
+      return !!(room?.tags?.['m.favourite']);
+    };
+    
+    const pinnedFav = items.filter((rId) => isPinned(rId) || isFav(rId));
+    const rest = items.filter((rId) => !isPinned(rId) && !isFav(rId));
+    
+    // 置顶排最前，收藏其次
+    pinnedFav.sort((a, b) => {
+      const pinA = isPinned(a) ? 0 : 1;
+      const pinB = isPinned(b) ? 0 : 1;
+      if (pinA !== pinB) return pinA - pinB;
+      return 0;
+    });
+    
+    try {
+      const activitySort = closedCategories.has(DEFAULT_CATEGORY_ID)
+        ? factoryRoomIdByActivity(mx)
+        : factoryRoomIdByAtoZ(mx);
+      rest.sort(activitySort);
+    } catch {
+      // 排序失败时保持原序
+    }
+    
+    let result = [...pinnedFav, ...rest];
+    if (closedCategories.has(DEFAULT_CATEGORY_ID) && roomToUnread) {
+      result = result.filter((rId) => roomToUnread.has(rId) || rId === selectedRoomId);
+    }
+    return result;
+  }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId, filter, mDirects]);
 
   const virtualizer = useVirtualizer({
     count: sortedRooms.length,
@@ -239,6 +304,44 @@ export function Home() {
   return (
     <PageNav>
       <HomeHeader />
+      <Box direction="Column" gap="100" style={{ padding: `${config.space.S200} ${config.space.S300}` }}>
+        <Box direction="Row" gap="100" alignItems="Center">
+          <Button
+            size="300"
+            variant={viewMode === 'all' ? 'Primary' : 'Secondary'}
+            fill={viewMode === 'all' ? 'Solid' : 'None'}
+            onClick={() => setViewMode('all')}
+          >
+            <Text size="T300">所有聊天</Text>
+          </Button>
+          <Button
+            size="300"
+            variant={viewMode === 'space' ? 'Primary' : 'Secondary'}
+            fill={viewMode === 'space' ? 'Solid' : 'None'}
+            onClick={() => setViewMode('space')}
+          >
+            <Text size="T300">按空间</Text>
+          </Button>
+        </Box>
+        {viewMode === 'all' && (
+          <Box direction="Row" gap="100" wrap="Wrap">
+            {(['all', 'unread', 'people', 'rooms', 'mentions'] as const).map((f) => (
+              <Button
+                key={f}
+                size="300"
+                variant={filter === f ? 'Primary' : 'Secondary'}
+                fill={filter === f ? 'Solid' : 'None'}
+                radii="400"
+                onClick={() => setFilter(f)}
+              >
+                <Text size="T300">
+                  {f === 'all' ? '全部' : f === 'unread' ? '未读' : f === 'people' ? '人员' : f === 'rooms' ? '房间' : '提及'}
+                </Text>
+              </Button>
+            ))}
+          </Box>
+        )}
+      </Box>
       {noRoomToDisplay ? (
         <HomeEmpty />
       ) : (
