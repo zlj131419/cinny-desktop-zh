@@ -4,8 +4,17 @@ import { ContainerColor } from '../../styles/ContainerColor.css';
 
 export const CardGrid = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: config.space.S400,
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: config.space.S300,
+  '@media': {
+    'screen and (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: config.space.S400,
+    },
+    'screen and (min-width: 1200px)': {
+      gridTemplateColumns: 'repeat(4, 1fr)',
+    },
+  },
 });
 
 export const RoomCardBase = style([
