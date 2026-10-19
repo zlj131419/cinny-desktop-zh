@@ -200,8 +200,8 @@ self.addEventListener('push', (event: PushEvent) => {
         body,
         icon: '/public/siyu-icon-200.png',
         badge: '/public/siyu-icon-200.png',
-        tag: roomId || 'siyu-message',
-        renotify: true,
+        // tag 用时间戳保证每条独立，iOS 才会每次都响铃
+        tag: `siyu-${Date.now()}`,
         data: { roomId },
       };
 
