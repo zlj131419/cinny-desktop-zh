@@ -58,6 +58,13 @@ const mountApp = () => {
 
   const root = createRoot(rootContainer);
   root.render(<App />);
+  // 隐藏启动闪屏
+  if (typeof (window as any).__hideSiyuSplash === 'function') {
+    // 等首屏渲染一帧后再隐藏，避免闪白
+    requestAnimationFrame(() => {
+      setTimeout(() => (window as any).__hideSiyuSplash(), 100);
+    });
+  }
 };
 
 mountApp();
