@@ -13,6 +13,14 @@ import { settingsAtom } from '../../../state/settings';
 import { getNotificationState, usePermissionState } from '../../../hooks/usePermission';
 import { useEmailNotifications } from '../../../hooks/useEmailNotifications';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
+import {
+  isWebPushSupported,
+  getPushSubscription,
+  subscribeWebPush,
+  unsubscribeWebPush,
+  registerMatrixPusher,
+  unregisterMatrixPusher,
+} from '../../../utils/webPush';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { NOTIFICATION_SOUNDS, getNotificationSoundSrc } from './notificationSounds';
 
@@ -161,6 +169,69 @@ function EmailNotification() {
   );
 }
 
+/**
+ * Web Push 后台推送开关（PWA 添加到主屏幕后，浏览器关闭也能收到通知）
+ */
+function WebPushNotification() {
+  const mx = useMatrixClient();
+  const [enabled, setEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    getPushSubscription()
+      .then((sub) => setEnabled(!!sub))
+      .catch(() => setEnabled(false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleToggle = async (value: boolean) => {
+    setError(null);
+    setLoading(true);
+    try {
+      if (value) {
+        const subscription = await subscribeWebPush();
+        await registerMatrixPusher(mx, subscription);
+        setEnabled(true);
+      } else {
+        const subscription = await getPushSubscription();
+        if (subscription) {
+          await unregisterMatrixPusher(mx, subscription);
+          await unsubscribeWebPush();
+        }
+        setEnabled(false);
+      }
+    } catch (e: any) {
+      setError(e?.message || '操作失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isWebPushSupported()) return null;
+
+  return (
+    <>
+      <SettingTile
+        title="后台推送通知"
+        description="开启后，即使浏览器关闭也能收到新消息提醒（需添加到主屏幕）"
+        after={
+          loading ? (
+            <Spinner size="300" />
+          ) : (
+            <Switch value={enabled} onChange={handleToggle} />
+          )
+        }
+      />
+      {error && (
+        <Text size="T200" style={{ color: color.Critical.Main }}>
+          {error}
+        </Text>
+      )}
+    </>
+  );
+}
+
 export function SystemNotification() {
   const { t } = useTranslation();
   const notifPermission = usePermissionState('notifications', getNotificationState());
@@ -223,6 +294,7 @@ export function SystemNotification() {
           description={t('features:settings.notifications.play_sound_when_new')}
           after={<Switch value={isNotificationSounds} onChange={setIsNotificationSounds} />}
         />
+        <WebPushNotification />
         {isNotificationSounds && (
           <SettingTile
             title="提示音"
