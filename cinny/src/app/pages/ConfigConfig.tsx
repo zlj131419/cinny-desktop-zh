@@ -8,9 +8,23 @@ export function ConfigConfigLoading() {
 
   return (
     <SplashScreen>
-      <Box grow="Yes" direction="Column" gap="400" alignItems="Center" justifyContent="Center">
-        <Spinner variant="Secondary" size="600" />
-        <Text>{t('pages:heating_up')}</Text>
+      <Box grow="Yes" direction="Column" gap="300" alignItems="Center" justifyContent="Center" style={{ padding: '40px 20px' }}>
+        <img
+          src="./public/siyu-icon-200.png"
+          alt="私语 Siyu"
+          style={{ width: 84, height: 84, borderRadius: 20, marginBottom: 8 }}
+        />
+        <Text size="H2" align="Center" style={{ fontWeight: 800, letterSpacing: 2 }}>
+          私语 Siyu
+        </Text>
+        <Text size="T400" align="Center" style={{ opacity: 0.75 }}>
+          聊天，本该如此安全
+        </Text>
+        <Box style={{ height: 24 }} />
+        <Spinner variant="Secondary" size="500" />
+        <Text size="T300" align="Center" style={{ opacity: 0.6 }}>
+          {t('pages:heating_up')}
+        </Text>
       </Box>
     </SplashScreen>
   );
