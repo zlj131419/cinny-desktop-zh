@@ -195,13 +195,15 @@ export function MImage({ content, renderImageContent, outlined }: MImageProps) {
   if (typeof mxcUrl !== 'string') {
     return <BrokenContent />;
   }
-  const height = scaleYDimension(imgInfo?.w || 400, 400, imgInfo?.h || 400);
+  const imgW = imgInfo?.w || 400;
+  const imgH = imgInfo?.h || 400;
 
   return (
     <Attachment outlined={outlined}>
       <AttachmentBox
         style={{
-          height: toRem(height < 48 ? 48 : height),
+          aspectRatio: `${imgW} / ${imgH}`,
+          maxHeight: toRem(600),
         }}
       >
         {renderImageContent({
@@ -245,7 +247,8 @@ export function MVideo({ content, renderAsFile, renderVideoContent, outlined }: 
     return <BrokenContent />;
   }
 
-  const height = scaleYDimension(videoInfo.w || 400, 400, videoInfo.h || 400);
+  const videoW = videoInfo.w || 400;
+  const videoH = videoInfo.h || 400;
 
   const filename = content.filename ?? content.body ?? 'Video';
 
@@ -267,7 +270,8 @@ export function MVideo({ content, renderAsFile, renderVideoContent, outlined }: 
       </AttachmentHeader>
       <AttachmentBox
         style={{
-          height: toRem(height < 48 ? 48 : height),
+          aspectRatio: `${videoW} / ${videoH}`,
+          maxHeight: toRem(600),
         }}
       >
         {renderVideoContent({
