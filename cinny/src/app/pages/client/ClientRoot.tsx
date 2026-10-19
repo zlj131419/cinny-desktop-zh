@@ -45,7 +45,7 @@ function ClientRootLoading() {
     <SplashScreen>
       <Box direction="Column" grow="Yes" alignItems="Center" justifyContent="Center" gap="300" style={{ padding: '40px 20px' }}>
         <img
-          src="./public/siyu-icon-200.png"
+          src="https://chat.xxqw.net/public/siyu-icon-200.png"
           alt="私语 Siyu"
           style={{ width: 84, height: 84, borderRadius: 20, marginBottom: 8 }}
         />
