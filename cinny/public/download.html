@@ -23,9 +23,14 @@
   h1 { font-size: 32px; margin-bottom: 8px; }
   .tagline {
     font-size: 42px; font-weight: 800; margin-bottom: 12px;
-    background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; letter-spacing: 2px;
+    color: #c4b5fd; letter-spacing: 2px;
+  }
+  @supports ((-webkit-background-clip: text) and (-webkit-text-fill-color: transparent)) {
+    .tagline {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; color: transparent;
+    }
   }
   .slogan { color: rgba(255,255,255,.75); margin-bottom: 8px; font-size: 17px; line-height: 1.8; }
   .slogan-sub { color: rgba(255,255,255,.55); margin-bottom: 48px; font-size: 15px; }
@@ -79,6 +84,13 @@
       <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.27/Siyu_1.0.27_x64-setup.exe" alt="Windows下载二维码"/><p>扫码下载 Windows 版</p></span></span></div>
     </div>
     <div class="card">
+      <div class="os">🤖</div>
+      <h2>Android</h2>
+      <p>Android 8.0 及以上<br/>v1.0.23</p>
+      <a class="btn" href="https://github.com/zlj131419/siyu/releases/tag/v1.0.23">下载 APK</a>
+      <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/tag/v1.0.23" alt="Android下载二维码"/><p>扫码打开下载页</p></span></span></div>
+    </div>
+    <div class="card">
       <div class="os">🍎</div>
       <h2>macOS</h2>
       <p>Apple Silicon / Intel<br/>敬请期待</p>
@@ -92,13 +104,6 @@
     </div>
   </div>
   <div class="cards" style="margin-top:20px">
-    <div class="card">
-      <div class="os">🤖</div>
-      <h2>Android</h2>
-      <p>Android 8.0 及以上<br/>v1.0.23</p>
-      <a class="btn" href="https://github.com/zlj131419/siyu/releases/tag/v1.0.23">下载 APK</a>
-      <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/tag/v1.0.23" alt="Android下载二维码"/><p>扫码打开下载页</p></span></span></div>
-    </div>
     <div class="card">
       <div class="os">📱</div>
       <h2>手机 / 平板</h2>
