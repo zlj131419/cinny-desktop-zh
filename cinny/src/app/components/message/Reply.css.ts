@@ -21,7 +21,7 @@ export const ThreadIndicator = style({
 export const Reply = style({
   marginBottom: toRem(1),
   minWidth: 0,
-  maxWidth: 'calc(100vw - 12rem)',
+  maxWidth: 'calc(100vw - 14rem)',
   minHeight: config.lineHeight.T300,
   overflow: 'hidden',
   selectors: {
