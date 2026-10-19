@@ -25,6 +25,9 @@ import { useOpenUserRoomProfile } from '../../state/hooks/userRoomProfile';
 import { useSpaceOptionally } from '../../hooks/useSpace';
 import { getMouseEventCords } from '../../utils/dom';
 import { useTranslation } from 'react-i18next';
+import { timeHourMinute } from '../../utils/time';
+import { useSetting } from '../../state/hooks/settings';
+import { settingsAtom } from '../../state/settings';
 
 export type EventReadersProps = {
   room: Room;
@@ -39,9 +42,13 @@ export const EventReaders = as<'div', EventReadersProps>(
     const openProfile = useOpenUserRoomProfile();
     const space = useSpaceOptionally();
     const { t } = useTranslation();
+    const [hour24Clock] = useSetting(settingsAtom, 'hour24Clock');
 
     const getName = (userId: string) =>
       getMemberDisplayName(room, userId) ?? getMxIdLocalPart(userId) ?? userId;
+
+    const getReadTs = (userId: string): number | undefined =>
+      room.getLastUnthreadedReceiptFor(userId)?.ts;
 
     return (
       <Box
@@ -63,6 +70,7 @@ export const EventReaders = as<'div', EventReadersProps>(
             <Box className={css.Content} direction="Column">
               {latestEventReaders.map((readerId) => {
                 const name = getName(readerId);
+                const readTs = getReadTs(readerId);
                 const avatarMxcUrl = room.getMember(readerId)?.getMxcAvatarUrl();
                 const avatarUrl = avatarMxcUrl
                   ? mx.mxcUrlToHttp(
@@ -108,6 +116,11 @@ export const EventReaders = as<'div', EventReadersProps>(
                     <Text size="T400" truncate>
                       {name}
                     </Text>
+                    {readTs !== undefined && (
+                      <Text size="T200" style={{ color: 'var(--_4yxtfda)' }}>
+                        {timeHourMinute(readTs, hour24Clock)}
+                      </Text>
+                    )}
                   </MenuItem>
                 );
               })}
