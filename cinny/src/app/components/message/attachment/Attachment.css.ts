@@ -10,7 +10,7 @@ export const Attachment = recipe({
     overflow: 'hidden',
     minWidth: toRem(200),
     width: '100%',
-    maxWidth: 'min(100%, 25rem)',
+    maxWidth: 'min(96%, 25rem)',
   },
   variants: {
     outlined: {
@@ -32,7 +32,7 @@ export const AttachmentBox = style([
   {
     minWidth: toRem(200),
     width: '100%',
-    maxWidth: 'min(100%, 25rem)',
+    maxWidth: 'min(96%, 25rem)',
     maxHeight: toRem(600),
     overflow: 'hidden',
   },
