@@ -200,7 +200,7 @@ export function MImage({ content, renderImageContent, outlined }: MImageProps) {
   const imgH = imgInfo?.h || 400;
 
   return (
-    <Attachment outlined={outlined} style={{ width: '36rem', maxWidth: '100%' }}>
+    <Attachment outlined={outlined} style={{ width: '36rem', maxWidth: 'calc(100vw - 120px)' }}>
       <AttachmentBox
         style={{
           width: '100%',
