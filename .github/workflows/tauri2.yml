@@ -233,6 +233,14 @@ jobs:
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
+      - name: Sign Android APK
+        uses: r0adkll/sign-android-release@7c393b7c56e2d9a5d4f8f3c9b6e5a4f2b1c3d4e5 # v1
+        with:
+          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
       - name: Upload APK to release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
