@@ -139,11 +139,28 @@ jobs:
             # Siyu fix 2: allow cleartext for the local app server (ERR_CLEARTEXT_NOT_PERMITTED)
             MANIFEST="src-tauri/gen/android/app/src/main/AndroidManifest.xml"
             if [ -f "$MANIFEST" ]; then
-              if ! grep -q "usesCleartextTraffic" "$MANIFEST"; then
+              # Tauri template ships usesCleartextTraffic="false": flip the value to true
+              sed -i 's/android:usesCleartextTraffic="false"/android:usesCleartextTraffic="true"/' "$MANIFEST" || true
+              if ! grep -q 'usesCleartextTraffic="true"' "$MANIFEST"; then
                 sed -i 's/<application /<application android:usesCleartextTraffic="true" /' "$MANIFEST" || true
               fi
-              grep -o "usesCleartextTraffic[^>]*" "$MANIFEST" | head -2 || echo "cleartext patch NOT applied"
+              echo "cleartext now:"; grep -o 'usesCleartextTraffic="[^"]*"' "$MANIFEST" | head -1
             fi
+            # Sync Android versionName/versionCode from tauri.conf.json (template defaults to 1.0/1)
+            python3 - <<'PYEOF_VER'
+            import json, re
+            try:
+                ver = json.load(open("src-tauri/tauri.conf.json"))["version"]
+                code = int(ver.replace(".", ""))
+                p = "src-tauri/gen/android/app/build.gradle.kts"
+                s = open(p).read()
+                s = re.sub(r'versionName = "[^"]*"', 'versionName = "%s"' % ver, s)
+                s = re.sub(r'versionCode = \d+', 'versionCode = %d' % code, s)
+                open(p, "w").write(s)
+                print("android version synced:", ver, code)
+            except Exception as e:
+                print("version sync skipped:", e)
+            PYEOF_VER
           } 2>&1 | tee /tmp/android-init.log
           tail -50 /tmp/android-init.log
           grep -q "^init exit: 0$" /tmp/android-init.log || { echo "tauri android init FAILED"; exit 1; }
