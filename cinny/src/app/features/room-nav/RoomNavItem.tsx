@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useState } from 'react';
+import React, { MouseEventHandler, forwardRef, useRef, useState } from 'react';
 import { Room } from 'matrix-js-sdk';
 import {
   Avatar,
@@ -405,6 +405,44 @@ export function RoomNavItem({
     setMenuAnchor(evt.currentTarget.getBoundingClientRect());
   };
 
+  // 长按唤出菜单（移动端无右键）
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+  const longPressPos = useRef<{ x: number; y: number } | null>(null);
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+  const handleTouchStart = (evt: React.TouchEvent) => {
+    const t = evt.touches[0];
+    if (!t) return;
+    longPressPos.current = { x: t.clientX, y: t.clientY };
+    longPressFired.current = false;
+    cancelLongPress();
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      const p = longPressPos.current;
+      setMenuAnchor({ x: p?.x ?? 0, y: p?.y ?? 0, width: 0, height: 0 });
+      longPressTimer.current = null;
+    }, 500);
+  };
+  const handleTouchMove = (evt: React.TouchEvent) => {
+    const t = evt.touches[0];
+    const p = longPressPos.current;
+    if (t && p && Math.hypot(t.clientX - p.x, t.clientY - p.y) > 12) cancelLongPress();
+  };
+  const handleTouchEnd = () => cancelLongPress();
+  const handleNavLinkClick: MouseEventHandler<HTMLAnchorElement> = (evt) => {
+    if (longPressFired.current) {
+      // 长按后松手：阻止跳转
+      longPressFired.current = false;
+      evt.preventDefault();
+      return;
+    }
+    if (room.isCallRoom()) handleStartCall(evt);
+  };
   const optionsVisible = hover || !!menuAnchor;
   const callSession = useCallSession(room);
   const callMembers = useCallMembers(callSession);
@@ -448,10 +486,15 @@ export function RoomNavItem({
       aria-selected={selected}
       data-hover={!!menuAnchor}
       onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
       {...hoverProps}
       {...focusWithinProps}
     >
-      <NavLink to={linkPath} onClick={room.isCallRoom() ? handleStartCall : undefined}>
+      <NavLink to={linkPath} onClick={handleNavLinkClick}>
         <NavItemContent>
           <Box as="span" grow="Yes" alignItems="Center" gap="200">
             <Avatar size="200" radii="400">
