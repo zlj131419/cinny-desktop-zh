@@ -208,29 +208,44 @@ export function Home() {
   const orphanRooms = useHomeRooms();
   const allRoomIds = useAllRooms();
   const mDirects = useAtomValue(mDirectAtom);
-  const [viewMode, setViewMode] = useState<'space' | 'all'>('all');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'people' | 'rooms' | 'mentions' | 'favourite'>('all');
+  const [viewMode, setViewMode] = useState<'all' | 'friends' | 'rooms' | 'spaces'>('all');
+  const [filter, setFilter] = useState<'all' | 'favourite' | 'unread' | 'rooms' | 'friends' | 'mentions'>('all');
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
+    if (!mx) return [];
     let list: string[] = [];
+    const isDM = (id: string): boolean => {
+      try {
+        return !!(mDirects && mDirects.has(id));
+      } catch {
+        return false;
+      }
+    };
+    const isSpaceRoom = (id: string): boolean => {
+      try {
+        const room = mx.getRoom(id);
+        return room ? isSpace(room) : false;
+      } catch {
+        return false;
+      }
+    };
     if (viewMode === 'all') {
       list = allRoomIds;
-    } else if (viewMode === 'space') {
-      // 按空间：只显示 Space 本身
-      if (!mx) return [];
-      list = allRoomIds.filter((id) => {
-        if (typeof id !== 'string') return false;
-        try {
-          const room = mx.getRoom(id);
-          return room ? isSpace(room) : false;
-        } catch {
-          return false;
-        }
-      });
+    } else if (viewMode === 'friends') {
+      // 好友：只显示 DM
+      list = allRoomIds.filter((id) => typeof id === 'string' && isDM(id));
+    } else if (viewMode === 'rooms') {
+      // 房间：普通房间（非 DM，非 Space）
+      list = allRoomIds.filter(
+        (id) => typeof id === 'string' && !isDM(id) && !isSpaceRoom(id)
+      );
+    } else if (viewMode === 'spaces') {
+      // 空间：只显示 Space
+      list = allRoomIds.filter((id) => typeof id === 'string' && isSpaceRoom(id));
     }
     if (!Array.isArray(list)) return [];
     return list.filter((id) => typeof id === 'string' && id.startsWith('!'));
-  }, [viewMode, allRoomIds, mx]);
+  }, [viewMode, allRoomIds, mx, mDirects]);
   const notificationPreferences = useRoomsNotificationPreferencesContext();
   const roomToUnread = useAtomValue(roomToUnreadAtom);
   const navigate = useNavigate();
@@ -249,7 +264,7 @@ export function Home() {
     try {
       if (filter === 'unread' && roomToUnread) {
         items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
-      } else if (filter === 'people' && mDirects) {
+      } else if (filter === 'friends' && mDirects) {
         items = items.filter((rId) => typeof rId === 'string' && mDirects.has(rId));
       } else if (filter === 'rooms' && mDirects) {
         items = items.filter((rId) => typeof rId === 'string' && !mDirects.has(rId));
@@ -330,28 +345,26 @@ export function Home() {
   return (
     <PageNav>
       <HomeHeader />
-      <Box direction="Column" gap="100" style={{ padding: `${config.space.S200} ${config.space.S300}` }}>
-        <Box direction="Row" gap="100" alignItems="Center">
-          <Button
-            size="300"
-            variant={viewMode === 'all' ? 'Primary' : 'Secondary'}
-            fill={viewMode === 'all' ? 'Solid' : 'None'}
-            onClick={() => setViewMode('all')}
-          >
-            <Text size="T300">所有聊天</Text>
-          </Button>
-          <Button
-            size="300"
-            variant={viewMode === 'space' ? 'Primary' : 'Secondary'}
-            fill={viewMode === 'space' ? 'Solid' : 'None'}
-            onClick={() => setViewMode('space')}
-          >
-            <Text size="T300">按空间</Text>
-          </Button>
+      <Box direction="Column" gap="100" style={{ padding: `${config.space.S200} ${config.space.S300}`, maxWidth: '100%', overflow: 'hidden' }}>
+        <Box direction="Row" gap="100" alignItems="Center" wrap="Wrap" style={{ maxWidth: '100%' }}>
+          {(['all', 'friends', 'rooms', 'spaces'] as const).map((m) => (
+            <Button
+              key={m}
+              size="300"
+              variant={viewMode === m ? 'Primary' : 'Secondary'}
+              fill={viewMode === m ? 'Solid' : 'None'}
+              onClick={() => setViewMode(m)}
+              style={{ flexShrink: 0 }}
+            >
+              <Text size="T300">
+                {m === 'all' ? '所有聊天' : m === 'friends' ? '好友' : m === 'rooms' ? '房间' : '空间'}
+              </Text>
+            </Button>
+          ))}
         </Box>
         {viewMode === 'all' && (
-          <Box direction="Row" gap="100" wrap="Wrap">
-            {(['favourite', 'all', 'unread', 'people', 'rooms', 'mentions'] as const).map((f) => (
+          <Box direction="Row" gap="100" wrap="Wrap" style={{ maxWidth: '100%' }}>
+            {(['all', 'favourite', 'unread', 'rooms', 'friends', 'mentions'] as const).map((f) => (
               <Button
                 key={f}
                 size="300"
@@ -359,9 +372,10 @@ export function Home() {
                 fill={filter === f ? 'Solid' : 'None'}
                 radii="400"
                 onClick={() => setFilter(f)}
+                style={{ flexShrink: 0 }}
               >
                 <Text size="T300">
-                  {f === 'favourite' ? '收藏' : f === 'all' ? '全部' : f === 'unread' ? '未读' : f === 'people' ? '人员' : f === 'rooms' ? '房间' : '提及'}
+                  {f === 'all' ? '全部' : f === 'favourite' ? '收藏' : f === 'unread' ? '未读' : f === 'rooms' ? '房间' : f === 'friends' ? '好友' : '提及'}
                 </Text>
               </Button>
             ))}
