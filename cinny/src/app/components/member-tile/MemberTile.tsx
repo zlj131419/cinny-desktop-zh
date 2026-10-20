@@ -38,7 +38,7 @@ export const MemberTile = as<'button', MemberTileProps>(
             alt={name}
             renderFallback={() => (
               <Text size="T400">
-                <b>{name.charAt(0).toUpperCase()}</b>
+                <b>{String(typeof name === "string" ? name : "?").charAt(0).toUpperCase()}</b>
               </Text>
             )}
           />
