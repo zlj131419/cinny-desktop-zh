@@ -32,7 +32,7 @@ export const secondsToMinutesAndSeconds = (seconds: number): string => {
 };
 
 export const getFileTypeIcon = (icons: Record<IconName, IconSrc>, fileType: string): IconSrc => {
-  const type = fileType.toLowerCase();
+  const type = typeof fileType === 'string' ? fileType.toLowerCase() : '';
   if (type.startsWith('audio')) {
     return icons.Play;
   }
