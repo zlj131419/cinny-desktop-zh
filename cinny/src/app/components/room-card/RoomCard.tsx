@@ -30,35 +30,13 @@ import { AsyncStatus, useAsyncCallback } from '../../hooks/useAsyncCallback';
 import { onEnterOrSpace, stopPropagation } from '../../utils/keyboard';
 import { RoomType, StateEvent } from '../../../types/matrix/room';
 import { useJoinedRoomId } from '../../hooks/useJoinedRoomId';
-import { useElementSizeObserver } from '../../hooks/useElementSizeObserver';
 import { getRoomAvatarUrl, getStateEvent } from '../../utils/room';
 import { useStateEventCallback } from '../../hooks/useStateEventCallback';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 
-type GridColumnCount = '1' | '2' | '3';
-const getGridColumnCount = (gridWidth: number): GridColumnCount => {
-  if (gridWidth < 300) return '1';
-  if (gridWidth <= 900) return '2';
-  return '3';
-};
-
-const setGridColumnCount = (grid: HTMLElement, count: GridColumnCount): void => {
-  grid.style.setProperty('grid-template-columns', `repeat(${count}, 1fr)`);
-};
-
 export function RoomCardGrid({ children }: { children: ReactNode }) {
-  const gridRef = useRef<HTMLDivElement>(null);
-
-  useElementSizeObserver(
-    useCallback(() => gridRef.current, []),
-    useCallback((width, _, target) => setGridColumnCount(target, getGridColumnCount(width)), [])
-  );
-
-  return (
-    <Box className={css.CardGrid} direction="Row" gap="400" wrap="Wrap" ref={gridRef}>
-      {children}
-    </Box>
-  );
+  // 列数完全交给 CSS（auto-fill + minmax 按容器宽自适应），不量宽、不写内联样式
+  return <div className={css.CardGrid}>{children}</div>;
 }
 
 export const RoomCardBase = as<'div'>(({ className, ...props }, ref) => (
