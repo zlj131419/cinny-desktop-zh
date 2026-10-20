@@ -930,7 +930,9 @@ export const Message = as<'div', MessageProps>(
           <MessageEditor
             style={{
               maxWidth: '100%',
-              width: '100vw',
+              width: '100%',
+              minWidth: 0,
+              overflow: 'hidden',
             }}
             roomId={room.roomId}
             room={room}
