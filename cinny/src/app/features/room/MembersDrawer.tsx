@@ -143,7 +143,7 @@ function MemberItem({
             alt={name}
             renderFallback={() => (
               <Text size="T200">
-                <b>{name.charAt(0).toUpperCase()}</b>
+                <b>{String(typeof name === "string" ? name : "?").charAt(0).toUpperCase()}</b>
               </Text>
             )}
           />
