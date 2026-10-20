@@ -36,6 +36,7 @@ import {
   getHomeRoomPath,
   getDirectRoomPath,
   getSpacePath,
+  getSpaceRoomPath,
   getHomeSearchPath,
   withSearchParam,
 } from '../../pathUtils';
@@ -53,7 +54,7 @@ import { RoomNavCategoryButton, RoomNavItem } from '../../../features/room-nav';
 import { makeNavCategoryId } from '../../../state/closedNavCategories';
 import { roomToUnreadAtom } from '../../../state/room/roomToUnread';
 import { mDirectAtom } from '../../../state/mDirectList';
-import { isSpace } from '../../../utils/room';
+import { isSpace, getRoomToParents, getAllParents } from '../../../utils/room';
 import { useCategoryHandler } from '../../../hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '../../../hooks/useNavToActivePathMapper';
 import { PageNav, PageNavHeader, PageNavContent } from '../../../components/page';
@@ -259,23 +260,23 @@ export function Home() {
   const [closedCategories, setClosedCategories] = useAtom(useClosedNavCategoriesAtom());
 
   // 根据视图模式和房间类型获取正确的跳转路径
+  // 视图只是列表过滤不跳转页面；空间里的房间用空间路径（/space/xxx/room/yyy）
+  const roomToParents = useMemo(() => {
+    try {
+      return getRoomToParents(mx);
+    } catch {
+      return new Map();
+    }
+  }, [mx]);
   const getRoomLinkPath = (roomId: string): string => {
     const roomIdOrAlias = getCanonicalAliasOrRoomId(mx, roomId);
     try {
-      if (viewMode === 'friends') {
-        return getDirectRoomPath(roomIdOrAlias);
-      }
-      if (viewMode === 'spaces') {
-        return getSpacePath(roomIdOrAlias);
-      }
-      const room = mx.getRoom(roomId);
-      if (room) {
-        if (mDirects?.has(roomId)) {
-          return getDirectRoomPath(roomIdOrAlias);
-        }
-        if (isSpace(room)) {
-          return getSpacePath(roomIdOrAlias);
-        }
+      // 空间里的房间：用空间路径
+      const parents = getAllParents(roomToParents, roomId);
+      if (parents.size > 0) {
+        const parentSpaceId = Array.from(parents)[0];
+        const parentAlias = getCanonicalAliasOrRoomId(mx, parentSpaceId);
+        return getSpaceRoomPath(parentAlias, roomIdOrAlias);
       }
       return getHomeRoomPath(roomIdOrAlias);
     } catch {
