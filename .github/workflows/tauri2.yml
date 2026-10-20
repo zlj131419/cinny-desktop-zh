@@ -133,6 +133,17 @@ jobs:
               fi
             done
             ls -la src-tauri/gen/android/ 2>&1 | head -10
+            # Siyu fix 1: regenerate launcher icons from our logo (template ships old defaults)
+            echo "Regenerating Android icons from src-tauri/icons/icon.png"
+            npx tauri icon src-tauri/icons/icon.png 2>&1 | tail -3 || echo "tauri icon failed, continuing"
+            # Siyu fix 2: allow cleartext for the local app server (ERR_CLEARTEXT_NOT_PERMITTED)
+            MANIFEST="src-tauri/gen/android/app/src/main/AndroidManifest.xml"
+            if [ -f "$MANIFEST" ]; then
+              if ! grep -q "usesCleartextTraffic" "$MANIFEST"; then
+                sed -i 's/<application /<application android:usesCleartextTraffic="true" /' "$MANIFEST" || true
+              fi
+              grep -o "usesCleartextTraffic[^>]*" "$MANIFEST" | head -2 || echo "cleartext patch NOT applied"
+            fi
           } 2>&1 | tee /tmp/android-init.log
           tail -50 /tmp/android-init.log
           grep -q "^init exit: 0$" /tmp/android-init.log || { echo "tauri android init FAILED"; exit 1; }
