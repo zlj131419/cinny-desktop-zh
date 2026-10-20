@@ -87,20 +87,30 @@ pub fn run() {
                     if let Ok(Some(update)) = updater.check().await {
                         let version = update.version.clone();
 
-                        let should_update = handle
-                            .dialog()
-                            .message(format!(
-                                "发现新版本 {}\n\n现在更新吗？",
-                                version
-                            ))
-                            .title("发现新版本")
-                            .kind(MessageDialogKind::Info)
-                            .buttons(MessageDialogButtons::YesNo)
-                            .blocking_show();
+                        // 1. 先在后台自动下载新版本，下载过程不打扰用户
+                        match update.download(|_, _| {}, || {}).await {
+                            Ok(bytes) => {
+                                // 2. 下载完成后才提示：点更新即自动升级
+                                let do_update = handle
+                                    .dialog()
+                                    .message(format!(
+                                        "新版本 {} 已下载完成\n\n点击更新将自动完成升级并重新打开私语",
+                                        version
+                                    ))
+                                    .title("新版本已就绪")
+                                    .kind(MessageDialogKind::Info)
+                                    .buttons(MessageDialogButtons::YesNo)
+                                    .blocking_show();
 
-                        if should_update {
-                            if update.download_and_install(|_, _| {}, || {}).await.is_ok() {
-                                handle.restart();
+                                // 3. 确认后自动安装并重启到新版本
+                                if do_update {
+                                    if update.install(bytes).is_ok() {
+                                        handle.restart();
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Update download failed: {}", e);
                             }
                         }
                     }
