@@ -23,7 +23,10 @@ const DOMAIN_REGEX = /\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b/;
 
 export const isServerName = (serverName: string): boolean => DOMAIN_REGEX.test(serverName);
 
-const matchMxId = (id: string): RegExpMatchArray | null => id.match(/^([@$+#])([^\s:]+):(\S+)$/);
+const matchMxId = (id: string): RegExpMatchArray | null => {
+  if (typeof id !== 'string') return null;
+  return id.match(/^([@$+#])([^\s:]+):(\S+)$/);
+};
 
 const validMxId = (id: string): boolean => !!matchMxId(id);
 
@@ -31,11 +34,11 @@ export const getMxIdServer = (userId: string): string | undefined => matchMxId(u
 
 export const getMxIdLocalPart = (userId: string): string | undefined => matchMxId(userId)?.[2];
 
-export const isUserId = (id: string): boolean => validMxId(id) && id.startsWith('@');
+export const isUserId = (id: string): boolean => typeof id === 'string' && validMxId(id) && id.startsWith('@');
 
-export const isRoomId = (id: string): boolean => id.startsWith('!');
+export const isRoomId = (id: string): boolean => typeof id === 'string' && id.startsWith('!');
 
-export const isRoomAlias = (id: string): boolean => validMxId(id) && id.startsWith('#');
+export const isRoomAlias = (id: string): boolean => typeof id === 'string' && validMxId(id) && id.startsWith('#');
 
 export const getCanonicalAliasRoomId = (mx: MatrixClient, alias: string): string | undefined =>
   mx
