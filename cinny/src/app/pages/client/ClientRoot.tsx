@@ -36,6 +36,7 @@ import { stopPropagation } from '../../utils/keyboard';
 import { SyncStatus } from './SyncStatus';
 import { AuthMetadataProvider } from '../../hooks/useAuthMetadata';
 import { getFallbackSession } from '../../state/sessions';
+import { startKeepAlive, stopKeepAlive } from '../../utils/keepAlive';
 import { AutoDiscovery } from './AutoDiscovery';
 
 function ClientRootLoading() {
@@ -199,6 +200,15 @@ export function ClientRoot({ children }: ClientRootProps) {
       startMatrix(mx);
     }
   }, [mx, startMatrix]);
+
+  // 安卓 App：登录成功后启动前台保活服务，切后台也能收消息通知；退出登录时停止
+  useEffect(() => {
+    if (!mx) return undefined;
+    void startKeepAlive();
+    return () => {
+      void stopKeepAlive();
+    };
+  }, [mx]);
 
   useSyncState(
     mx,
