@@ -317,7 +317,7 @@ export const MessageReadReceiptBadge = as<
                   alt={displayName}
                   renderFallback={() => (
                     <Text size="T200">
-                      <b>{displayName.charAt(0).toUpperCase()}</b>
+                      <b>{String(typeof displayName === "string" ? displayName : "?").charAt(0).toUpperCase()}</b>
                     </Text>
                   )}
                 />
@@ -915,7 +915,7 @@ export const Message = as<'div', MessageProps>(
             alt={senderDisplayName}
             renderFallback={() => (
               <Text size="T400">
-                <b>{senderDisplayName.charAt(0).toUpperCase()}</b>
+                <b>{String(typeof senderDisplayName === "string" ? senderDisplayName : "?").charAt(0).toUpperCase()}</b>
               </Text>
             )}
           />
