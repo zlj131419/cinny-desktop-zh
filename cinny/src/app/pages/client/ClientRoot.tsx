@@ -37,6 +37,7 @@ import { SyncStatus } from './SyncStatus';
 import { AuthMetadataProvider } from '../../hooks/useAuthMetadata';
 import { getFallbackSession } from '../../state/sessions';
 import { startKeepAlive, stopKeepAlive } from '../../utils/keepAlive';
+import { checkAndroidUpdate } from '../../utils/appUpdateCheck';
 import { AutoDiscovery } from './AutoDiscovery';
 
 function ClientRootLoading() {
@@ -205,6 +206,8 @@ export function ClientRoot({ children }: ClientRootProps) {
   useEffect(() => {
     if (!mx) return undefined;
     void startKeepAlive();
+    // 安卓 App 不能自动升级：查一次官方最新版本，有新版就弹提醒跳下载页
+    checkAndroidUpdate();
     return () => {
       void stopKeepAlive();
     };
