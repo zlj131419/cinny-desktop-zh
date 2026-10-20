@@ -1,0 +1,38 @@
+name: "Attach latest.json"
+
+# tauri-action 与 CLI 的更新包格式代差导致 latest.json 被跳过上传，
+# 这个 workflow 在发版后手动触发：取 release 里的 NSIS 签名文件，组装 latest.json 传回 release。
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.0.32)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  latest-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and upload latest.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "*_x64-setup.exe.sig"
+          SIG_FILE=$(ls *_x64-setup.exe.sig | head -1)
+          echo "签名文件: $SIG_FILE"
+          EXE_NAME=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep '_x64-setup\.exe$')
+          echo "安装包: $EXE_NAME"
+          VERSION="${TAG#v}"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${EXE_NAME}"
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq -n --rawfile sig "$SIG_FILE" --arg version "$VERSION" --arg url "$URL" --arg date "$DATE" \
+            '{version: $version, notes: "私语 Siyu 更新", pub_date: $date, platforms: {"windows-x86_64": {signature: ($sig | rtrimstr("\n")), url: $url}}}' > latest.json
+          cat latest.json
+          gh release upload "$TAG" latest.json --repo "$GITHUB_REPOSITORY" --clobber
+          echo "latest.json 已上传到 $TAG"
