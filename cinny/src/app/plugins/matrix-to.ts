@@ -47,6 +47,7 @@ const MATRIX_TO_ROOM_EVENT =
   /^https?:\/\/matrix\.to\/#\/([#!][^?/\s]+)\/(\$[^?/\s]+)\/?(\?[\S]*)?$/;
 
 export const parseMatrixToUser = (href: string): string | undefined => {
+  if (typeof href !== 'string') return undefined;
   const match = href.match(MATRIX_TO_USER);
   if (!match) return undefined;
   const userId = match[1];
@@ -54,6 +55,7 @@ export const parseMatrixToUser = (href: string): string | undefined => {
 };
 
 export const parseMatrixToRoom = (href: string): MatrixToRoom | undefined => {
+  if (typeof href !== 'string') return undefined;
   const match = href.match(MATRIX_TO_ROOM);
   if (!match) return undefined;
 
@@ -68,6 +70,7 @@ export const parseMatrixToRoom = (href: string): MatrixToRoom | undefined => {
 };
 
 export const parseMatrixToRoomEvent = (href: string): MatrixToRoomEvent | undefined => {
+  if (typeof href !== 'string') return undefined;
   const match = href.match(MATRIX_TO_ROOM_EVENT);
   if (!match) return undefined;
 
