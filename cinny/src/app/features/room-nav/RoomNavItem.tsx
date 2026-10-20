@@ -45,6 +45,7 @@ import { useSetting } from '../../state/hooks/settings';
 import { settingsAtom } from '../../state/settings';
 import { useOpenRoomSettings } from '../../state/hooks/roomSettings';
 import { useSpaceOptionally } from '../../hooks/useSpace';
+import { siyuTouchDrag } from '../../utils/siyuDrag';
 import {
   getRoomNotificationModeIcon,
   RoomNotificationMode,
@@ -436,6 +437,10 @@ export function RoomNavItem({
     longPressFired.current = false;
     cancelLongPress();
     longPressTimer.current = setTimeout(() => {
+      if (siyuTouchDrag.active) {
+        longPressTimer.current = null;
+        return;
+      }
       longPressFired.current = true;
       const p = longPressPos.current;
       setMenuAnchor({ x: p?.x ?? 0, y: p?.y ?? 0, width: 0, height: 0 });
