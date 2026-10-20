@@ -67,7 +67,7 @@ const defaultSettings: Settings = {
   enterForNewline: false,
   messageLayout: MessageLayout.Bubble,
   messageSpacing: '400',
-  hideMembershipEvents: false,
+  hideMembershipEvents: true,
   hideNickAvatarEvents: true,
   mediaAutoLoad: true,
   urlPreview: true,
