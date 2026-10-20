@@ -449,7 +449,7 @@ export function Home() {
       result = result.filter((rId) => roomToUnread.has(rId) || rId === selectedRoomId);
     }
     return result;
-  }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId, filter, mDirects]);
+  }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId, filter, mDirects, tagVersion]);
 
   // 构建带分组标题的显示列表（所有聊天模式下按分组分区）
   type DisplayItem = { type: 'header'; title: string } | { type: 'room'; roomId: string };
