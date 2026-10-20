@@ -51,6 +51,7 @@ import { useAllRooms } from './useAllRooms';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { VirtualTile } from '../../../components/virtualizer';
 import { RoomNavCategoryButton, RoomNavItem } from '../../../features/room-nav';
+import { siyuTouchDrag } from '../../../utils/siyuDrag';
 import { makeNavCategoryId } from '../../../state/closedNavCategories';
 import { roomToUnreadAtom } from '../../../state/room/roomToUnread';
 import { mDirectAtom } from '../../../state/mDirectList';
@@ -222,6 +223,12 @@ export function Home() {
       return new Set<string>();
     }
   });
+  React.useEffect(() => {
+    if (!touchDrag) return;
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener('touchmove', prevent, { passive: false });
+    return () => document.removeEventListener('touchmove', prevent);
+  }, [touchDrag]);
   const toggleGroup = (name: string) => {
     setClosedGroups((prev) => {
       const next = new Set(prev);
@@ -261,8 +268,29 @@ export function Home() {
       return list;
     });
   };
-  // 拖拽：当前拖动的房间
+  // 拖拽：当前拖动的房间（桌面 HTML5）
   const dragRoomIdRef = useRef<string | null>(null);
+  // 触屏拖拽：ghost 跟随手指 + 悬停落点高亮
+  const [touchDrag, setTouchDrag] = useState<{ roomId: string; x: number; y: number } | null>(null);
+  const [hoverDrop, setHoverDrop] = useState<string | null>(null);
+  const touchRef = useRef<{
+    roomId: string; startX: number; startY: number; lastX: number; lastY: number;
+    armed: boolean; active: boolean; timer: ReturnType<typeof setTimeout> | null;
+  } | null>(null);
+  const dropNameAt = (x: number, y: number): string | null => {
+    try {
+      const el = document.elementFromPoint(x, y)?.closest('[data-siyu-drop]');
+      return el ? (el.getAttribute('data-siyu-drop') as string) : null;
+    } catch { return null; }
+  };
+  const applyDrop = (roomId: string, dropName: string | null) => {
+    if (!dropName) return;
+    if (dropName === '__ungroup__') {
+      mx.deleteRoomTag(roomId, 'com.siyu.group').catch(() => {});
+    } else {
+      mx.setRoomTag(roomId, 'com.siyu.group', { name: dropName }).catch(() => {});
+    }
+  };
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
@@ -573,13 +601,29 @@ export function Home() {
             </NavCategory>
             <NavCategory>
               <NavCategoryHeader>
-                <RoomNavCategoryButton
-                  closed={closedCategories.has(DEFAULT_CATEGORY_ID)}
-                  data-category-id={DEFAULT_CATEGORY_ID}
-                  onClick={handleCategoryClick}
+                <div
+                  data-siyu-drop="__ungroup__"
+                  onDragOver={(e: React.DragEvent) => e.preventDefault()}
+                  onDrop={(e: React.DragEvent) => {
+                    e.preventDefault();
+                    const rid = dragRoomIdRef.current ?? e.dataTransfer.getData('text/siyu-room');
+                    if (rid) applyDrop(rid, '__ungroup__');
+                    dragRoomIdRef.current = null;
+                  }}
+                  style={{
+                    background: hoverDrop === '__ungroup__' ? 'rgba(63, 131, 246, 0.18)' : undefined,
+                    borderRadius: 8,
+                  }}
+                  title="拖到此处可移出分组"
                 >
-                  {'所有'}
-                </RoomNavCategoryButton>
+                  <RoomNavCategoryButton
+                    closed={closedCategories.has(DEFAULT_CATEGORY_ID)}
+                    data-category-id={DEFAULT_CATEGORY_ID}
+                    onClick={handleCategoryClick}
+                  >
+                    {'所有'}
+                  </RoomNavCategoryButton>
+                </div>
               </NavCategoryHeader>
               <div
                 style={{
@@ -608,17 +652,19 @@ export function Home() {
                           onDragOver={(e: React.DragEvent) => {
                             e.preventDefault();
                           }}
+                          data-siyu-drop={item.title}
                           onDrop={(e: React.DragEvent) => {
                             e.preventDefault();
                             const rid = dragRoomIdRef.current ?? e.dataTransfer.getData('text/siyu-room');
-                            if (rid) {
-                              mx.setRoomTag(rid, 'com.siyu.group', { name: item.title }).catch(() => {});
-                            }
+                            if (rid) applyDrop(rid, item.title);
                             dragRoomIdRef.current = null;
                           }}
                           style={{
                             padding: `${config.space.S300} ${config.space.S200} ${config.space.S100}`,
                             cursor: 'pointer',
+                            background:
+                              hoverDrop === item.title ? 'rgba(63, 131, 246, 0.18)' : undefined,
+                            borderRadius: 8,
                           }}
                         >
                           <RoomNavCategoryButton
@@ -667,6 +713,7 @@ export function Home() {
                     >
                       <div
                         draggable
+                        style={{ WebkitTouchCallout: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
                         onDragStart={(e: React.DragEvent) => {
                           dragRoomIdRef.current = roomId;
                           try {
@@ -678,6 +725,53 @@ export function Home() {
                         }}
                         onDragEnd={() => {
                           dragRoomIdRef.current = null;
+                        }}
+                        onTouchStart={(e: React.TouchEvent) => {
+                          const t = e.touches[0];
+                          if (!t) return;
+                          const rec = {
+                            roomId, startX: t.clientX, startY: t.clientY,
+                            lastX: t.clientX, lastY: t.clientY,
+                            armed: false, active: false, timer: null as ReturnType<typeof setTimeout> | null,
+                          };
+                          rec.timer = setTimeout(() => { rec.armed = true; }, 260);
+                          touchRef.current = rec;
+                        }}
+                        onTouchMove={(e: React.TouchEvent) => {
+                          const rec = touchRef.current;
+                          const t = e.touches[0];
+                          if (!rec || !t) return;
+                          rec.lastX = t.clientX; rec.lastY = t.clientY;
+                          if (!rec.active && rec.armed && Math.hypot(t.clientX - rec.startX, t.clientY - rec.startY) > 10) {
+                            rec.active = true;
+                            siyuTouchDrag.active = true;
+                            try { navigator.vibrate?.(15); } catch { /* ignore */ }
+                            setTouchDrag({ roomId: rec.roomId, x: t.clientX, y: t.clientY });
+                          }
+                          if (rec.active) {
+                            setTouchDrag({ roomId: rec.roomId, x: t.clientX, y: t.clientY });
+                            const g = dropNameAt(t.clientX, t.clientY);
+                            setHoverDrop((prev) => (prev === g ? prev : g));
+                          }
+                        }}
+                        onTouchEnd={() => {
+                          const rec = touchRef.current;
+                          if (rec?.timer) clearTimeout(rec.timer);
+                          if (rec?.active) {
+                            applyDrop(rec.roomId, dropNameAt(rec.lastX, rec.lastY));
+                          }
+                          siyuTouchDrag.active = false;
+                          setTouchDrag(null);
+                          setHoverDrop(null);
+                          touchRef.current = null;
+                        }}
+                        onTouchCancel={() => {
+                          const rec = touchRef.current;
+                          if (rec?.timer) clearTimeout(rec.timer);
+                          siyuTouchDrag.active = false;
+                          setTouchDrag(null);
+                          setHoverDrop(null);
+                          touchRef.current = null;
                         }}
                       >
                         <RoomNavItem
@@ -696,6 +790,36 @@ export function Home() {
               </div>
             </NavCategory>
           </Box>
+          {touchDrag && (
+            <div
+              style={{
+                position: 'fixed',
+                left: touchDrag.x - 70,
+                top: touchDrag.y - 24,
+                width: 140,
+                padding: '8px 12px',
+                background: 'rgba(63, 131, 246, 0.92)',
+                color: '#fff',
+                borderRadius: 8,
+                fontSize: 13,
+                textAlign: 'center',
+                pointerEvents: 'none',
+                zIndex: 9999,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+              }}
+            >
+              {(() => {
+                try {
+                  return mx.getRoom(touchDrag.roomId)?.name ?? '';
+                } catch {
+                  return '';
+                }
+              })()}
+            </div>
+          )}
         </PageNavContent>
       )}
     </PageNav>
