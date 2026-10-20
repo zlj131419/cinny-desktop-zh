@@ -147,20 +147,7 @@ jobs:
               echo "cleartext now:"; grep -o 'usesCleartextTraffic="[^"]*"' "$MANIFEST" | head -1
             fi
             # Sync Android versionName/versionCode from tauri.conf.json (template defaults to 1.0/1)
-            python3 - <<'PYEOF_VER'
-            import json, re
-            try:
-                ver = json.load(open("src-tauri/tauri.conf.json"))["version"]
-                code = int(ver.replace(".", ""))
-                p = "src-tauri/gen/android/app/build.gradle.kts"
-                s = open(p).read()
-                s = re.sub(r'versionName = "[^"]*"', 'versionName = "%s"' % ver, s)
-                s = re.sub(r'versionCode = \d+', 'versionCode = %d' % code, s)
-                open(p, "w").write(s)
-                print("android version synced:", ver, code)
-            except Exception as e:
-                print("version sync skipped:", e)
-            PYEOF_VER
+            python3 -c "import json,re; ver=json.load(open('src-tauri/tauri.conf.json'))['version']; code=int(ver.replace('.','')); p='src-tauri/gen/android/app/build.gradle.kts'; s=open(p).read(); s=re.sub(r'versionName = \"[^\"]*\"','versionName = \"'+ver+'\"',s); s=re.sub(r'versionCode = [0-9]+','versionCode = '+str(code),s); open(p,'w').write(s); print('android version synced:',ver,code)" || echo "version sync skipped"
           } 2>&1 | tee /tmp/android-init.log
           tail -50 /tmp/android-init.log
           grep -q "^init exit: 0$" /tmp/android-init.log || { echo "tauri android init FAILED"; exit 1; }
