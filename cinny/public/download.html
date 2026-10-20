@@ -72,23 +72,21 @@
   }
   .btn:hover { opacity: .92; }
   .btn.secondary { background: rgba(255,255,255,.13); font-weight: 500; }
-  .alt-link {
-    display: inline-block; margin-top: 10px; font-size: 12px;
-    color: rgba(255,255,255,.55); text-decoration: none;
+  .btn + .btn { margin-top: 8px; }
+  .qr-box { margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .qr-box img {
+    width: 84px; height: 84px; display: block; cursor: zoom-in;
+    background: #fff; padding: 5px; border-radius: 10px;
   }
-  .alt-link:hover { color: #c4b5fd; }
-  .qr-hint { margin-top: 12px; font-size: 12px; font-weight: 400; color: rgba(255,255,255,.5); }
-  .qr-trigger { cursor: pointer; position: relative; display: inline-block; }
-  .qr-trigger:hover { color: rgba(255,255,255,.85); }
-  .qr-popup {
-    display: none; position: absolute; bottom: 100%; left: 50%;
-    transform: translateX(-50%); margin-bottom: 12px;
-    background: #fff; padding: 12px; border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.4); z-index: 10;
+  .qr-box span { font-size: 11px; color: rgba(255,255,255,.5); letter-spacing: 1px; }
+  .qr-overlay {
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(10,8,30,.82); align-items: center; justify-content: center;
+    flex-direction: column; gap: 14px; cursor: zoom-out;
   }
-  .qr-popup img { width: 180px; height: 180px; display: block; }
-  .qr-popup p { color: #333; font-size: 12px; margin: 8px 0 0; text-align: center; }
-  .qr-trigger:hover .qr-popup { display: block; }
+  .qr-overlay.show { display: flex; }
+  .qr-overlay img { width: 250px; height: 250px; background: #fff; padding: 12px; border-radius: 16px; }
+  .qr-overlay span { color: rgba(255,255,255,.75); font-size: 13px; letter-spacing: 1px; }
   .note { margin-top: 40px; color: rgba(255,255,255,.42); font-size: 12px; text-align: center; line-height: 1.9; }
   .note a { color: #a78bfa; text-decoration: none; }
   @media (max-width: 640px) {
@@ -100,8 +98,10 @@
     .card h2 { font-size: 15px; margin-bottom: 6px; }
     .card p { font-size: 11px; line-height: 1.6; margin-bottom: 14px; }
     .btn { padding: 9px 4px; font-size: 12px; border-radius: 9px; }
-    .alt-link { font-size: 11px; margin-top: 8px; }
-    .qr-hint { display: none; }
+    .btn + .btn { margin-top: 6px; }
+    .qr-box { margin-top: 10px; }
+    .qr-box img { width: 66px; height: 66px; padding: 4px; border-radius: 8px; }
+    .qr-box span { font-size: 10px; }
     .slogan-sub { margin: 20px 0 16px; }
   }
 </style>
@@ -119,45 +119,49 @@
       <h2>Windows</h2>
       <p>Windows 10 / 11 64位<br/>v1.0.30</p>
       <div class="spacer"></div>
-      <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64-setup.exe">下载 EXE</a>
-      <a class="alt-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64_en-US.msi">或下载 MSI 安装包</a>
-      <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64-setup.exe" alt="Windows下载二维码"/><p>扫码下载 Windows 版</p></span></span></div>
+      <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64_en-US.msi">MSI 安装</a>
+      <a class="btn primary-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64-setup.exe">下载 EXE</a>
+      <div class="qr-box"><img class="qr-img" alt="Windows 下载二维码"/><span>扫码下载</span></div>
     </div>
     <div class="card">
       <div class="os">🤖</div>
       <h2>Android</h2>
       <p>Android 8.0 及以上<br/>v1.0.30</p>
       <div class="spacer"></div>
-      <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk">下载 APK</a>
-      <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk" alt="Android下载二维码"/><p>扫码打开下载页</p></span></span></div>
+      <a class="btn primary-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk">下载 APK</a>
+      <div class="qr-box"><img class="qr-img" alt="Android 下载二维码"/><span>扫码下载</span></div>
     </div>
     <div class="card">
       <div class="os">🍎</div>
       <h2>macOS</h2>
       <p>Apple Silicon / Intel<br/>敬请期待</p>
       <div class="spacer"></div>
-      <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
+      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
+      <div class="qr-box"><img class="qr-img" alt="macOS 版本二维码"/><span>扫码查看</span></div>
     </div>
     <div class="card">
       <div class="os">🐧</div>
       <h2>Linux</h2>
       <p>AppImage / deb<br/>敬请期待</p>
       <div class="spacer"></div>
-      <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
+      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
+      <div class="qr-box"><img class="qr-img" alt="Linux 版本二维码"/><span>扫码查看</span></div>
     </div>
     <div class="card">
       <div class="os">📱</div>
       <h2>手机 / 平板</h2>
       <p>用浏览器打开本站<br/>添加到主屏幕即为 App</p>
       <div class="spacer"></div>
-      <a class="btn secondary" href="../">打开网页版</a>
+      <a class="btn secondary primary-link" href="../">打开网页版</a>
+      <div class="qr-box"><img class="qr-img" alt="网页版二维码"/><span>扫码打开</span></div>
     </div>
     <div class="card">
       <div class="os">🌐</div>
       <h2>网页版</h2>
       <p>免安装，打开即用<br/>支持 PWA 安装</p>
       <div class="spacer"></div>
-      <a class="btn secondary" href="../">打开网页版</a>
+      <a class="btn secondary primary-link" href="../">打开网页版</a>
+      <div class="qr-box"><img class="qr-img" alt="网页版二维码"/><span>扫码打开</span></div>
     </div>
   </div>
   <p class="note">
@@ -165,5 +169,25 @@
     所有版本均可在 <a href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">GitHub Releases</a> 查看完整列表。
   </p>
 </div>
+<div class="qr-overlay" id="qrOverlay"><img id="qrOverlayImg" alt="二维码大图"/><span>点任意处关闭</span></div>
+<script>
+  // 二维码按每张卡主链接实时生成：链接换版本，二维码自动跟着变
+  document.querySelectorAll('.card').forEach(function (card) {
+    var link = card.querySelector('a.primary-link') || card.querySelector('a.btn');
+    var img = card.querySelector('img.qr-img');
+    if (!link || !img) return;
+    var target = new URL(link.getAttribute('href'), window.location.href).href;
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=' + encodeURIComponent(target);
+    img.onerror = function () { var b = card.querySelector('.qr-box'); if (b) b.style.display = 'none'; };
+    img.addEventListener('click', function () {
+      var ov = document.getElementById('qrOverlay');
+      document.getElementById('qrOverlayImg').src = img.src;
+      ov.classList.add('show');
+    });
+  });
+  document.getElementById('qrOverlay').addEventListener('click', function () {
+    this.classList.remove('show');
+  });
+</script>
 </body>
 </html>
