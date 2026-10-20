@@ -20,6 +20,30 @@ export function initTauriNotificationShim(attempt = 0) {
     args?: Record<string, unknown>
   ) => Promise<unknown>;
 
+  // 安卓通知渠道：插件默认渠道的重要程度在创建时锁死（表现为只有声音、没有横幅），
+  // 建一个高优先级（Importance.High=4）的专用渠道，消息通知都走它，横幅才能弹出。
+  // 桌面端没有建渠道命令，调用失败静默忽略、通知照常发（桌面忽略 channelId）。
+  const MESSAGE_CHANNEL_ID = 'siyu_messages';
+  let channelReady: Promise<void> | null = null;
+  const ensureMessageChannel = (): Promise<void> => {
+    if (!channelReady) {
+      channelReady = invoke('plugin:notification|create_channel', {
+        channel: {
+          id: MESSAGE_CHANNEL_ID,
+          name: '消息提醒',
+          description: '新消息通知（横幅弹出）',
+          importance: 4,
+          visibility: 1,
+          vibration: true,
+        },
+      })
+        .then(() => undefined)
+        .catch(() => undefined);
+    }
+    return channelReady;
+  };
+  void ensureMessageChannel();
+
   // 请求原生通知权限（Windows 上一般直接可用）
   const requestNativePermission = async (): Promise<boolean> => {
     try {
@@ -45,14 +69,17 @@ export function initTauriNotificationShim(attempt = 0) {
     constructor(title: string, options?: NotificationOptions) {
       this.title = title;
       // 触发时请求一次权限（幂等），然后发原生通知
-      requestNativePermission().then(() => {
-        invoke('plugin:notification|notify', {
-          notification: {
-            title,
-            body: options?.body ?? '',
-          },
-        }).catch(() => {});
-      });
+      ensureMessageChannel()
+        .then(() => requestNativePermission())
+        .then(() => {
+          invoke('plugin:notification|notify', {
+            notification: {
+              title,
+              body: options?.body ?? '',
+              channelId: MESSAGE_CHANNEL_ID,
+            },
+          }).catch(() => {});
+        });
     }
 
     close() {}
