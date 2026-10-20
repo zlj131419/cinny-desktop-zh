@@ -26,7 +26,9 @@ export function usePermissionState(name: PermissionName, initialValue: Permissio
     try {
       query = navigator.permissions.query({ name });
     } catch {
-      // 部分 WebView（如安卓）不支持某些权限名，query 会同步抛错：保持初始状态即可
+      // 部分 WebView（如安卓）不支持某些权限名，query 会同步抛错：
+      // 回退到直接读 Notification 状态，不能让它在 useEffect 里炸掉整页
+      setPermissionState(getNotificationState());
       return;
     }
     query
