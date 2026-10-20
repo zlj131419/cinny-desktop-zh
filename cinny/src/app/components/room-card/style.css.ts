@@ -4,12 +4,16 @@ import { ContainerColor } from '../../styles/ContainerColor.css';
 
 export const CardGrid = style({
   display: 'grid',
-  // 纯 CSS 按容器宽算列：不再用 JS 量宽写内联样式（WebView 里量宽误差曾把手机端压成单列）
-  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))',
+  // 断点定列：手机恒 2 列（1fr 相对单位，不受 WebView 量宽/视口误差影响）
+  gridTemplateColumns: 'repeat(2, 1fr)',
   gap: config.space.S300,
   '@media': {
     'screen and (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(3, 1fr)',
       gap: config.space.S400,
+    },
+    'screen and (min-width: 1200px)': {
+      gridTemplateColumns: 'repeat(4, 1fr)',
     },
   },
 });
