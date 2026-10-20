@@ -346,7 +346,7 @@ export function Home() {
   }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId, filter, mDirects]);
 
   const virtualizer = useVirtualizer({
-    count: sortedRooms.length,
+    count: displayItems.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 38,
     overscan: 10,
@@ -355,6 +355,49 @@ export function Home() {
   const handleCategoryClick = useCategoryHandler(setClosedCategories, (categoryId) =>
     closedCategories.has(categoryId)
   );
+
+  // 构建带分组标题的显示列表（所有聊天模式下按分组分区）
+  type DisplayItem = { type: 'header'; title: string } | { type: 'room'; roomId: string };
+  const displayItems = useMemo<DisplayItem[]>(() => {
+    if (viewMode !== 'all') {
+      return sortedRooms.map((roomId) => ({ type: 'room' as const, roomId }));
+    }
+    const getGroup = (rId: string): string | undefined => {
+      try {
+        const room = mx.getRoom(rId);
+        const n = room?.tags?.['com.siyu.group']?.name;
+        return typeof n === 'string' && n ? n : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const grouped = new Map<string, string[]>();
+    const ungrouped: string[] = [];
+    sortedRooms.forEach((rId) => {
+      const g = getGroup(rId);
+      if (g) {
+        const arr = grouped.get(g) ?? [];
+        arr.push(rId);
+        grouped.set(g, arr);
+      } else {
+        ungrouped.push(rId);
+      }
+    });
+    if (grouped.size === 0) {
+      return sortedRooms.map((roomId) => ({ type: 'room' as const, roomId }));
+    }
+    const items: DisplayItem[] = [];
+    // 未分组的排前面（保持活跃排序）
+    ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
+    // 分组按组名排序，每个分组前加标题
+    Array.from(grouped.keys())
+      .sort()
+      .forEach((g) => {
+        items.push({ type: 'header', title: g });
+        (grouped.get(g) ?? []).forEach((roomId) => items.push({ type: 'room', roomId }));
+      });
+    return items;
+  }, [viewMode, sortedRooms, mx]);
 
   return (
     <PageNav>
@@ -490,7 +533,28 @@ export function Home() {
                 }}
               >
                 {virtualizer.getVirtualItems().map((vItem) => {
-                  const roomId = sortedRooms[vItem.index];
+                  const item = displayItems[vItem.index];
+                  if (!item) return null;
+                  if (item.type === 'header') {
+                    return (
+                      <VirtualTile
+                        virtualItem={vItem}
+                        key={vItem.index}
+                        ref={virtualizer.measureElement}
+                      >
+                        <Box
+                          style={{
+                            padding: `${config.space.S300} ${config.space.S200} ${config.space.S100}`,
+                          }}
+                        >
+                          <Text size="T300" priority="400">
+                            📁 {item.title}
+                          </Text>
+                        </Box>
+                      </VirtualTile>
+                    );
+                  }
+                  const roomId = item.roomId;
                   const room = mx.getRoom(roomId);
                   if (!room) return null;
                   const selected = selectedRoomId === roomId;
