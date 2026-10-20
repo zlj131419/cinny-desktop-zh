@@ -32,8 +32,8 @@
       background-clip: text; color: transparent;
     }
   }
-  .slogan { color: rgba(255,255,255,.75); margin-bottom: 8px; font-size: 17px; line-height: 1.8; }
-  .slogan-sub { color: rgba(255,255,255,.55); margin-bottom: 48px; font-size: 15px; }
+  .slogan { color: rgba(255,255,255,.75); margin-bottom: 8px; font-size: clamp(15px, 4.6vw, 17px); line-height: 1.8; }
+  .slogan-sub { color: rgba(255,255,255,.55); margin-bottom: 48px; font-size: clamp(13px, 4vw, 15px); }
   .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1900px; }
   .card {
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
@@ -42,13 +42,13 @@
     position: relative;
   }
   .card:hover { transform: translateY(-4px); background: rgba(255,255,255,.12); }
-  .card .os { font-size: 40px; margin-bottom: 12px; }
-  .card h2 { font-size: 20px; margin-bottom: 8px; }
-  .card p { color: rgba(255,255,255,.6); font-size: 13px; margin-bottom: 20px; min-height: 36px; }
+  .card .os { font-size: clamp(28px, 9vw, 40px); margin-bottom: 12px; }
+  .card h2 { font-size: clamp(15px, 4.6vw, 20px); margin-bottom: 8px; }
+  .card p { color: rgba(255,255,255,.6); font-size: clamp(11px, 3.4vw, 13px); margin-bottom: 20px; min-height: 36px; }
   .btn {
     display: inline-block; padding: 12px 32px; border-radius: 10px;
     background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
-    text-decoration: none; font-size: 15px; font-weight: 600;
+    text-decoration: none; font-size: clamp(12px, 3.8vw, 15px); font-weight: 600;
   }
   .btn:hover { opacity: .9; }
   .btn.secondary { background: rgba(255,255,255,.15); }
@@ -60,7 +60,9 @@
     .card .os { font-size: 30px; margin-bottom: 8px; }
     .card h2 { font-size: 16px; margin-bottom: 6px; }
     .card p { min-height: 0; margin-bottom: 14px; font-size: 12px; }
-    .btn { padding: 10px 14px; font-size: 13px; }
+    .btn { display: block; padding: 10px 6px; font-size: clamp(12px, 3.6vw, 14px); text-align: center; }
+    .card { display: flex; flex-direction: column; align-items: stretch; }
+    .card .os, .card h2, .card p { text-align: center; }
     .slogan { font-size: 15px; }
     .slogan-sub { font-size: 13px; margin-bottom: 32px; }
   }
@@ -112,8 +114,7 @@
       <p>AppImage / deb<br/>敬请期待</p>
       <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
     </div>
-  </div>
-  <div class="cards" style="margin-top:20px">
+
     <div class="card">
       <div class="os">📱</div>
       <h2>手机 / 平板</h2>
