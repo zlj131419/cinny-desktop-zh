@@ -59,6 +59,14 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* 安卓 App 的 WebView 铺满全屏，顶部内容会钻到系统状态栏下面重叠：
+     全局让出一个状态栏高度，样式其余不变。桌面/浏览器里该值为 0，无影响、不留白框。 */
+  padding-top: env(safe-area-inset-top, 0px);
+  background-color: #f4f4f5;
+}
+.dark-theme #root,
+.butter-theme #root {
+  background-color: #101014;
 }
 
 *,
