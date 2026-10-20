@@ -22,8 +22,14 @@ export function usePermissionState(name: PermissionName, initialValue: Permissio
       setPermissionState(this.state);
     }
 
-    navigator.permissions
-      .query({ name })
+    let query: Promise<PermissionStatus>;
+    try {
+      query = navigator.permissions.query({ name });
+    } catch {
+      // 部分 WebView（如安卓）不支持某些权限名，query 会同步抛错：保持初始状态即可
+      return;
+    }
+    query
       .then((permStatus: PermissionStatus) => {
         permissionStatus = permStatus;
         handlePermissionChange.apply(permStatus);
