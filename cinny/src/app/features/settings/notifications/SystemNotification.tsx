@@ -243,7 +243,10 @@ export function SystemNotification() {
 
 
   const requestNotificationPermission = () => {
-    window.Notification.requestPermission();
+    // 安卓 WebView 没有 Notification API，直接调用会抛错崩页
+    if ('Notification' in window && typeof window.Notification.requestPermission === 'function') {
+      window.Notification.requestPermission();
+    }
   };
 
   return (
@@ -270,9 +273,11 @@ export function SystemNotification() {
           }
           after={
             notifPermission !== 'granted' ? (
-              <Button size="300" radii="300" onClick={requestNotificationPermission}>
-                <Text size="B300">{t('features:settings.notifications.enable')}</Text>
-              </Button>
+              'Notification' in window ? (
+                <Button size="300" radii="300" onClick={requestNotificationPermission}>
+                  <Text size="B300">{t('features:settings.notifications.enable')}</Text>
+                </Button>
+              ) : undefined
             ) : (
               <Switch
                 disabled={notifPermission !== 'granted'}
