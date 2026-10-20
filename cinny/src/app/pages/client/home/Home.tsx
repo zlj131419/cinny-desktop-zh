@@ -260,24 +260,10 @@ export function Home() {
   const [closedCategories, setClosedCategories] = useAtom(useClosedNavCategoriesAtom());
 
   // 根据视图模式和房间类型获取正确的跳转路径
-  // 视图只是列表过滤不跳转页面；空间里的房间用空间路径（/space/xxx/room/yyy）
-  const roomToParents = useMemo(() => {
-    try {
-      return getRoomToParents(mx);
-    } catch {
-      return new Map();
-    }
-  }, [mx]);
+  // 所有房间都用 Home 路径，不跳转页面（HomeRouteRoomProvider 已改为接受所有房间）
   const getRoomLinkPath = (roomId: string): string => {
     const roomIdOrAlias = getCanonicalAliasOrRoomId(mx, roomId);
     try {
-      // 空间里的房间：用空间路径
-      const parents = getAllParents(roomToParents, roomId);
-      if (parents.size > 0) {
-        const parentSpaceId = Array.from(parents)[0];
-        const parentAlias = getCanonicalAliasOrRoomId(mx, parentSpaceId);
-        return getSpaceRoomPath(parentAlias, roomIdOrAlias);
-      }
       return getHomeRoomPath(roomIdOrAlias);
     } catch {
       return getHomeRoomPath(roomIdOrAlias);
