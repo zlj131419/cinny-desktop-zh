@@ -303,7 +303,7 @@ jobs:
             "$AAPT" dump badging "$APK" | grep -q "versionName='$TAG'" || { echo "APK versionName WRONG"; exit 1; }
             LINE=$("$AAPT" dump xmltree --file AndroidManifest.xml "$APK" | grep "usesCleartextTraffic" | head -1)
             echo "cleartext attr: $LINE"
-            echo "$LINE" | grep -q "0xffffffff" || { echo "APK cleartext NOT true"; exit 1; }
+            echo "$LINE" | grep -Eq "=true|0xffffffff" || { echo "APK cleartext NOT true"; exit 1; }
             echo "APK values verified OK"
           else
             echo "aapt2 not found, skipping in-CI verification"
