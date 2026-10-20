@@ -245,15 +245,17 @@ export function Home() {
       return [];
     }
   });
-  const moveGroup = (name: string, dir: -1 | 1, allNames: string[]) => {
+  const reorderGroup = (dragName: string, targetName: string | null, allNames: string[]) => {
+    if (!targetName || targetName === dragName) return;
     setGroupOrder((prev) => {
       const base = allNames.filter((n) => prev.includes(n)).concat(allNames.filter((n) => !prev.includes(n)));
-      const merged = prev.length ? base : [...allNames];
-      const list = [...merged];
-      const idx = list.indexOf(name);
-      const swap = idx + dir;
-      if (idx < 0 || swap < 0 || swap >= list.length) return prev;
-      [list[idx], list[swap]] = [list[swap], list[idx]];
+      const list = prev.length ? base : [...allNames];
+      const from = list.indexOf(dragName);
+      if (from < 0) return prev;
+      list.splice(from, 1);
+      const to = list.indexOf(targetName);
+      if (to < 0) return prev;
+      list.splice(to, 0, dragName);
       try {
         localStorage.setItem('siyu-group-order', JSON.stringify(list));
       } catch {
@@ -271,6 +273,20 @@ export function Home() {
     roomId: string; startX: number; startY: number; lastX: number; lastY: number;
     armed: boolean; active: boolean; timer: ReturnType<typeof setTimeout> | null;
   } | null>(null);
+  // 分组标题拖拽排序：桌面 HTML5 用 ref，触屏用长按拖（与房间拖拽同套路）
+  const dragGroupRef = useRef<string | null>(null);
+  const [groupDrag, setGroupDrag] = useState<{ title: string; x: number; y: number } | null>(null);
+  const [groupHover, setGroupHover] = useState<string | null>(null);
+  const groupTouchRef = useRef<{
+    title: string; startX: number; startY: number; lastX: number; lastY: number;
+    armed: boolean; active: boolean; timer: ReturnType<typeof setTimeout> | null;
+  } | null>(null);
+  const groupNameAt = (x: number, y: number): string | null => {
+    try {
+      const el = document.elementFromPoint(x, y)?.closest('[data-siyu-group]');
+      return el ? (el.getAttribute('data-siyu-group') as string) : null;
+    } catch { return null; }
+  };
   const dropNameAt = (x: number, y: number): string | null => {
     try {
       const el = document.elementFromPoint(x, y)?.closest('[data-siyu-drop]');
@@ -287,11 +303,11 @@ export function Home() {
   };
   // 触屏拖拽中禁止页面滚动（非被动监听）
   React.useEffect(() => {
-    if (!touchDrag) return;
+    if (!touchDrag && !groupDrag) return;
     const prevent = (e: TouchEvent) => e.preventDefault();
     document.addEventListener('touchmove', prevent, { passive: false });
     return () => document.removeEventListener('touchmove', prevent);
-  }, [touchDrag]);
+  }, [touchDrag, groupDrag]);
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
@@ -650,21 +666,90 @@ export function Home() {
                           direction="Row"
                           alignItems="Center"
                           gap="100"
+                          draggable
+                          data-siyu-drop={item.title}
+                          data-siyu-group={item.title}
+                          onDragStart={(e: React.DragEvent) => {
+                            dragGroupRef.current = item.title;
+                            try {
+                              e.dataTransfer.setData('text/siyu-group', item.title);
+                              e.dataTransfer.effectAllowed = 'move';
+                            } catch {
+                              /* ignore */
+                            }
+                          }}
+                          onDragEnd={() => {
+                            dragGroupRef.current = null;
+                          }}
                           onDragOver={(e: React.DragEvent) => {
                             e.preventDefault();
                           }}
-                          data-siyu-drop={item.title}
                           onDrop={(e: React.DragEvent) => {
                             e.preventDefault();
-                            const rid = dragRoomIdRef.current ?? e.dataTransfer.getData('text/siyu-room');
-                            if (rid) applyDrop(rid, item.title);
+                            const g = dragGroupRef.current ?? e.dataTransfer.getData('text/siyu-group');
+                            if (g) {
+                              reorderGroup(g, item.title, groupNames);
+                            } else {
+                              const rid = dragRoomIdRef.current ?? e.dataTransfer.getData('text/siyu-room');
+                              if (rid) applyDrop(rid, item.title);
+                            }
+                            dragGroupRef.current = null;
                             dragRoomIdRef.current = null;
+                          }}
+                          onTouchStart={(e: React.TouchEvent) => {
+                            const t = e.touches[0];
+                            if (!t) return;
+                            const rec = {
+                              title: item.title, startX: t.clientX, startY: t.clientY,
+                              lastX: t.clientX, lastY: t.clientY,
+                              armed: false, active: false, timer: null as ReturnType<typeof setTimeout> | null,
+                            };
+                            rec.timer = setTimeout(() => { rec.armed = true; }, 260);
+                            groupTouchRef.current = rec;
+                          }}
+                          onTouchMove={(e: React.TouchEvent) => {
+                            const rec = groupTouchRef.current;
+                            const t = e.touches[0];
+                            if (!rec || !t) return;
+                            rec.lastX = t.clientX; rec.lastY = t.clientY;
+                            if (!rec.active && rec.armed && Math.hypot(t.clientX - rec.startX, t.clientY - rec.startY) > 10) {
+                              rec.active = true;
+                              siyuTouchDrag.active = true;
+                              try { navigator.vibrate?.(15); } catch { /* ignore */ }
+                              setGroupDrag({ title: rec.title, x: t.clientX, y: t.clientY });
+                            }
+                            if (rec.active) {
+                              setGroupDrag({ title: rec.title, x: t.clientX, y: t.clientY });
+                              const g = groupNameAt(t.clientX, t.clientY);
+                              setGroupHover((prev) => (prev === g ? prev : g));
+                            }
+                          }}
+                          onTouchEnd={() => {
+                            const rec = groupTouchRef.current;
+                            if (rec?.timer) clearTimeout(rec.timer);
+                            if (rec?.active) {
+                              reorderGroup(rec.title, groupNameAt(rec.lastX, rec.lastY), groupNames);
+                            }
+                            siyuTouchDrag.active = false;
+                            setGroupDrag(null);
+                            setGroupHover(null);
+                            groupTouchRef.current = null;
+                          }}
+                          onTouchCancel={() => {
+                            const rec = groupTouchRef.current;
+                            if (rec?.timer) clearTimeout(rec.timer);
+                            siyuTouchDrag.active = false;
+                            setGroupDrag(null);
+                            setGroupHover(null);
+                            groupTouchRef.current = null;
                           }}
                           style={{
                             padding: `${config.space.S300} ${config.space.S200} ${config.space.S100}`,
                             cursor: 'pointer',
                             background:
-                              hoverDrop === item.title ? 'rgba(63, 131, 246, 0.18)' : undefined,
+                              hoverDrop === item.title || groupHover === item.title
+                                ? 'rgba(63, 131, 246, 0.18)'
+                                : undefined,
                             borderRadius: 8,
                           }}
                         >
@@ -675,28 +760,6 @@ export function Home() {
                             {item.title}
                           </RoomNavCategoryButton>
                           <span style={{ flexGrow: 1 }} />
-                          <span
-                            role="button"
-                            aria-label="上移"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveGroup(item.title, -1, groupNames);
-                            }}
-                            style={{ padding: '0 4px', opacity: 0.7 }}
-                          >
-                            ↑
-                          </span>
-                          <span
-                            role="button"
-                            aria-label="下移"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveGroup(item.title, 1, groupNames);
-                            }}
-                            style={{ padding: '0 4px', opacity: 0.7 }}
-                          >
-                            ↓
-                          </span>
                         </Box>
                       </VirtualTile>
                     );
@@ -791,6 +854,30 @@ export function Home() {
               </div>
             </NavCategory>
           </Box>
+          {groupDrag && (
+            <div
+              style={{
+                position: 'fixed',
+                left: groupDrag.x - 70,
+                top: groupDrag.y - 24,
+                width: 140,
+                padding: '8px 12px',
+                background: 'rgba(63, 131, 246, 0.92)',
+                color: '#fff',
+                borderRadius: 8,
+                fontSize: 13,
+                textAlign: 'center',
+                pointerEvents: 'none',
+                zIndex: 9999,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+              }}
+            >
+              {groupDrag.title}
+            </div>
+          )}
           {touchDrag && (
             <div
               style={{
