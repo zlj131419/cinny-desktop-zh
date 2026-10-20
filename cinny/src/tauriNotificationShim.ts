@@ -3,10 +3,17 @@
  * 在 Tauri 环境下，将 Web Notification API 转发到原生系统通知
  * （Tauri webview 的 Notification.permission 默认被拒绝，走原生通道才有弹窗）
  */
-export function initTauriNotificationShim() {
+export function initTauriNotificationShim(attempt = 0) {
   if (typeof window === 'undefined') return;
   const tauri = (window as any).__TAURI__;
-  if (!tauri?.core?.invoke) return;
+  if (!tauri?.core?.invoke) {
+    // 安卓 WebView 里 __TAURI__ 桥注入时机晚于桌面，一次性判断会漏装垫片
+    // （通知设置页因此在安卓 App 里报错）。照 ThemeManager 模式重试：500ms × 10
+    if (attempt < 10) {
+      setTimeout(() => initTauriNotificationShim(attempt + 1), 500);
+    }
+    return;
+  }
 
   const invoke = tauri.core.invoke as (
     cmd: string,
