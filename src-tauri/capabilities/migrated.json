@@ -63,6 +63,7 @@
     "dialog:allow-confirm",
     "http:default",
     "notification:default",
+    "notification:allow-create-channel",
     "os:allow-platform",
     "os:allow-version",
     "os:allow-os-type",
