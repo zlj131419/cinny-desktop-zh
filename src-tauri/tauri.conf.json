@@ -45,7 +45,7 @@
     "beforeDevCommand": "cd cinny && npm start",
     "devUrl": "http://localhost:8080"
   },
-  "productName": "Siyu",
+  "productName": "私语",
   "mainBinaryName": "siyu",
   "version": "1.0.19",
   "identifier": "net.xxqw.siyu",
