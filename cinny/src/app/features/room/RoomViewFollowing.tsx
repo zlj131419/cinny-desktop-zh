@@ -60,7 +60,7 @@ export const RoomViewFollowing = as<'div', RoomViewFollowingProps>(
                   escapeDeactivates: stopPropagation,
                 }}
               >
-                <Modal variant="Surface" size="300">
+                <Modal variant="Surface" size="300" style={{ width: 'min(18rem, 90vw)' }}>
                   <EventReaders room={room} eventId={eventId} requestClose={() => setOpen(false)} />
                 </Modal>
               </FocusTrap>
