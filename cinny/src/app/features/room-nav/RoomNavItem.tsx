@@ -127,6 +127,41 @@ const RoomNavItemMenu = forwardRef<HTMLDivElement, RoomNavItemMenuProps>(
       requestClose();
     };
 
+    // 分组：组名存在标签 com.siyu.group 的 name 字段
+    const currentGroup =
+      typeof room.tags?.['com.siyu.group']?.name === 'string'
+        ? (room.tags['com.siyu.group'].name as string)
+        : undefined;
+    const allGroups = (() => {
+      try {
+        const names = new Set<string>();
+        mx.getRooms().forEach((r) => {
+          const n = r.tags?.['com.siyu.group']?.name;
+          if (typeof n === 'string' && n) names.add(n);
+        });
+        return Array.from(names).sort();
+      } catch {
+        return [];
+      }
+    })();
+    const handleMoveToGroup = (groupName: string | undefined) => {
+      if (!room?.roomId) return;
+      if (groupName) {
+        mx.setRoomTag(room.roomId, 'com.siyu.group', { name: groupName }).catch(() => {});
+      } else {
+        mx.deleteRoomTag(room.roomId, 'com.siyu.group').catch(() => {});
+      }
+      requestClose();
+    };
+    const handleCreateGroup = () => {
+      const name = window.prompt('新建分组名称');
+      if (name && name.trim()) {
+        handleMoveToGroup(name.trim());
+      } else {
+        requestClose();
+      }
+    };
+
     return (
       <Menu ref={ref} style={{ maxWidth: toRem(160), width: '100vw' }}>
         {invitePrompt && room && (
@@ -218,6 +253,50 @@ const RoomNavItemMenu = forwardRef<HTMLDivElement, RoomNavItemMenuProps>(
               {isPinned ? '取消置顶' : '置顶'}
             </Text>
           </MenuItem>
+          {currentGroup && (
+            <MenuItem size="300" radii="300" disabled>
+              <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+                当前分组：{currentGroup}
+              </Text>
+            </MenuItem>
+          )}
+          {allGroups
+            .filter((g) => g !== currentGroup)
+            .map((g) => (
+              <MenuItem
+                key={g}
+                onClick={() => handleMoveToGroup(g)}
+                size="300"
+                after={<Icon size="100" src={Icons.Folder} />}
+                radii="300"
+              >
+                <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+                  移到：{g}
+                </Text>
+              </MenuItem>
+            ))}
+          <MenuItem
+            onClick={handleCreateGroup}
+            size="300"
+            after={<Icon size="100" src={Icons.Plus} />}
+            radii="300"
+          >
+            <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+              新建分组
+            </Text>
+          </MenuItem>
+          {currentGroup && (
+            <MenuItem
+              onClick={() => handleMoveToGroup(undefined)}
+              size="300"
+              after={<Icon size="100" src={Icons.Cross} />}
+              radii="300"
+            >
+              <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
+                移出分组
+              </Text>
+            </MenuItem>
+          )}
           <MenuItem
             onClick={handleRoomSettings}
             size="300"
