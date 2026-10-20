@@ -51,6 +51,7 @@ import { RoomNavCategoryButton, RoomNavItem } from '../../../features/room-nav';
 import { makeNavCategoryId } from '../../../state/closedNavCategories';
 import { roomToUnreadAtom } from '../../../state/room/roomToUnread';
 import { mDirectAtom } from '../../../state/mDirectList';
+import { isSpace } from '../../../utils/room';
 import { useCategoryHandler } from '../../../hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '../../../hooks/useNavToActivePathMapper';
 import { PageNav, PageNavHeader, PageNavContent } from '../../../components/page';
@@ -208,13 +209,28 @@ export function Home() {
   const allRoomIds = useAllRooms();
   const mDirects = useAtomValue(mDirectAtom);
   const [viewMode, setViewMode] = useState<'space' | 'all'>('all');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'people' | 'rooms' | 'mentions'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'people' | 'rooms' | 'mentions' | 'favourite'>('all');
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
-    const list = viewMode === 'all' ? allRoomIds : orphanRooms;
+    let list: string[] = [];
+    if (viewMode === 'all') {
+      list = allRoomIds;
+    } else if (viewMode === 'space') {
+      // 按空间：只显示 Space 本身
+      if (!mx) return [];
+      list = allRoomIds.filter((id) => {
+        if (typeof id !== 'string') return false;
+        try {
+          const room = mx.getRoom(id);
+          return room ? isSpace(room) : false;
+        } catch {
+          return false;
+        }
+      });
+    }
     if (!Array.isArray(list)) return [];
     return list.filter((id) => typeof id === 'string' && id.startsWith('!'));
-  }, [viewMode, allRoomIds, orphanRooms]);
+  }, [viewMode, allRoomIds, mx]);
   const notificationPreferences = useRoomsNotificationPreferencesContext();
   const roomToUnread = useAtomValue(roomToUnreadAtom);
   const navigate = useNavigate();
@@ -239,6 +255,16 @@ export function Home() {
         items = items.filter((rId) => typeof rId === 'string' && !mDirects.has(rId));
       } else if (filter === 'mentions' && roomToUnread) {
         items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
+      } else if (filter === 'favourite') {
+        items = items.filter((rId) => {
+          if (typeof rId !== 'string') return false;
+          try {
+            const room = mx.getRoom(rId);
+            return !!(room?.tags?.['m.favourite']);
+          } catch {
+            return false;
+          }
+        });
       }
     } catch {
       // 筛选失败时返回原列表
@@ -325,7 +351,7 @@ export function Home() {
         </Box>
         {viewMode === 'all' && (
           <Box direction="Row" gap="100" wrap="Wrap">
-            {(['all', 'unread', 'people', 'rooms', 'mentions'] as const).map((f) => (
+            {(['favourite', 'all', 'unread', 'people', 'rooms', 'mentions'] as const).map((f) => (
               <Button
                 key={f}
                 size="300"
@@ -335,7 +361,7 @@ export function Home() {
                 onClick={() => setFilter(f)}
               >
                 <Text size="T300">
-                  {f === 'all' ? '全部' : f === 'unread' ? '未读' : f === 'people' ? '人员' : f === 'rooms' ? '房间' : '提及'}
+                  {f === 'favourite' ? '收藏' : f === 'all' ? '全部' : f === 'unread' ? '未读' : f === 'people' ? '人员' : f === 'rooms' ? '房间' : '提及'}
                 </Text>
               </Button>
             ))}
