@@ -578,7 +578,7 @@ export function Home() {
                   data-category-id={DEFAULT_CATEGORY_ID}
                   onClick={handleCategoryClick}
                 >
-                  {t('pages:client.home.rooms')}
+                  {'所有'}
                 </RoomNavCategoryButton>
               </NavCategoryHeader>
               <div
@@ -605,7 +605,6 @@ export function Home() {
                           direction="Row"
                           alignItems="Center"
                           gap="100"
-                          onClick={() => toggleGroup(item.title)}
                           onDragOver={(e: React.DragEvent) => {
                             e.preventDefault();
                           }}
@@ -622,9 +621,13 @@ export function Home() {
                             cursor: 'pointer',
                           }}
                         >
-                          <Text size="T300" priority="400" style={{ flexGrow: 1 }}>
-                            {isClosed ? '▸' : '▾'} 📁 {item.title}
-                          </Text>
+                          <RoomNavCategoryButton
+                            closed={isClosed}
+                            onClick={() => toggleGroup(item.title)}
+                          >
+                            {item.title}
+                          </RoomNavCategoryButton>
+                          <span style={{ flexGrow: 1 }} />
                           <span
                             role="button"
                             aria-label="上移"
