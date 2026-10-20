@@ -213,7 +213,7 @@ export const MessageReadReceiptItem = as<
               escapeDeactivates: stopPropagation,
             }}
           >
-            <Modal variant="Surface" size="300">
+            <Modal variant="Surface" size="300" style={{ width: 'min(18rem, 90vw)' }}>
               <EventReaders room={room} eventId={eventId} requestClose={handleClose} />
             </Modal>
           </FocusTrap>
@@ -274,7 +274,7 @@ export const MessageReadReceiptBadge = as<
               escapeDeactivates: stopPropagation,
             }}
           >
-            <Modal variant="Surface" size="300">
+            <Modal variant="Surface" size="300" style={{ width: 'min(18rem, 90vw)' }}>
               <EventReaders room={room} eventId={eventId} requestClose={handleClose} />
             </Modal>
           </FocusTrap>
