@@ -213,8 +213,7 @@ export function Home() {
   const orphanRooms = useHomeRooms();
   const allRoomIds = useAllRooms();
   const mDirects = useAtomValue(mDirectAtom);
-  const [viewMode, setViewMode] = useState<'all' | 'friends' | 'rooms' | 'spaces'>('all');
-  const [filter, setFilter] = useState<'all' | 'favourite' | 'unread' | 'rooms' | 'friends' | 'mentions'>('all');
+  const [filter, setFilter] = useState<'all' | 'favourite' | 'rooms' | 'friends' | 'spaces' | 'unread' | 'mentions'>('all');
   // 分组折叠状态（本地记忆）
   const [closedGroups, setClosedGroups] = useState<Set<string>>(() => {
     try {
@@ -322,39 +321,11 @@ export function Home() {
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
-    let list: string[] = [];
-    const isDM = (id: string): boolean => {
-      try {
-        return !!(mDirects && mDirects.has(id));
-      } catch {
-        return false;
-      }
-    };
-    const isSpaceRoom = (id: string): boolean => {
-      try {
-        const room = mx.getRoom(id);
-        return room ? isSpace(room) : false;
-      } catch {
-        return false;
-      }
-    };
-    if (viewMode === 'all') {
-      list = allRoomIds;
-    } else if (viewMode === 'friends') {
-      // 好友：只显示 DM
-      list = allRoomIds.filter((id) => typeof id === 'string' && isDM(id));
-    } else if (viewMode === 'rooms') {
-      // 房间：普通房间（非 DM，非 Space）
-      list = allRoomIds.filter(
-        (id) => typeof id === 'string' && !isDM(id) && !isSpaceRoom(id)
-      );
-    } else if (viewMode === 'spaces') {
-      // 空间：只显示 Space
-      list = allRoomIds.filter((id) => typeof id === 'string' && isSpaceRoom(id));
-    }
+    // 顶部视图页签已去掉：默认永远是所有聊天，细筛由下方筛选条负责
+    const list: string[] = allRoomIds;
     if (!Array.isArray(list)) return [];
     return list.filter((id) => typeof id === 'string' && id.startsWith('!'));
-  }, [viewMode, allRoomIds, mx, mDirects]);
+  }, [allRoomIds, mx, mDirects]);
   const notificationPreferences = useRoomsNotificationPreferencesContext();
   const roomToUnread = useAtomValue(roomToUnreadAtom);
   const navigate = useNavigate();
@@ -387,7 +358,26 @@ export function Home() {
       } else if (filter === 'friends' && mDirects) {
         items = items.filter((rId) => typeof rId === 'string' && mDirects.has(rId));
       } else if (filter === 'rooms' && mDirects) {
-        items = items.filter((rId) => typeof rId === 'string' && !mDirects.has(rId));
+        // 房间：非私聊、非空间
+        items = items.filter((rId) => {
+          if (typeof rId !== 'string' || mDirects.has(rId)) return false;
+          try {
+            const room = mx.getRoom(rId);
+            return !room || !isSpace(room);
+          } catch {
+            return true;
+          }
+        });
+      } else if (filter === 'spaces') {
+        items = items.filter((rId) => {
+          if (typeof rId !== 'string') return false;
+          try {
+            const room = mx.getRoom(rId);
+            return !!room && isSpace(room);
+          } catch {
+            return false;
+          }
+        });
       } else if (filter === 'mentions' && roomToUnread) {
         items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
       } else if (filter === 'favourite') {
@@ -436,7 +426,7 @@ export function Home() {
     });
     
     try {
-      const activitySort = closedCategories.has(DEFAULT_CATEGORY_ID)
+      const activitySort = false
         ? factoryRoomIdByActivity(mx)
         : factoryRoomIdByAtoZ(mx);
       rest.sort(activitySort);
@@ -445,7 +435,7 @@ export function Home() {
     }
     
     let result = [...pinnedFav, ...rest];
-    if (closedCategories.has(DEFAULT_CATEGORY_ID) && roomToUnread) {
+    if (false && roomToUnread) {
       result = result.filter((rId) => roomToUnread.has(rId) || rId === selectedRoomId);
     }
     return result;
@@ -454,9 +444,6 @@ export function Home() {
   // 构建带分组标题的显示列表（所有聊天模式下按分组分区）
   type DisplayItem = { type: 'header'; title: string } | { type: 'room'; roomId: string };
   const displayItems = useMemo<DisplayItem[]>(() => {
-    if (viewMode !== 'all') {
-      return sortedRooms.map((roomId) => ({ type: 'room' as const, roomId }));
-    }
     const getGroup = (rId: string): string | undefined => {
       try {
         const room = mx.getRoom(rId);
@@ -497,7 +484,7 @@ export function Home() {
     // 未分组的默认排在所有分组下面（保持活跃排序）
     ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
     return items;
-  }, [viewMode, sortedRooms, mx, closedGroups, groupOrder, tagVersion]);
+  }, [sortedRooms, mx, closedGroups, groupOrder, tagVersion]);
 
   const virtualizer = useVirtualizer({
     count: displayItems.length,
@@ -513,26 +500,9 @@ export function Home() {
   return (
     <PageNav>
       <HomeHeader />
-      <Box direction="Column" gap="100" style={{ padding: `${config.space.S200} ${config.space.S300}`, maxWidth: '100%', overflow: 'hidden' }}>
-        <Box direction="Row" gap="100" alignItems="Center" wrap="Wrap" style={{ maxWidth: '100%' }}>
-          {(['all', 'friends', 'rooms', 'spaces'] as const).map((m) => (
-            <Button
-              key={m}
-              size="300"
-              variant={viewMode === m ? 'Primary' : 'Secondary'}
-              fill={viewMode === m ? 'Solid' : 'None'}
-              onClick={() => setViewMode(m)}
-              style={{ flexShrink: 0 }}
-            >
-              <Text size="T300">
-                {m === 'all' ? '所有聊天' : m === 'friends' ? '好友' : m === 'rooms' ? '房间' : '空间'}
-              </Text>
-            </Button>
-          ))}
-        </Box>
-        {viewMode === 'all' && (
+      <Box direction="Column" gap="100" style={{ padding: `${config.space.S100} ${config.space.S300}`, maxWidth: '100%', overflow: 'hidden' }}>
           <Box direction="Row" gap="100" wrap="Wrap" style={{ maxWidth: '100%' }}>
-            {(['all', 'favourite', 'unread', 'rooms', 'friends', 'mentions'] as const).map((f) => (
+            {(['all', 'favourite', 'rooms', 'friends', 'spaces', 'unread', 'mentions'] as const).map((f) => (
               <Button
                 key={f}
                 size="300"
@@ -543,12 +513,11 @@ export function Home() {
                 style={{ flexShrink: 0 }}
               >
                 <Text size="T300">
-                  {f === 'all' ? '全部' : f === 'favourite' ? '收藏' : f === 'unread' ? '未读' : f === 'rooms' ? '房间' : f === 'friends' ? '好友' : '提及'}
+                  {f === 'all' ? '全部' : f === 'favourite' ? '收藏' : f === 'rooms' ? '房间' : f === 'friends' ? '好友' : f === 'spaces' ? '空间' : f === 'unread' ? '未读' : '提及'}
                 </Text>
               </Button>
             ))}
           </Box>
-        )}
       </Box>
       {noRoomToDisplay ? (
         <HomeEmpty />
@@ -639,18 +608,24 @@ export function Home() {
                     dragRoomIdRef.current = null;
                   }}
                   style={{
+                    width: '100%',
                     background: hoverDrop === '__ungroup__' ? 'rgba(63, 131, 246, 0.18)' : undefined,
                     borderRadius: 8,
                   }}
                   title="拖到此处可移出分组"
                 >
-                  <RoomNavCategoryButton
-                    closed={closedCategories.has(DEFAULT_CATEGORY_ID)}
-                    data-category-id={DEFAULT_CATEGORY_ID}
-                    onClick={handleCategoryClick}
-                  >
-                    {'所有'}
-                  </RoomNavCategoryButton>
+                  {/* 「所有」标题去掉，换成一条居中粗横线（宽 90%）；外层 div 仍是拖出分组的落点 */}
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '4px 0' }}>
+                    <div
+                      style={{
+                        width: '90%',
+                        height: 4,
+                        borderRadius: 2,
+                        background: 'currentColor',
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
                 </div>
               </NavCategoryHeader>
               <div
