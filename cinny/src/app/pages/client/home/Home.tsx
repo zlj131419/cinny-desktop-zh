@@ -213,6 +213,56 @@ export function Home() {
   const mDirects = useAtomValue(mDirectAtom);
   const [viewMode, setViewMode] = useState<'all' | 'friends' | 'rooms' | 'spaces'>('all');
   const [filter, setFilter] = useState<'all' | 'favourite' | 'unread' | 'rooms' | 'friends' | 'mentions'>('all');
+  // 分组折叠状态（本地记忆）
+  const [closedGroups, setClosedGroups] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('siyu-closed-groups');
+      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      return new Set<string>();
+    }
+  });
+  const toggleGroup = (name: string) => {
+    setClosedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      try {
+        localStorage.setItem('siyu-closed-groups', JSON.stringify(Array.from(next)));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+  // 分组顺序（本地记忆，新分组排最后）
+  const [groupOrder, setGroupOrder] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('siyu-group-order');
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const moveGroup = (name: string, dir: -1 | 1, allNames: string[]) => {
+    setGroupOrder((prev) => {
+      const base = allNames.filter((n) => prev.includes(n)).concat(allNames.filter((n) => !prev.includes(n)));
+      const merged = prev.length ? base : [...allNames];
+      const list = [...merged];
+      const idx = list.indexOf(name);
+      const swap = idx + dir;
+      if (idx < 0 || swap < 0 || swap >= list.length) return prev;
+      [list[idx], list[swap]] = [list[swap], list[idx]];
+      try {
+        localStorage.setItem('siyu-group-order', JSON.stringify(list));
+      } catch {
+        /* ignore */
+      }
+      return list;
+    });
+  };
+  // 拖拽：当前拖动的房间
+  const dragRoomIdRef = useRef<string | null>(null);
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
@@ -378,15 +428,20 @@ export function Home() {
     const items: DisplayItem[] = [];
     // 未分组的排前面（保持活跃排序）
     ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
-    // 分组按组名排序，每个分组前加标题
-    Array.from(grouped.keys())
-      .sort()
-      .forEach((g) => {
-        items.push({ type: 'header', title: g });
+    // 分组按用户自定义顺序（groupOrder 优先，其余按名称），每个分组前加标题
+    const names = Array.from(grouped.keys());
+    const ordered = [
+      ...groupOrder.filter((n) => names.includes(n)),
+      ...names.filter((n) => !groupOrder.includes(n)).sort(),
+    ];
+    ordered.forEach((g) => {
+      items.push({ type: 'header', title: g });
+      if (!closedGroups.has(g)) {
         (grouped.get(g) ?? []).forEach((roomId) => items.push({ type: 'room', roomId }));
-      });
+      }
+    });
     return items;
-  }, [viewMode, sortedRooms, mx]);
+  }, [viewMode, sortedRooms, mx, closedGroups, groupOrder]);
 
   const virtualizer = useVirtualizer({
     count: displayItems.length,
@@ -536,6 +591,10 @@ export function Home() {
                   const item = displayItems[vItem.index];
                   if (!item) return null;
                   if (item.type === 'header') {
+                    const groupNames = displayItems
+                      .filter((d) => d.type === 'header')
+                      .map((d) => (d.type === 'header' ? d.title : ''));
+                    const isClosed = closedGroups.has(item.title);
                     return (
                       <VirtualTile
                         virtualItem={vItem}
@@ -543,13 +602,51 @@ export function Home() {
                         ref={virtualizer.measureElement}
                       >
                         <Box
+                          direction="Row"
+                          alignItems="Center"
+                          gap="100"
+                          onClick={() => toggleGroup(item.title)}
+                          onDragOver={(e: React.DragEvent) => {
+                            e.preventDefault();
+                          }}
+                          onDrop={(e: React.DragEvent) => {
+                            e.preventDefault();
+                            const rid = dragRoomIdRef.current ?? e.dataTransfer.getData('text/siyu-room');
+                            if (rid) {
+                              mx.setRoomTag(rid, 'com.siyu.group', { name: item.title }).catch(() => {});
+                            }
+                            dragRoomIdRef.current = null;
+                          }}
                           style={{
                             padding: `${config.space.S300} ${config.space.S200} ${config.space.S100}`,
+                            cursor: 'pointer',
                           }}
                         >
-                          <Text size="T300" priority="400">
-                            📁 {item.title}
+                          <Text size="T300" priority="400" style={{ flexGrow: 1 }}>
+                            {isClosed ? '▸' : '▾'} 📁 {item.title}
                           </Text>
+                          <span
+                            role="button"
+                            aria-label="上移"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveGroup(item.title, -1, groupNames);
+                            }}
+                            style={{ padding: '0 4px', opacity: 0.7 }}
+                          >
+                            ↑
+                          </span>
+                          <span
+                            role="button"
+                            aria-label="下移"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveGroup(item.title, 1, groupNames);
+                            }}
+                            style={{ padding: '0 4px', opacity: 0.7 }}
+                          >
+                            ↓
+                          </span>
                         </Box>
                       </VirtualTile>
                     );
@@ -565,15 +662,31 @@ export function Home() {
                       key={vItem.index}
                       ref={virtualizer.measureElement}
                     >
-                      <RoomNavItem
-                        room={room}
-                        selected={selected}
-                        linkPath={getRoomLinkPath(roomId)}
-                        notificationMode={getRoomNotificationMode(
-                          notificationPreferences,
-                          room.roomId
-                        )}
-                      />
+                      <div
+                        draggable
+                        onDragStart={(e: React.DragEvent) => {
+                          dragRoomIdRef.current = roomId;
+                          try {
+                            e.dataTransfer.setData('text/siyu-room', roomId);
+                            e.dataTransfer.effectAllowed = 'move';
+                          } catch {
+                            /* ignore */
+                          }
+                        }}
+                        onDragEnd={() => {
+                          dragRoomIdRef.current = null;
+                        }}
+                      >
+                        <RoomNavItem
+                          room={room}
+                          selected={selected}
+                          linkPath={getRoomLinkPath(roomId)}
+                          notificationMode={getRoomNotificationMode(
+                            notificationPreferences,
+                            room.roomId
+                          )}
+                        />
+                      </div>
                     </VirtualTile>
                   );
                 })}
