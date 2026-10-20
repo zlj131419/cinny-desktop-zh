@@ -13,61 +13,73 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(135deg, #1a1b3a 0%, #2d1b4e 50%, #1a2a6c 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: linear-gradient(160deg, #191a3d 0%, #2b1a4d 52%, #17275f 100%);
     min-height: 100vh; color: #fff;
     display: flex; flex-direction: column; align-items: center;
-    padding: 60px 20px;
+    padding: 56px 20px 48px;
+    -webkit-font-smoothing: antialiased;
   }
-  .logo { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
-  h1 { font-size: 32px; margin-bottom: 8px; }
+  .wrap { width: 100%; max-width: 880px; display: flex; flex-direction: column; align-items: center; }
+  .logo { width: 88px; height: 88px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 34px rgba(0,0,0,.45); }
+  h1 { font-size: clamp(24px, 6vw, 30px); font-weight: 700; letter-spacing: .5px; margin-bottom: 14px; }
   .tagline {
-    font-size: 42px; font-weight: 800; margin-bottom: 12px;
-    color: #c4b5fd; letter-spacing: 2px;
+    text-align: center; font-weight: 800; line-height: 1.35;
+    font-size: clamp(27px, 7vw, 40px); letter-spacing: 1.5px; margin-bottom: 18px;
+    color: #c4b5fd;
   }
+  .tagline .tail { display: block; font-size: .58em; font-weight: 700; letter-spacing: 2px; margin-top: 6px; }
   @supports ((-webkit-background-clip: text) and (-webkit-text-fill-color: transparent)) {
     .tagline {
-      background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+      background: linear-gradient(120deg, #a78bfa, #60a5fa 55%, #34d399);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text; color: transparent;
     }
   }
-  .slogan { color: rgba(255,255,255,.75); margin-bottom: 8px; font-size: clamp(15px, 4.6vw, 17px); line-height: 1.8; }
-  .slogan-sub { color: rgba(255,255,255,.55); margin-bottom: 48px; font-size: clamp(13px, 4vw, 15px); }
-  .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1900px; }
+  .slogan {
+    color: rgba(255,255,255,.72); font-size: clamp(13px, 3.8vw, 15px);
+    line-height: 1.9; text-align: center; max-width: 600px; margin-bottom: 10px;
+  }
+  .slogan-sub {
+    color: rgba(255,255,255,.45); font-size: 12px; letter-spacing: 4px;
+    margin: 26px 0 20px; text-align: center;
+  }
+  .cards {
+    display: grid; width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
   .card {
-    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 16px; padding: 32px; width: 260px; text-align: center;
-    backdrop-filter: blur(10px); transition: transform .2s;
-    position: relative;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px; padding: 26px 18px 20px;
+    backdrop-filter: blur(10px); transition: transform .2s, background .2s;
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,.18);
   }
-  .card:hover { transform: translateY(-4px); background: rgba(255,255,255,.12); }
-  .card .os { font-size: clamp(28px, 9vw, 40px); margin-bottom: 12px; }
-  .card h2 { font-size: clamp(15px, 4.6vw, 20px); margin-bottom: 8px; }
-  .card p { color: rgba(255,255,255,.6); font-size: clamp(11px, 3.4vw, 13px); margin-bottom: 20px; min-height: 36px; }
+  .card:hover { transform: translateY(-3px); background: rgba(255,255,255,.11); }
+  .card .os { font-size: 36px; line-height: 1; margin-bottom: 14px; }
+  .card h2 { font-size: 17px; font-weight: 600; letter-spacing: .5px; margin-bottom: 8px; }
+  .card p {
+    color: rgba(255,255,255,.55); font-size: 12px; line-height: 1.7;
+    text-align: center; margin-bottom: 18px;
+  }
+  .card .spacer { flex: 1; }
   .btn {
-    display: inline-block; padding: 12px 32px; border-radius: 10px;
+    display: block; width: 100%; text-align: center;
+    padding: 11px 8px; border-radius: 11px; white-space: nowrap;
     background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
-    text-decoration: none; font-size: clamp(12px, 3.8vw, 15px); font-weight: 600;
+    text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: .5px;
   }
-  .btn:hover { opacity: .9; }
-  .btn.secondary { background: rgba(255,255,255,.15); }
-  .note { margin-top: 48px; color: rgba(255,255,255,.5); font-size: 13px; text-align: center; line-height: 1.8; }
-  .note a { color: #a78bfa; }
-  @media (max-width: 640px) {
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(106px, 1fr)); gap: 12px; width: 100%; padding: 0 12px; box-sizing: border-box; }
-    .card { width: auto; padding: 20px 10px; border-radius: 12px; }
-    .card .os { font-size: 30px; margin-bottom: 8px; }
-    .card h2 { font-size: 16px; margin-bottom: 6px; }
-    .card p { min-height: 0; margin-bottom: 14px; font-size: 12px; }
-    .btn { display: block; padding: 10px 6px; font-size: clamp(12px, 3.6vw, 14px); text-align: center; }
-    .card { display: flex; flex-direction: column; align-items: stretch; }
-    .card .os, .card h2, .card p { text-align: center; }
-    .slogan { font-size: 15px; }
-    .slogan-sub { font-size: 13px; margin-bottom: 32px; }
+  .btn:hover { opacity: .92; }
+  .btn.secondary { background: rgba(255,255,255,.13); font-weight: 500; }
+  .alt-link {
+    display: inline-block; margin-top: 10px; font-size: 12px;
+    color: rgba(255,255,255,.55); text-decoration: none;
   }
-  .web-link { margin-top: 24px; }
+  .alt-link:hover { color: #c4b5fd; }
+  .qr-hint { margin-top: 12px; font-size: 12px; font-weight: 400; color: rgba(255,255,255,.5); }
   .qr-trigger { cursor: pointer; position: relative; display: inline-block; }
+  .qr-trigger:hover { color: rgba(255,255,255,.85); }
   .qr-popup {
     display: none; position: absolute; bottom: 100%; left: 50%;
     transform: translateX(-50%); margin-bottom: 12px;
@@ -75,15 +87,30 @@
     box-shadow: 0 8px 32px rgba(0,0,0,.4); z-index: 10;
   }
   .qr-popup img { width: 180px; height: 180px; display: block; }
-  .qr-popup p { color: #333; font-size: 12px; margin: 8px 0 0; min-height: auto; }
+  .qr-popup p { color: #333; font-size: 12px; margin: 8px 0 0; text-align: center; }
   .qr-trigger:hover .qr-popup { display: block; }
-  .qr-hint { font-size: 22px; color: rgba(255,255,255,.9); margin-top: 14px; font-weight: 700; }
+  .note { margin-top: 40px; color: rgba(255,255,255,.42); font-size: 12px; text-align: center; line-height: 1.9; }
+  .note a { color: #a78bfa; text-decoration: none; }
+  @media (max-width: 640px) {
+    body { padding: 40px 14px 36px; }
+    .logo { width: 76px; height: 76px; border-radius: 17px; }
+    .cards { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px; }
+    .card { padding: 18px 9px 14px; border-radius: 14px; }
+    .card .os { font-size: 30px; margin-bottom: 10px; }
+    .card h2 { font-size: 15px; margin-bottom: 6px; }
+    .card p { font-size: 11px; line-height: 1.6; margin-bottom: 14px; }
+    .btn { padding: 9px 4px; font-size: 12px; border-radius: 9px; }
+    .alt-link { font-size: 11px; margin-top: 8px; }
+    .qr-hint { display: none; }
+    .slogan-sub { margin: 20px 0 16px; }
+  }
 </style>
 </head>
 <body>
+<div class="wrap">
   <img class="logo" src="./res/siyu-icon.png" alt="私语 Siyu" />
   <h1>私语 Siyu</h1>
-  <h2 class="tagline">聊天，本该如此安全 —— 私语 Siyu</h2>
+  <div class="tagline">聊天，本该如此安全<span class="tail">—— 私语 Siyu</span></div>
   <p class="slogan">私语 Siyu，一款属于自己的聊天软件。一切掌握在自己手里，聊天记录不经过任何第三方。<br/>轻快、中文、加密沟通，不收集、不画像、不打扰。</p>
   <p class="slogan-sub">选择你的平台下载客户端</p>
   <div class="cards">
@@ -91,14 +118,16 @@
       <div class="os">🪟</div>
       <h2>Windows</h2>
       <p>Windows 10 / 11 64位<br/>v1.0.30</p>
+      <div class="spacer"></div>
       <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64-setup.exe">下载 EXE</a>
-      <div style="margin-top:10px"><a class="btn secondary" style="padding:8px 24px;font-size:13px" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64_en-US.msi">下载 MSI</a></div>
+      <a class="alt-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64_en-US.msi">或下载 MSI 安装包</a>
       <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.30/Siyu_1.0.30_x64-setup.exe" alt="Windows下载二维码"/><p>扫码下载 Windows 版</p></span></span></div>
     </div>
     <div class="card">
       <div class="os">🤖</div>
       <h2>Android</h2>
       <p>Android 8.0 及以上<br/>v1.0.30</p>
+      <div class="spacer"></div>
       <a class="btn" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk">下载 APK</a>
       <div class="qr-hint"><span class="qr-trigger">📱 扫码下载<span class="qr-popup"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk" alt="Android下载二维码"/><p>扫码打开下载页</p></span></span></div>
     </div>
@@ -106,25 +135,28 @@
       <div class="os">🍎</div>
       <h2>macOS</h2>
       <p>Apple Silicon / Intel<br/>敬请期待</p>
+      <div class="spacer"></div>
       <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
     </div>
     <div class="card">
       <div class="os">🐧</div>
       <h2>Linux</h2>
       <p>AppImage / deb<br/>敬请期待</p>
+      <div class="spacer"></div>
       <a class="btn secondary" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
     </div>
-
     <div class="card">
       <div class="os">📱</div>
       <h2>手机 / 平板</h2>
       <p>用浏览器打开本站<br/>添加到主屏幕即为 App</p>
+      <div class="spacer"></div>
       <a class="btn secondary" href="../">打开网页版</a>
     </div>
     <div class="card">
       <div class="os">🌐</div>
       <h2>网页版</h2>
       <p>免安装，打开即用<br/>支持 PWA 安装</p>
+      <div class="spacer"></div>
       <a class="btn secondary" href="../">打开网页版</a>
     </div>
   </div>
@@ -132,5 +164,6 @@
     客户端支持自动更新，新版本发布会自动提示升级。<br/>
     所有版本均可在 <a href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">GitHub Releases</a> 查看完整列表。
   </p>
+</div>
 </body>
 </html>
