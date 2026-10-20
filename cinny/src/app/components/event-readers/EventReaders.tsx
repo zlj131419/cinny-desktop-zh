@@ -43,6 +43,21 @@ export const EventReaders = as<'div', EventReadersProps>(
     const getName = (userId: string) =>
       getMemberDisplayName(room, userId) ?? getMxIdLocalPart(userId) ?? userId;
 
+    // 获取并格式化已读时间（年月日 + 时分）
+    const getReadTime = (userId: string): string | undefined => {
+      try {
+        if (typeof userId !== 'string') return undefined;
+        const receipt = room.getLastUnthreadedReceiptFor(userId);
+        const ts = receipt?.ts;
+        if (typeof ts !== 'number' || !ts) return undefined;
+        const d = new Date(ts);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } catch {
+        return undefined;
+      }
+    };
+
     return (
       <Box
         className={classNames(css.EventReaders, className)}
@@ -105,9 +120,16 @@ export const EventReaders = as<'div', EventReadersProps>(
                       </Avatar>
                     }
                   >
-                    <Text size="T400" truncate>
-                      {name}
-                    </Text>
+                    <Box direction="Column" style={{ flexGrow: 1, minWidth: 0 }}>
+                      <Text size="T400" truncate>
+                        {name}
+                      </Text>
+                      {getReadTime(readerId) && (
+                        <Text size="T200" priority="400" truncate>
+                          {getReadTime(readerId)}
+                        </Text>
+                      )}
+                    </Box>
                   </MenuItem>
                 );
               })}
