@@ -73,13 +73,13 @@
   .btn:hover { opacity: .92; }
   .btn.secondary { background: rgba(255,255,255,.13); font-weight: 500; }
   .btn + .btn { margin-top: 8px; }
-  .qr-line { margin-top: 12px; }
+  .qr-line { width: 100%; margin-bottom: 8px; }
   .qr-trigger {
-    position: relative; display: inline-block; cursor: pointer;
-    font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,.55);
-    border-bottom: 1px dashed rgba(255,255,255,.3); padding-bottom: 1px;
+    position: relative; display: block; width: 100%; text-align: center; cursor: pointer;
+    background: rgba(255,255,255,.13); border-radius: 11px;
+    padding: 11px 8px; font-size: 14px; font-weight: 500; letter-spacing: 2px; color: #fff;
   }
-  .qr-trigger:hover { color: #c4b5fd; }
+  .qr-trigger:hover { background: rgba(255,255,255,.2); }
   .qr-pop {
     display: none; position: absolute; bottom: calc(100% + 10px); left: 50%;
     transform: translateX(-50%); z-index: 20;
@@ -108,7 +108,8 @@
     .card p { font-size: 11px; line-height: 1.6; margin-bottom: 14px; }
     .btn { padding: 9px 4px; font-size: 12px; border-radius: 9px; }
     .btn + .btn { margin-top: 6px; }
-    .qr-line { margin-top: 10px; }
+    .qr-line { margin-bottom: 6px; }
+    .qr-trigger { padding: 9px 4px; font-size: 12px; border-radius: 9px; }
     .qr-pop img { width: 150px; height: 150px; }
     .slogan-sub { margin: 20px 0 16px; }
   }
@@ -136,40 +137,40 @@
       <h2>Android</h2>
       <p>Android 8.0 及以上<br/>v1.0.30</p>
       <div class="spacer"></div>
-      <a class="btn primary-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk">下载 APK</a>
       <div class="qr-line"><span class="qr-trigger" tabindex="0">二维码<span class="qr-pop"><img class="qr-img" alt="二维码"/></span></span></div>
+      <a class="btn primary-link" href="https://github.com/zlj131419/siyu/releases/download/v1.0.30/app-universal-release-unsigned-signed.apk">下载 APK</a>
     </div>
     <div class="card">
       <div class="os">🍎</div>
       <h2>macOS</h2>
       <p>Apple Silicon / Intel<br/>敬请期待</p>
       <div class="spacer"></div>
-      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
       <div class="qr-line"><span class="qr-trigger" tabindex="0">二维码<span class="qr-pop"><img class="qr-img" alt="二维码"/></span></span></div>
+      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
     </div>
     <div class="card">
       <div class="os">🐧</div>
       <h2>Linux</h2>
       <p>AppImage / deb<br/>敬请期待</p>
       <div class="spacer"></div>
-      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
       <div class="qr-line"><span class="qr-trigger" tabindex="0">二维码<span class="qr-pop"><img class="qr-img" alt="二维码"/></span></span></div>
+      <a class="btn secondary primary-link" href="https://github.com/zlj131419/siyu/releases" target="_blank" rel="noreferrer">查看 releases</a>
     </div>
     <div class="card">
       <div class="os">📱</div>
       <h2>手机 / 平板</h2>
       <p>用浏览器打开本站<br/>添加到主屏幕即为 App</p>
       <div class="spacer"></div>
-      <a class="btn secondary primary-link" href="../">打开网页版</a>
       <div class="qr-line"><span class="qr-trigger" tabindex="0">二维码<span class="qr-pop"><img class="qr-img" alt="二维码"/></span></span></div>
+      <a class="btn secondary primary-link" href="../">打开网页版</a>
     </div>
     <div class="card">
       <div class="os">🌐</div>
       <h2>网页版</h2>
       <p>免安装，打开即用<br/>支持 PWA 安装</p>
       <div class="spacer"></div>
-      <a class="btn secondary primary-link" href="../">打开网页版</a>
       <div class="qr-line"><span class="qr-trigger" tabindex="0">二维码<span class="qr-pop"><img class="qr-img" alt="二维码"/></span></span></div>
+      <a class="btn secondary primary-link" href="../">打开网页版</a>
     </div>
   </div>
   <p class="note">
