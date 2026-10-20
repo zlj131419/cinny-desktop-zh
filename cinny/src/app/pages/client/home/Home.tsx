@@ -426,8 +426,6 @@ export function Home() {
       return sortedRooms.map((roomId) => ({ type: 'room' as const, roomId }));
     }
     const items: DisplayItem[] = [];
-    // 未分组的排前面（保持活跃排序）
-    ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
     // 分组按用户自定义顺序（groupOrder 优先，其余按名称），每个分组前加标题
     const names = Array.from(grouped.keys());
     const ordered = [
@@ -440,6 +438,8 @@ export function Home() {
         (grouped.get(g) ?? []).forEach((roomId) => items.push({ type: 'room', roomId }));
       }
     });
+    // 未分组的默认排在所有分组下面（保持活跃排序）
+    ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
     return items;
   }, [viewMode, sortedRooms, mx, closedGroups, groupOrder]);
 
