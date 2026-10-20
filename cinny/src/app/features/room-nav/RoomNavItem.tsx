@@ -267,7 +267,7 @@ const RoomNavItemMenu = forwardRef<HTMLDivElement, RoomNavItemMenuProps>(
                 key={g}
                 onClick={() => handleMoveToGroup(g)}
                 size="300"
-                after={<Icon size="100" src={Icons.Folder} />}
+                after={<Icon size="100" src={Icons.Category} />}
                 radii="300"
               >
                 <Text style={{ flexGrow: 1 }} as="span" size="T300" truncate>
