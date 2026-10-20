@@ -34,6 +34,8 @@ import {
   getExplorePath,
   getHomeCreatePath,
   getHomeRoomPath,
+  getDirectRoomPath,
+  getSpacePath,
   getHomeSearchPath,
   withSearchParam,
 } from '../../pathUtils';
@@ -255,6 +257,31 @@ export function Home() {
   const searchSelected = useHomeSearchSelected();
   const noRoomToDisplay = rooms.length === 0;
   const [closedCategories, setClosedCategories] = useAtom(useClosedNavCategoriesAtom());
+
+  // 根据视图模式和房间类型获取正确的跳转路径
+  const getRoomLinkPath = (roomId: string): string => {
+    const roomIdOrAlias = getCanonicalAliasOrRoomId(mx, roomId);
+    try {
+      if (viewMode === 'friends') {
+        return getDirectRoomPath(roomIdOrAlias);
+      }
+      if (viewMode === 'spaces') {
+        return getSpacePath(roomIdOrAlias);
+      }
+      const room = mx.getRoom(roomId);
+      if (room) {
+        if (mDirects?.has(roomId)) {
+          return getDirectRoomPath(roomIdOrAlias);
+        }
+        if (isSpace(room)) {
+          return getSpacePath(roomIdOrAlias);
+        }
+      }
+      return getHomeRoomPath(roomIdOrAlias);
+    } catch {
+      return getHomeRoomPath(roomIdOrAlias);
+    }
+  };
 
   const sortedRooms = useMemo(() => {
     if (!mx || !Array.isArray(rooms)) return [];
@@ -490,7 +517,7 @@ export function Home() {
                       <RoomNavItem
                         room={room}
                         selected={selected}
-                        linkPath={getHomeRoomPath(getCanonicalAliasOrRoomId(mx, roomId))}
+                        linkPath={getRoomLinkPath(roomId)}
                         notificationMode={getRoomNotificationMode(
                           notificationPreferences,
                           room.roomId
