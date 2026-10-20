@@ -48,6 +48,7 @@ import {
 } from '../../../hooks/router/useHomeSelected';
 import { useHomeRooms } from './useHomeRooms';
 import { useAllRooms } from './useAllRooms';
+import { RoomEvent } from 'matrix-js-sdk';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { VirtualTile } from '../../../components/virtualizer';
 import { RoomNavCategoryButton, RoomNavItem } from '../../../features/room-nav';
@@ -308,6 +309,16 @@ export function Home() {
     document.addEventListener('touchmove', prevent, { passive: false });
     return () => document.removeEventListener('touchmove', prevent);
   }, [touchDrag, groupDrag]);
+  // 分组实时刷新：其他设备（或本机）改了房间标签（分组/收藏/置顶）时，
+  // Room.tags 事件不会让 sortedRooms 变化，displayItems 不会重算 —— 手动 bump 版本触发重算
+  const [tagVersion, setTagVersion] = useState(0);
+  React.useEffect(() => {
+    const onTags = () => setTagVersion((v) => v + 1);
+    mx.on(RoomEvent.Tags, onTags);
+    return () => {
+      mx.removeListener(RoomEvent.Tags, onTags);
+    };
+  }, [mx]);
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
@@ -486,7 +497,7 @@ export function Home() {
     // 未分组的默认排在所有分组下面（保持活跃排序）
     ungrouped.forEach((roomId) => items.push({ type: 'room', roomId }));
     return items;
-  }, [viewMode, sortedRooms, mx, closedGroups, groupOrder]);
+  }, [viewMode, sortedRooms, mx, closedGroups, groupOrder, tagVersion]);
 
   const virtualizer = useVirtualizer({
     count: displayItems.length,
