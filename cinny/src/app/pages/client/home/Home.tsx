@@ -345,17 +345,6 @@ export function Home() {
     return result;
   }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId, filter, mDirects]);
 
-  const virtualizer = useVirtualizer({
-    count: displayItems.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 38,
-    overscan: 10,
-  });
-
-  const handleCategoryClick = useCategoryHandler(setClosedCategories, (categoryId) =>
-    closedCategories.has(categoryId)
-  );
-
   // 构建带分组标题的显示列表（所有聊天模式下按分组分区）
   type DisplayItem = { type: 'header'; title: string } | { type: 'room'; roomId: string };
   const displayItems = useMemo<DisplayItem[]>(() => {
@@ -398,6 +387,17 @@ export function Home() {
       });
     return items;
   }, [viewMode, sortedRooms, mx]);
+
+  const virtualizer = useVirtualizer({
+    count: displayItems.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 38,
+    overscan: 10,
+  });
+
+  const handleCategoryClick = useCategoryHandler(setClosedCategories, (categoryId) =>
+    closedCategories.has(categoryId)
+  );
 
   return (
     <PageNav>
