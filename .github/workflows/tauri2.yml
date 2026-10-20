@@ -243,11 +243,54 @@ jobs:
           grep -B2 -A4 "google-services" src-tauri/gen/android/build.gradle.kts | head -12
           echo "--- app plugins/deps ---"
           grep -A8 "^plugins {" src-tauri/gen/android/app/build.gradle.kts | head -10
+      - name: Apply Android release fixes (version + cleartext)
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "--- BEFORE ---"
+          grep -n "versionName\|versionCode\|usesCleartextTraffic" src-tauri/gen/android/app/build.gradle.kts src-tauri/gen/android/app/src/main/AndroidManifest.xml || true
+          TAG="$TAG" python3 - <<'PYEOF_FIX'
+          import json, os, re
+          ver = os.environ.get('TAG') or json.load(open('src-tauri/tauri.conf.json'))['version']
+          code = int(ver.replace('.', ''))
+          app = 'src-tauri/gen/android/app/build.gradle.kts'
+          s = open(app).read()
+          s = re.sub(r'versionName\s*=\s*"[^"]*"', 'versionName = "%s"' % ver, s)
+          s = re.sub(r'versionCode\s*=\s*[0-9]+', 'versionCode = %d' % code, s)
+          s = re.sub(r'(usesCleartextTraffic"\]\s*=\s*)"false"', r'\1"true"', s)
+          open(app, 'w').write(s)
+          man = 'src-tauri/gen/android/app/src/main/AndroidManifest.xml'
+          m = open(man).read()
+          m = m.replace('android:usesCleartextTraffic="${usesCleartextTraffic}"', 'android:usesCleartextTraffic="true"')
+          m = m.replace('android:usesCleartextTraffic="false"', 'android:usesCleartextTraffic="true"')
+          if 'usesCleartextTraffic' not in m:
+              m = m.replace('<application ', '<application android:usesCleartextTraffic="true" ', 1)
+          open(man, 'w').write(m)
+          print('release fixes applied:', ver, code)
+          PYEOF_FIX
+          echo "--- AFTER ---"
+          grep -n "versionName\|versionCode\|usesCleartextTraffic" src-tauri/gen/android/app/build.gradle.kts src-tauri/gen/android/app/src/main/AndroidManifest.xml
+          grep -q "versionName = \"$TAG\"" src-tauri/gen/android/app/build.gradle.kts || { echo "VERSION FIX DID NOT LAND"; exit 1; }
+          grep -q 'usesCleartextTraffic="true"' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "CLEARTEXT FIX DID NOT LAND"; exit 1; }
       - name: Build Android APK
         run: |
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
+      - name: Verify built APK values
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          APK="src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1)
+          if [ -n "$AAPT" ]; then
+            "$AAPT" dump badging "$APK" | head -2
+            "$AAPT" dump badging "$APK" | grep -q "versionName='$TAG'" || { echo "APK versionName WRONG"; exit 1; }
+            LINE=$("$AAPT" dump xmltree "$APK" AndroidManifest.xml | grep "usesCleartextTraffic" | head -1)
+            echo "cleartext attr: $LINE"
+            echo "$LINE" | grep -q "0xffffffff" || { echo "APK cleartext NOT true"; exit 1; }
+            echo "APK values verified OK"
+          else
+            echo "aapt2 not found, skipping in-CI verification"
+          fi
       - name: Install build-tools 29.0.3 (sign action needs zipalign)
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
