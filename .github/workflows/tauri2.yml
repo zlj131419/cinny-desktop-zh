@@ -233,6 +233,11 @@ jobs:
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
+      - name: Install build-tools 29.0.3 (sign action needs zipalign)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "build-tools;29.0.3"
+          ls "$ANDROID_HOME/build-tools/"
       - name: Sign Android APK
         uses: r0adkll/sign-android-release@v1
         with:
