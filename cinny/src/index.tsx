@@ -1,4 +1,5 @@
 /* eslint-disable import/first */
+import './polyfills';
 import { initTauriNotificationShim } from './tauriNotificationShim';
 
 initTauriNotificationShim();
