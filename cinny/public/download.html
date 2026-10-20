@@ -54,6 +54,16 @@
   .btn.secondary { background: rgba(255,255,255,.15); }
   .note { margin-top: 48px; color: rgba(255,255,255,.5); font-size: 13px; text-align: center; line-height: 1.8; }
   .note a { color: #a78bfa; }
+  @media (max-width: 640px) {
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; padding: 0 12px; box-sizing: border-box; }
+    .card { width: auto; padding: 20px 10px; border-radius: 12px; }
+    .card .os { font-size: 30px; margin-bottom: 8px; }
+    .card h2 { font-size: 16px; margin-bottom: 6px; }
+    .card p { min-height: 0; margin-bottom: 14px; font-size: 12px; }
+    .btn { padding: 10px 14px; font-size: 13px; }
+    .slogan { font-size: 15px; }
+    .slogan-sub { font-size: 13px; margin-bottom: 32px; }
+  }
   .web-link { margin-top: 24px; }
   .qr-trigger { cursor: pointer; position: relative; display: inline-block; }
   .qr-popup {
