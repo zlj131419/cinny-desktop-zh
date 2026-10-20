@@ -223,12 +223,6 @@ export function Home() {
       return new Set<string>();
     }
   });
-  React.useEffect(() => {
-    if (!touchDrag) return;
-    const prevent = (e: TouchEvent) => e.preventDefault();
-    document.addEventListener('touchmove', prevent, { passive: false });
-    return () => document.removeEventListener('touchmove', prevent);
-  }, [touchDrag]);
   const toggleGroup = (name: string) => {
     setClosedGroups((prev) => {
       const next = new Set(prev);
@@ -291,6 +285,13 @@ export function Home() {
       mx.setRoomTag(roomId, 'com.siyu.group', { name: dropName }).catch(() => {});
     }
   };
+  // 触屏拖拽中禁止页面滚动（非被动监听）
+  React.useEffect(() => {
+    if (!touchDrag) return;
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener('touchmove', prevent, { passive: false });
+    return () => document.removeEventListener('touchmove', prevent);
+  }, [touchDrag]);
   // 确保 rooms 始终是有效字符串数组
   const rooms = useMemo(() => {
     if (!mx) return [];
