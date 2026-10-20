@@ -331,12 +331,14 @@ export const getDirectRoomAvatarUrl = (
 };
 
 export const trimReplyFromBody = (body: string): string => {
+  if (typeof body !== 'string') return '';
   const match = body.match(/^> <.+?> .+\n(>.*\n)*?\n/m);
   if (!match) return body;
   return body.slice(match[0].length);
 };
 
 export const trimReplyFromFormattedBody = (formattedBody: string): string => {
+  if (typeof formattedBody !== 'string') return '';
   const suffix = '</mx-reply>';
   const i = formattedBody.lastIndexOf(suffix);
   if (i < 0) {
