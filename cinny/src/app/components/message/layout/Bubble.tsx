@@ -64,7 +64,10 @@ export const BubbleLayout = as<'div', BubbleLayoutProps>(
         {hideBubble ? (
           children
         ) : (
-          <Box justifyContent={alignRight ? 'End' : 'Start'}>
+          <Box
+            justifyContent={alignRight ? 'End' : 'Start'}
+            style={{ width: '100%', minWidth: 0 }}
+          >
             <Box
               className={
                 hideBubble
