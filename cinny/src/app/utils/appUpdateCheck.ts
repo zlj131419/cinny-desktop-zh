@@ -35,6 +35,21 @@ function showUpdateBanner(version: string): void {
   go.style.cssText =
     'background:#fff;color:#2563eb;border:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;flex-shrink:0;';
   go.onclick = () => {
+    // 在 App 里用 window.open 会被 WebView 接管（下载页在 App 内没权限下载），
+    // 优先走 Tauri 的系统浏览器打开，拿不到桥时才退回 window.open
+    const t = (window as unknown as Record<string, any>).__TAURI__;
+    try {
+      if (t?.shell?.open) {
+        void t.shell.open(DOWNLOAD_PAGE);
+        return;
+      }
+      if (t?.opener?.openUrl) {
+        void t.opener.openUrl(DOWNLOAD_PAGE);
+        return;
+      }
+    } catch {
+      /* 忽略，走下面的兜底 */
+    }
     window.open(DOWNLOAD_PAGE, '_blank');
   };
   const dismiss = document.createElement('button');
