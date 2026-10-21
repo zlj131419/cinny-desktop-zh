@@ -9,6 +9,7 @@ const LogoUnreadSVG = '/public/siyu-icon-200.png';
 const LogoHighlightSVG = '/public/siyu-icon-200.png';
 import { getNotificationSoundSrc } from '../../features/settings/notifications/notificationSounds';
 import InviteSound from '../../../../public/sound/invite.wav';
+import { playWebAudioSound, initWebAudioUnlock } from '../../utils/webAudioSound';
 import { notificationPermission, setFavicon } from '../../utils/dom';
 import { useSetting } from '../../state/hooks/settings';
 import { settingsAtom } from '../../state/settings';
@@ -23,33 +24,13 @@ import {
 } from '../../utils/room';
 import { NotificationType } from '../../../types/matrix/room';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
-// 解锁浏览器音频自动播放：首次用户交互时静音触发一次播放
-let audioUnlocked = false;
-const unlockAudio = () => {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  document.querySelectorAll('audio').forEach((el) => {
-    const origMuted = el.muted;
-    el.muted = true;
-    el.play()
-      .then(() => el.pause())
-      .catch(() => {})
-      .finally(() => {
-        el.muted = origMuted;
-        el.currentTime = 0;
-      });
-  });
-  window.removeEventListener('pointerdown', unlockAudio);
-  window.removeEventListener('keydown', unlockAudio);
-};
 import { useSelectedRoom } from '../../hooks/router/useSelectedRoom';
 import { useInboxNotificationsSelected } from '../../hooks/router/useInbox';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('pointerdown', unlockAudio);
-  window.addEventListener('keydown', unlockAudio);
-}
+// 提示音走 Web Audio 播放（不用 <audio> 元素，避免 iOS 残留假「正在播放」
+// 会话）；首次用户手势时激活 AudioContext，替代旧的静音预播解锁 hack。
+initWebAudioUnlock();
 
 function SystemEmojiFeature() {
   const [twitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
@@ -102,7 +83,6 @@ function FaviconUpdater() {
 
 function InviteNotifications() {
   const { t } = useTranslation();
-  const audioRef = useRef<HTMLAudioElement>(null);
   const invites = useAtomValue(allInvitesAtom);
   const perviousInviteLen = usePreviousValue(invites.length, 0);
   const mx = useMatrixClient();
@@ -130,11 +110,7 @@ function InviteNotifications() {
   );
 
   const playSound = useCallback(() => {
-    const audioElement = audioRef.current;
-    if (!audioElement) return;
-    audioElement.currentTime = 0;
-    const p = audioElement.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
+    void playWebAudioSound(InviteSound);
   }, []);
 
   useEffect(() => {
@@ -149,17 +125,11 @@ function InviteNotifications() {
     }
   }, [mx, invites, perviousInviteLen, showNotifications, notificationSound, notify, playSound]);
 
-  return (
-    // eslint-disable-next-line jsx-a11y/media-has-caption
-    <audio ref={audioRef} style={{ display: 'none' }}>
-      <source src={InviteSound} type="audio/ogg" />
-    </audio>
-  );
+  return null;
 }
 
 function MessageNotifications() {
   const { t } = useTranslation();
-  const audioRef = useRef<HTMLAudioElement>(null);
   const notifRef = useRef<Notification>();
   const unreadCacheRef = useRef<Map<string, string>>(new Map());
   const mx = useMatrixClient();
@@ -206,12 +176,8 @@ function MessageNotifications() {
   );
 
   const playSound = useCallback(() => {
-    const audioElement = audioRef.current;
-    if (!audioElement) return;
-    audioElement.currentTime = 0;
-    const p = audioElement.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
-  }, []);
+    void playWebAudioSound(getNotificationSoundSrc(notificationSoundId));
+  }, [notificationSoundId]);
 
   useEffect(() => {
     const handleTimelineEvent: RoomEventHandlerMap[RoomEvent.Timeline] = (
@@ -275,10 +241,7 @@ function MessageNotifications() {
     useAuthentication,
   ]);
 
-  return (
-    // eslint-disable-next-line jsx-a11y/media-has-caption
-    <audio ref={audioRef} style={{ display: 'none' }} src={getNotificationSoundSrc(notificationSoundId)} />
-  );
+  return null;
 }
 
 type ClientNonUIFeaturesProps = {
