@@ -48,6 +48,7 @@ import { settingsAtom } from '../../state/settings';
 import { millify } from '../../plugins/millify';
 import { ScrollTopContainer } from '../../components/scroll-top-container';
 import { UserAvatar } from '../../components/user-avatar';
+import { PresenceAvatar } from '../../components/presence';
 import { useRoomTypingMember } from '../../hooks/useRoomTypingMembers';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { useMembershipFilter, useMembershipFilterMenu } from '../../hooks/useMemberFilter';
@@ -136,18 +137,20 @@ function MemberItem({
       radii="400"
       onClick={onClick}
       before={
-        <Avatar size="200">
-          <UserAvatar
-            userId={member.userId}
-            src={avatarUrl ?? undefined}
-            alt={name}
-            renderFallback={() => (
-              <Text size="T200">
-                <b>{String(typeof name === "string" ? name : "?").charAt(0).toUpperCase()}</b>
-              </Text>
-            )}
-          />
-        </Avatar>
+        <PresenceAvatar userId={member.userId}>
+          <Avatar size="200">
+            <UserAvatar
+              userId={member.userId}
+              src={avatarUrl ?? undefined}
+              alt={name}
+              renderFallback={() => (
+                <Text size="T200">
+                  <b>{String(typeof name === "string" ? name : "?").charAt(0).toUpperCase()}</b>
+                </Text>
+              )}
+            />
+          </Avatar>
+        </PresenceAvatar>
       }
       after={
         typing && (
