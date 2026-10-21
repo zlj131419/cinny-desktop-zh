@@ -1,8 +1,10 @@
 /* eslint-disable import/first */
 import './polyfills';
 import { initTauriNotificationShim } from './tauriNotificationShim';
+import { initExternalLinks } from './app/utils/externalLinks';
 
 initTauriNotificationShim();
+initExternalLinks();
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
