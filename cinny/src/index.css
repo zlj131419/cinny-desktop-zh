@@ -60,8 +60,11 @@ body {
   display: flex;
   flex-direction: column;
   /* 安卓 App 的 WebView 铺满全屏，顶部内容会钻到系统状态栏下面重叠：
-     全局让出一个状态栏高度，样式其余不变。桌面/浏览器里该值为 0，无影响、不留白框。 */
-  padding-top: env(safe-area-inset-top, 0px);
+     全局让出一个状态栏高度，样式其余不变。桌面/浏览器里该值为 0，无影响、不留白框。
+     注意：部分老安卓 WebView 的 env(safe-area-inset-top) 报的是刘海高度（无刘海=0）、
+     不是状态栏高度，纯 CSS 拿不到真值；App 里由 keepAlive 插件从原生侧量真实
+     状态栏高度写入 --siyu-top-inset 兜底，两者取大。 */
+  padding-top: max(env(safe-area-inset-top, 0px), var(--siyu-top-inset, 0px));
   background-color: #f4f4f5;
 }
 .dark-theme #root,
