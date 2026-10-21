@@ -3,14 +3,13 @@
  * 安卓侧载的 APK 不能像桌面端那样自动升级（桌面端走 Tauri updater），
  * 这里登录后查一次官方 latest.json 与本地版本对比，有新版就在底部弹一条
  * 提醒，点「去更新」跳下载页下载新 APK 覆盖安装（同签名，数据不丢）。
- * 只在安卓 Tauri 里跑；6 小时内不重复查；同一版本点过「以后再说」不再弹。
+ * 只在安卓 Tauri 里跑；每次登录都查；同一版本点过「以后再说」不再弹。
  */
 import { SIYU_VERSION } from '../../version';
 
 const LATEST_JSON_URL =
   'https://github.com/zlj131419/siyu/releases/latest/download/latest.json';
 const DOWNLOAD_PAGE = 'https://chat.xxqw.net/public/download.html';
-const CHECK_INTERVAL_MS = 6 * 3600 * 1000;
 
 function isNewer(remote: string, local: string): boolean {
   const r = remote.split('.').map((n) => parseInt(n, 10) || 0);
@@ -75,9 +74,9 @@ export function checkAndroidUpdate(): void {
     | undefined;
   if (!tauri?.core?.invoke) return;
   if (!/Android/i.test(navigator.userAgent)) return;
+  // 不做时间节流：每次登录都查（只是一个小 json 请求）。旧版 6 小时节流会在
+  // 查时线上还是旧版、之后新版发布了也不再弹——2026-10-21 用户实测踩中。
   try {
-    const last = Number(localStorage.getItem('siyu-update-check-ts') ?? 0);
-    if (Date.now() - last < CHECK_INTERVAL_MS) return;
     localStorage.setItem('siyu-update-check-ts', String(Date.now()));
   } catch {
     /* ignore */
