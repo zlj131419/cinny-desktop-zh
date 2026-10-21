@@ -29,6 +29,7 @@ import { Room } from 'matrix-js-sdk';
 import { useStateEvent } from '../../hooks/useStateEvent';
 import { PageHeader } from '../../components/page';
 import { RoomAvatar, RoomIcon } from '../../components/room-avatar';
+import { nameInitials } from '../../utils/common';
 import { UseStateProvider } from '../../components/UseStateProvider';
 import { RoomTopicViewer } from '../../components/room-topic-viewer';
 import { StateEvent } from '../../../types/matrix/room';
@@ -475,7 +476,9 @@ export function RoomViewHeader({ callView }: { callView?: boolean }) {
                 src={avatarUrl}
                 alt={name}
                 renderFallback={() => (
-                  <RoomIcon size="200" joinRule={room.getJoinRule()} roomType={room.getType()} />
+                  <Text as="span" size="H5">
+                    {nameInitials(name)}
+                  </Text>
                 )}
               />
             </Avatar>
