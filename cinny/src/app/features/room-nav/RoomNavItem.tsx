@@ -498,11 +498,9 @@ export function RoomNavItem({
     }
   };
 
-  // 一对一私聊时头像代表对方，给头像加在线状态点（群聊私聊不加，避免误导）
-  const dmPartnerId =
-    direct && room.getJoinedMembers().length === 2
-      ? room.getAvatarFallbackMember()?.userId
-      : undefined;
+  // 私聊（含群聊私聊）头像代表对方成员，给头像加在线状态点；
+  // 群聊私聊显示的是头像那位成员的状态，与脸对应
+  const dmPartnerId = direct ? room.getAvatarFallbackMember()?.userId : undefined;
 
   return (
     <NavItem
