@@ -35,6 +35,7 @@ import { InboxNotificationsPathSearchParams } from '../../paths';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { SequenceCard } from '../../../components/sequence-card';
 import { RoomAvatar, RoomIcon } from '../../../components/room-avatar';
+import { nameInitials } from '../../../utils/common';
 import {
   getEditedEvent,
   getMemberAvatarMxc,
@@ -419,12 +420,9 @@ function RoomNotificationsGroupComp({
               src={getRoomAvatarUrl(mx, room, 96, useAuthentication)}
               alt={room.name}
               renderFallback={() => (
-                <RoomIcon
-                  size="50"
-                  roomType={room.getType()}
-                  joinRule={room.getJoinRule() ?? JoinRule.Restricted}
-                  filled
-                />
+                <Text as="span" size="H6">
+                  {nameInitials(room.name)}
+                </Text>
               )}
             />
           </Avatar>
