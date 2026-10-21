@@ -33,6 +33,7 @@ import { ImageViewer } from '../../components/image-viewer';
 import * as customHtmlCss from '../../styles/CustomHtml.css';
 import { RoomAvatar, RoomIcon } from '../../components/room-avatar';
 import { getMemberAvatarMxc, getMemberDisplayName, getRoomAvatarUrl } from '../../utils/room';
+import { nameInitials } from '../../utils/common';
 import { ResultItem } from './useMessageSearch';
 import { SequenceCard } from '../../components/sequence-card';
 import { UserAvatar } from '../../components/user-avatar';
@@ -203,12 +204,9 @@ export function SearchResultGroup({
               src={getRoomAvatarUrl(mx, room, 96, useAuthentication)}
               alt={room.name}
               renderFallback={() => (
-                <RoomIcon
-                  size="50"
-                  roomType={room.getType()}
-                  joinRule={room.getJoinRule() ?? JoinRule.Restricted}
-                  filled
-                />
+                <Text as="span" size="H6">
+                  {nameInitials(room.name)}
+                </Text>
               )}
             />
           </Avatar>
