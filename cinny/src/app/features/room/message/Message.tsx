@@ -924,7 +924,7 @@ export const Message = as<'div', MessageProps>(
     );
 
     const msgContentJSX = (
-      <Box direction="Column" alignSelf="Start" style={{ maxWidth: '100%' }}>
+      <Box direction="Column" alignSelf="Stretch" style={{ maxWidth: '100%', minWidth: 0 }}>
         {reply}
         {edit && onEditId ? (
           <MessageEditor
