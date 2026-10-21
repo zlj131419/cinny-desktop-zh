@@ -1,4 +1,4 @@
-import DefaultSound from '../../../../../public/sound/notification.ogg';
+import DefaultSound from '../../../../../public/sound/notification.wav';
 import CrispSound from '../../../../../public/sound/notify-crisp.wav';
 import SoftSound from '../../../../../public/sound/notify-soft.wav';
 import UrgentSound from '../../../../../public/sound/notify-urgent.wav';
