@@ -16,19 +16,15 @@ export function initExternalLinks(): void {
   document.addEventListener('click', (e) => {
     const a = (e.target as HTMLElement | null)?.closest?.('a');
     if (!a || !a.href || !isDownloadUrl(a.href)) return;
-    // 先拦下默认导航，再异步走系统浏览器；两个通道都失败才放行默认行为。
-    // （旧写法没 await：shell 异步被拒时点击已被吞、页面也不动，等于死按钮。）
+    // 先拦下默认导航，再异步走系统浏览器；失败才放行默认行为。
+    // （旧写法走了 __TAURI__.shell/opener 全局：Tauri v2 根本没有这两个命名空间，
+    //  一直是 undefined、直接落到兜底；插件必须经 core.invoke 调 plugin:opener|open_url。
+    //  2026-10-21 实锤：这就是 1.0.37 里「点下载还是没跳转浏览器」的根因。）
     e.preventDefault();
     void (async () => {
       try {
-        if (tauri.shell?.open) {
-          await tauri.shell.open(a.href);
-          return;
-        }
-        if (tauri.opener?.openUrl) {
-          await tauri.opener.openUrl(a.href);
-          return;
-        }
+        await tauri.core.invoke('plugin:opener|open_url', { url: a.href });
+        return;
       } catch {
         /* 落到下面放行默认导航 */
       }
