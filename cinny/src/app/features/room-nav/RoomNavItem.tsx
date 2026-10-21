@@ -24,6 +24,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { NavItem, NavItemContent, NavItemOptions, NavLink } from '../../components/nav';
 import { UnreadBadge, UnreadBadgeCenter } from '../../components/unread-badge';
 import { RoomAvatar, RoomIcon } from '../../components/room-avatar';
+import { PresenceAvatar } from '../../components/presence';
 import { getDirectRoomAvatarUrl, getRoomAvatarUrl, getStateEvent } from '../../utils/room';
 import { nameInitials } from '../../utils/common';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
@@ -497,6 +498,12 @@ export function RoomNavItem({
     }
   };
 
+  // 一对一私聊时头像代表对方，给头像加在线状态点（群聊私聊不加，避免误导）
+  const dmPartnerId =
+    direct && room.getJoinedMembers().length === 2
+      ? room.getAvatarFallbackMember()?.userId
+      : undefined;
+
   return (
     <NavItem
       variant="Background"
@@ -516,6 +523,7 @@ export function RoomNavItem({
       <NavLink to={linkPath} onClick={handleNavLinkClick}>
         <NavItemContent>
           <Box as="span" grow="Yes" alignItems="Center" gap="200">
+            <PresenceAvatar userId={showAvatar ? dmPartnerId : undefined}>
             <Avatar size="200" radii="400">
               {showAvatar ? (
                 <RoomAvatar
@@ -544,6 +552,7 @@ export function RoomNavItem({
                 />
               )}
             </Avatar>
+            </PresenceAvatar>
             <Box as="span" grow="Yes">
               <Text priority={unread ? '500' : '300'} as="span" size="Inherit" truncate>
                 {roomName}
