@@ -7,8 +7,14 @@
  */
 import { SIYU_VERSION } from '../../version';
 
-const LATEST_JSON_URL =
-  'https://github.com/zlj131419/siyu/releases/latest/download/latest.json';
+// 检查地址优先走自家服务器镜像：GitHub 的 release 下载不带跨域头，WebView
+// 的 fetch 读不到响应（实测跳转链无 Access-Control-Allow-Origin），且国内
+// 直连 GitHub 不稳；桌面端 updater 走 Rust 请求不受跨域限，所以桌面一直正常。
+// 服务器上的 /public/latest.json 在每次发版时同步。
+const LATEST_JSON_URLS = [
+  'https://chat.xxqw.net/public/latest.json',
+  'https://github.com/zlj131419/siyu/releases/latest/download/latest.json',
+];
 const DOWNLOAD_PAGE = 'https://chat.xxqw.net/public/download.html';
 
 function isNewer(remote: string, local: string): boolean {
@@ -34,22 +40,27 @@ function showUpdateBanner(version: string): void {
   go.style.cssText =
     'background:#fff;color:#2563eb;border:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;flex-shrink:0;';
   go.onclick = () => {
-    // 在 App 里用 window.open 会被 WebView 接管（下载页在 App 内没权限下载），
-    // 优先走 Tauri 的系统浏览器打开，拿不到桥时才退回 window.open
+    // 走系统浏览器打开下载页：__TAURI__.shell/opener 全局在 Tauri v2 不存在，
+    // 正道是 core.invoke('plugin:opener|open_url')（与侧边栏下载按钮同款修法），
+    // 全失败才退回 window.open。
     const t = (window as unknown as Record<string, any>).__TAURI__;
-    try {
-      if (t?.shell?.open) {
-        void t.shell.open(DOWNLOAD_PAGE);
+    void (async () => {
+      try {
+        await t?.core?.invoke('plugin:opener|open_url', { url: DOWNLOAD_PAGE });
         return;
+      } catch {
+        /* 继续兜底 */
       }
-      if (t?.opener?.openUrl) {
-        void t.opener.openUrl(DOWNLOAD_PAGE);
-        return;
+      try {
+        if (t?.opener?.openUrl) {
+          await t.opener.openUrl(DOWNLOAD_PAGE);
+          return;
+        }
+      } catch {
+        /* 继续兜底 */
       }
-    } catch {
-      /* 忽略，走下面的兜底 */
-    }
-    window.open(DOWNLOAD_PAGE, '_blank');
+      window.open(DOWNLOAD_PAGE, '_blank');
+    })();
   };
   const dismiss = document.createElement('button');
   dismiss.textContent = '以后再说';
@@ -81,9 +92,19 @@ export function checkAndroidUpdate(): void {
   } catch {
     /* ignore */
   }
-  fetch(LATEST_JSON_URL)
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data: { version?: unknown } | null) => {
+  const tryFetch = async (): Promise<{ version?: unknown } | null> => {
+    for (const url of LATEST_JSON_URLS) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) return (await res.json()) as { version?: unknown };
+      } catch {
+        /* 换下一个地址 */
+      }
+    }
+    return null;
+  };
+  void tryFetch()
+    .then((data) => {
       const remote = typeof data?.version === 'string' ? data.version : '';
       if (!remote || !isNewer(remote, SIYU_VERSION)) return;
       try {
