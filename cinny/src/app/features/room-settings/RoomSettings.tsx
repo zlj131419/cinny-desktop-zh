@@ -11,6 +11,7 @@ import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { useRoomAvatar, useRoomJoinRule, useRoomName } from '../../hooks/useRoomMeta';
 import { mDirectAtom } from '../../state/mDirectList';
 import { RoomAvatar, RoomIcon } from '../../components/room-avatar';
+import { nameInitials } from '../../utils/common';
 import { General } from './general';
 import { Members } from '../common-settings/members';
 import { EmojisStickers } from '../common-settings/emojis-stickers';
@@ -105,12 +106,9 @@ export function RoomSettings({ initialPage, requestClose }: RoomSettingsProps) {
                     src={avatarUrl}
                     alt={roomName}
                     renderFallback={() => (
-                      <RoomIcon
-                        size="50"
-                        roomType={room.getType()}
-                        joinRule={joinRuleContent?.join_rule ?? JoinRule.Invite}
-                        filled
-                      />
+                      <Text as="span" size="H6">
+                        {nameInitials(roomName)}
+                      </Text>
                     )}
                   />
                 </Avatar>
