@@ -1,0 +1,11 @@
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-top-inset"
+description = "Enables the top_inset command without any pre-configured scope."
+commands.allow = ["top_inset"]
+
+[[permission]]
+identifier = "deny-top-inset"
+description = "Denies the top_inset command without any pre-configured scope."
+commands.deny = ["top_inset"]
