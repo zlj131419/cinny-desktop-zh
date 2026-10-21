@@ -48,7 +48,7 @@
   },
   "productName": "私语",
   "mainBinaryName": "siyu",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "identifier": "net.xxqw.siyu",
   "plugins": {
     "updater": {
