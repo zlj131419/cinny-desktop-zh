@@ -827,6 +827,8 @@ export function Home() {
                         <RoomNavItem
                           room={room}
                           selected={selected}
+                          showAvatar
+                          direct={mDirects.has(roomId)}
                           linkPath={getRoomLinkPath(roomId)}
                           notificationMode={getRoomNotificationMode(
                             notificationPreferences,
