@@ -36,6 +36,7 @@ import * as css from './RoomItem.css';
 import * as styleCss from './style.css';
 import { AsyncStatus, useAsyncCallback } from '../../hooks/useAsyncCallback';
 import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '../../utils/room';
+import { nameInitials } from '../../utils/common';
 import { ItemDraggableTarget, useDraggableItem } from './DnD';
 import { mxcUrlToHttp } from '../../utils/matrix';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
@@ -205,7 +206,11 @@ function RoomProfile({
           roomId={roomId}
           src={avatarUrl}
           alt={name}
-          renderFallback={() => <RoomIcon size="300" joinRule={joinRule} roomType={roomType} />}
+          renderFallback={() => (
+            <Text as="span" size="H4">
+              {nameInitials(name)}
+            </Text>
+          )}
         />
       </Avatar>
       <Box grow="Yes" direction="Column">
