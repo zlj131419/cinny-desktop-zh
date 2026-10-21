@@ -54,7 +54,7 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
             webView.getLocationOnScreen(loc)
             covered = (sbPx - loc[1]).coerceAtLeast(0)
         }
-        return if (density > 0) covered / density else covered.toDouble()
+        return if (density > 0) covered / density.toDouble() else covered.toDouble()
     }
 
     private fun findWebView(view: View): WebView? {
