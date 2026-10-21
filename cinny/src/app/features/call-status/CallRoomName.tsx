@@ -1,11 +1,13 @@
 import React from 'react';
 import { Room } from 'matrix-js-sdk';
-import { Chip, Icon, Icons, Text } from 'folds';
+import { Avatar, Chip, Icon, Icons, Text } from 'folds';
 import { useAtomValue } from 'jotai';
 import { useRoomName } from '../../hooks/useRoomMeta';
-import { RoomIcon } from '../../components/room-avatar';
+import { RoomAvatar } from '../../components/room-avatar';
 import { roomToParentsAtom } from '../../state/room/roomToParents';
-import { getAllParents, guessPerfectParent } from '../../utils/room';
+import { getAllParents, getRoomAvatarUrl, guessPerfectParent } from '../../utils/room';
+import { nameInitials } from '../../utils/common';
+import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { useOrphanSpaces } from '../../state/hooks/roomList';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
 import { allRoomsAtom } from '../../state/room-list/roomList';
@@ -18,6 +20,7 @@ type CallRoomNameProps = {
 };
 export function CallRoomName({ room }: CallRoomNameProps) {
   const mx = useMatrixClient();
+  const useAuthentication = useMediaAuthentication();
   const name = useRoomName(room);
   const roomToParents = useAtomValue(roomToParentsAtom);
   const orphanSpaces = useOrphanSpaces(mx, allRoomsAtom, roomToParents);
@@ -41,7 +44,18 @@ export function CallRoomName({ room }: CallRoomNameProps) {
         dm ? (
           <Icon size="200" src={Icons.VolumeHigh} filled />
         ) : (
-          <RoomIcon size="200" joinRule={room.getJoinRule()} roomType={room.getType()} filled />
+          <Avatar size="200" radii="400">
+            <RoomAvatar
+              roomId={room.roomId}
+              src={getRoomAvatarUrl(mx, room, 96, useAuthentication)}
+              alt={name}
+              renderFallback={() => (
+                <Text as="span" size="H6">
+                  {nameInitials(name)}
+                </Text>
+              )}
+            />
+          </Avatar>
         )
       }
       onClick={() => navigateRoom(room.roomId)}
