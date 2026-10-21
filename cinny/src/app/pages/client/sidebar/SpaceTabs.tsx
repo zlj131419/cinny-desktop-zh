@@ -457,7 +457,7 @@ function SpaceTab({
                   src={getRoomAvatarUrl(mx, space, 96, useAuthentication) ?? undefined}
                   alt={space.name}
                   renderFallback={() => (
-                    <Text size={folder ? 'H6' : 'H4'}>{nameInitials(space.name, 2)}</Text>
+                    <Text size={folder ? 'H6' : 'H4'}>{nameInitials(space.name)}</Text>
                   )}
                 />
               </SidebarAvatar>
@@ -584,7 +584,7 @@ function ClosedSpaceFolder({
                         alt={space.name}
                         renderFallback={() => (
                           <Text size="Inherit">
-                            <b>{nameInitials(space.name, 2)}</b>
+                            <b>{nameInitials(space.name)}</b>
                           </Text>
                         )}
                       />
