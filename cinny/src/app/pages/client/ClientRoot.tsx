@@ -36,7 +36,7 @@ import { stopPropagation } from '../../utils/keyboard';
 import { SyncStatus } from './SyncStatus';
 import { AuthMetadataProvider } from '../../hooks/useAuthMetadata';
 import { getFallbackSession } from '../../state/sessions';
-import { startKeepAlive, stopKeepAlive } from '../../utils/keepAlive';
+import { startKeepAlive, stopKeepAlive, initTopInset } from '../../utils/keepAlive';
 import { checkAndroidUpdate } from '../../utils/appUpdateCheck';
 import { AutoDiscovery } from './AutoDiscovery';
 
@@ -206,6 +206,8 @@ export function ClientRoot({ children }: ClientRootProps) {
   useEffect(() => {
     if (!mx) return undefined;
     void startKeepAlive();
+    // 安卓 App：从原生侧量真实状态栏高度，给顶栏让位（老 WebView 的 env 不可靠）
+    initTopInset();
     // 安卓 App 不能自动升级：查一次官方最新版本，有新版就弹提醒跳下载页
     checkAndroidUpdate();
     return () => {
