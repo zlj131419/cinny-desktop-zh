@@ -23,7 +23,11 @@ export function initTauriNotificationShim(attempt = 0) {
   // 安卓通知渠道：插件默认渠道的重要程度在创建时锁死（表现为只有声音、没有横幅），
   // 建一个高优先级（Importance.High=4）的专用渠道，消息通知都走它，横幅才能弹出。
   // 桌面端没有建渠道命令，调用失败静默忽略、通知照常发（桌面忽略 channelId）。
-  const MESSAGE_CHANNEL_ID = 'siyu_messages';
+  // 渠道 ID 用全新的 siyu_msg_high：旧 siyu_messages 在用户机器上首次创建时
+  // 重要程度已被锁死（安卓规则，覆盖安装改不动）。新渠道主要由安卓原生层
+  // （保活服务启动时）以 IMPORTANCE_HIGH 创建；这里保留同 ID 的 JS 建渠道兜底，
+  // 谁先建都一样。
+  const MESSAGE_CHANNEL_ID = 'siyu_msg_high';
   // 注意：create_channel 的参数必须平铺传（插件官方 JS 就是 {...channel}），
   // 包一层 {channel: {...}} 会被 Rust 端拒掉、渠道建不出来，之后带 channelId 的
   // 通知会被安卓直接丢弃（无声无横幅）。2026-10-21 实锤此坑。
