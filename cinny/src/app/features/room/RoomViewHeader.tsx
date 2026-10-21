@@ -29,6 +29,7 @@ import { Room } from 'matrix-js-sdk';
 import { useStateEvent } from '../../hooks/useStateEvent';
 import { PageHeader } from '../../components/page';
 import { RoomAvatar, RoomIcon } from '../../components/room-avatar';
+import { PresenceAvatar } from '../../components/presence';
 import { nameInitials } from '../../utils/common';
 import { UseStateProvider } from '../../components/UseStateProvider';
 import { RoomTopicViewer } from '../../components/room-topic-viewer';
@@ -415,6 +416,11 @@ export function RoomViewHeader({ callView }: { callView?: boolean }) {
   const encryptionEvent = useStateEvent(room, StateEvent.RoomEncryption);
   const encryptedRoom = !!encryptionEvent;
   const avatarMxc = useRoomAvatar(room, direct);
+  // 一对一私聊时标题栏头像代表对方，加在线状态点
+  const dmPartnerId =
+    direct && room.getJoinedMembers().length === 2
+      ? room.getAvatarFallbackMember()?.userId
+      : undefined;
   const name = useRoomName(room);
   const topic = useRoomTopic(room);
   const avatarUrl = avatarMxc
@@ -470,6 +476,7 @@ export function RoomViewHeader({ callView }: { callView?: boolean }) {
         )}
         <Box grow="Yes" alignItems="Center" gap="300">
           {screenSize !== ScreenSize.Mobile && (
+            <PresenceAvatar userId={dmPartnerId}>
             <Avatar size="300">
               <RoomAvatar
                 roomId={room.roomId}
@@ -482,6 +489,7 @@ export function RoomViewHeader({ callView }: { callView?: boolean }) {
                 )}
               />
             </Avatar>
+            </PresenceAvatar>
           )}
           <Box direction="Column">
             <Text size={topic ? 'H5' : 'H3'} truncate>
