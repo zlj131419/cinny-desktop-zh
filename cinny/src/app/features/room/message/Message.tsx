@@ -71,6 +71,7 @@ import { EmojiBoard } from '../../../components/emoji-board';
 import { ReactionViewer } from '../reaction-viewer';
 import { MessageEditor } from './MessageEditor';
 import { UserAvatar } from '../../../components/user-avatar';
+import { PresenceAvatar } from '../../../components/presence';
 import { useIsDeactivated } from '../../admin/useDeactivated';
 import { copyToClipboard } from '../../../utils/dom';
 import { stopPropagation } from '../../../utils/keyboard';
@@ -898,28 +899,30 @@ export const Message = as<'div', MessageProps>(
       <AvatarBase
         className={messageLayout === MessageLayout.Bubble ? css.BubbleAvatarBase : undefined}
       >
-        <Avatar
-          className={css.MessageAvatar}
-          as="button"
-          size="300"
-          data-user-id={senderId}
-          onClick={onUserClick}
-        >
-          <UserAvatar
-            userId={senderId}
-            src={
-              senderAvatarMxc
-                ? mxcUrlToHttp(mx, senderAvatarMxc, useAuthentication, 48, 48, 'crop') ?? undefined
-                : undefined
-            }
-            alt={senderDisplayName}
-            renderFallback={() => (
-              <Text size="T400">
-                <b>{String(typeof senderDisplayName === "string" ? senderDisplayName : "?").charAt(0).toUpperCase()}</b>
-              </Text>
-            )}
-          />
-        </Avatar>
+        <PresenceAvatar userId={senderId}>
+          <Avatar
+            className={css.MessageAvatar}
+            as="button"
+            size="300"
+            data-user-id={senderId}
+            onClick={onUserClick}
+          >
+            <UserAvatar
+              userId={senderId}
+              src={
+                senderAvatarMxc
+                  ? mxcUrlToHttp(mx, senderAvatarMxc, useAuthentication, 48, 48, 'crop') ?? undefined
+                  : undefined
+              }
+              alt={senderDisplayName}
+              renderFallback={() => (
+                <Text size="T400">
+                  <b>{String(typeof senderDisplayName === "string" ? senderDisplayName : "?").charAt(0).toUpperCase()}</b>
+                </Text>
+              )}
+            />
+          </Avatar>
+        </PresenceAvatar>
       </AvatarBase>
     );
 
