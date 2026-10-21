@@ -35,9 +35,24 @@ async fn stop<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
     Ok(())
 }
 
+/// 量 WebView 顶部被状态栏挡住的高度（CSS px）。桌面端恒为 0。
+#[tauri::command]
+async fn top_inset<R: Runtime>(app: tauri::AppHandle<R>) -> Result<f64, String> {
+    #[cfg(mobile)]
+    {
+        let handle = app.state::<SiyuKeepalive<R>>();
+        return handle.top_inset();
+    }
+    #[cfg(not(mobile))]
+    {
+        let _ = &app;
+        Ok(0.0)
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("siyu-keepalive")
-        .invoke_handler(tauri::generate_handler![start, stop])
+        .invoke_handler(tauri::generate_handler![start, stop, top_inset])
         .setup(|app, api| {
             #[cfg(mobile)]
             {
