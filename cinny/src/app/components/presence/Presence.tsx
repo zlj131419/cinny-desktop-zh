@@ -12,7 +12,7 @@ import {
 } from 'folds';
 import React, { ReactNode, useId } from 'react';
 import * as css from './styles.css';
-import { Presence, usePresenceLabel } from '../../hooks/useUserPresence';
+import { Presence, usePresenceLabel, useUserPresence } from '../../hooks/useUserPresence';
 
 const PresenceToColor: Record<Presence, MainColor> = {
   [Presence.Online]: 'Success',
@@ -56,6 +56,30 @@ export function PresenceBadge({ presence, status, size }: PresenceBadgeProps) {
         />
       )}
     </TooltipProvider>
+  );
+}
+
+type PresenceAvatarProps = {
+  userId?: string;
+  children: ReactNode;
+};
+/**
+ * 给“人”的头像右下角加在线状态点（参照 Element）：在线绿、忙碌黄、离线灰。
+ * userId 为空时原样渲染，不加包装。状态走 Matrix presence，实时订阅更新。
+ */
+export function PresenceAvatar({ userId, children }: PresenceAvatarProps) {
+  const presence = useUserPresence(userId ?? '');
+  if (!userId) return <>{children}</>;
+  return (
+    <AvatarPresence
+      badge={
+        presence ? (
+          <PresenceBadge presence={presence.presence} status={presence.status} size="200" />
+        ) : undefined
+      }
+    >
+      {children}
+    </AvatarPresence>
   );
 }
 
