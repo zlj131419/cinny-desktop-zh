@@ -6,7 +6,8 @@ import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 
 import { createMentionElement, moveCursor, replaceWithElement } from '../utils';
-import { getDirectRoomAvatarUrl } from '../../../utils/room';
+import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '../../../utils/room';
+import { nameInitials } from '../../../utils/common';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { AutocompleteQuery } from './autocompleteQuery';
 import { AutocompleteMenu } from './AutocompleteMenu';
@@ -168,16 +169,22 @@ export function RoomMentionAutocomplete({
                       src={getDirectRoomAvatarUrl(mx, room)}
                       alt={room.name}
                       renderFallback={() => (
-                        <RoomIcon
-                          size="50"
-                          joinRule={room.getJoinRule() ?? JoinRule.Restricted}
-                          roomType={room.getType()}
-                          filled
-                        />
+                        <Text as="span" size="H6">
+                          {nameInitials(room.name)}
+                        </Text>
                       )}
                     />
                   ) : (
-                    <RoomIcon size="100" joinRule={room.getJoinRule()} roomType={room.getType()} />
+                    <RoomAvatar
+                      roomId={room.roomId}
+                      src={getRoomAvatarUrl(mx, room)}
+                      alt={room.name}
+                      renderFallback={() => (
+                        <Text as="span" size="H6">
+                          {nameInitials(room.name)}
+                        </Text>
+                      )}
+                    />
                   )}
                 </Avatar>
               }
