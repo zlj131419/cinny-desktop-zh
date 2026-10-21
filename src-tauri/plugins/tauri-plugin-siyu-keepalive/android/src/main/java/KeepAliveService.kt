@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.IBinder
 
@@ -37,6 +39,30 @@ class KeepAliveService : Service() {
                 channel.description = "保持私语在后台接收消息提醒"
                 channel.setShowBadge(false)
                 manager.createNotificationChannel(channel)
+            }
+            // 消息横幅渠道必须在原生层建：安卓渠道重要程度首次创建即锁死、覆盖
+            // 安装改不动——JS 垫片建的旧 siyu_messages 渠道在用户机器上已被锁成
+            // 低重要程度、救不回来。换全新 ID 在这里建，首次创建就是高重要程度；
+            // 前端垫片也用这个 ID 发通知，并保留同 ID 的 JS 建渠道作兜底。
+            val msgChannelId = "siyu_msg_high"
+            if (manager != null && manager.getNotificationChannel(msgChannelId) == null) {
+                val msgChannel = NotificationChannel(
+                    msgChannelId,
+                    "消息提醒",
+                    NotificationManager.IMPORTANCE_HIGH
+                )
+                msgChannel.description = "新消息通知（横幅弹出）"
+                msgChannel.setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                msgChannel.enableVibration(true)
+                msgChannel.setShowBadge(true)
+                msgChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                manager.createNotificationChannel(msgChannel)
             }
         }
 
