@@ -356,28 +356,20 @@ export function Search({ requestClose }: SearchProps) {
                           }
                           before={
                             <Avatar size="200" radii={dm ? '400' : '300'}>
-                              {dm || room.isSpaceRoom() ? (
-                                <RoomAvatar
-                                  roomId={room.roomId}
-                                  src={
-                                    dm
-                                      ? getDirectRoomAvatarUrl(mx, room, 32, useAuthentication)
-                                      : getRoomAvatarUrl(mx, room, 32, useAuthentication)
-                                  }
-                                  alt={room.name}
-                                  renderFallback={() => (
-                                    <Text as="span" size="H6">
-                                      {nameInitials(room.name)}
-                                    </Text>
-                                  )}
-                                />
-                              ) : (
-                                <RoomIcon
-                                  size="100"
-                                  joinRule={room.getJoinRule()}
-                                  roomType={room.getType()}
-                                />
-                              )}
+                              <RoomAvatar
+                                roomId={room.roomId}
+                                src={
+                                  dm
+                                    ? getDirectRoomAvatarUrl(mx, room, 32, useAuthentication)
+                                    : getRoomAvatarUrl(mx, room, 32, useAuthentication)
+                                }
+                                alt={room.name}
+                                renderFallback={() => (
+                                  <Text as="span" size="H6">
+                                    {nameInitials(room.name)}
+                                  </Text>
+                                )}
+                              />
                             </Avatar>
                           }
                         >
