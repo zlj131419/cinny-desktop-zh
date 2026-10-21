@@ -1,4 +1,4 @@
-const COMMANDS: &[&str] = &["start", "stop"];
+const COMMANDS: &[&str] = &["start", "stop", "top_inset"];
 
 fn main() {
     let result = tauri_plugin::Builder::new(COMMANDS)
