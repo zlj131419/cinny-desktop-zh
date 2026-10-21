@@ -90,6 +90,20 @@ export function initTauriNotificationShim(attempt = 0) {
               body: options?.body ?? '',
               // 渠道没建成时不带 channelId：带一个不存在的渠道 ID 会被安卓丢弃
               ...(channelOk ? { channelId: MESSAGE_CHANNEL_ID } : {}),
+              // 桌面端：给原生通知挂系统提示音。声音原本只有网页层 Audio 播放，
+              // 窗口切后台后 WKWebView 会挂起页面音频 → 只剩横幅没声音；把声音
+              // 挂到通知本身，与横幅同出一条系统通知，不依赖 WebView 状态。
+              // 取值按 notify-rust / mac-notification-sys 源码核实：macOS 必须传
+              // "NSUserNotificationDefaultSoundName" 才是系统默认提醒音（传
+              // "default" 会被当作自定义音名、找不到音源而静默）；Windows 传
+              // winrt 预置名 "Default"。安卓声音由渠道负责，不传。
+              ...(/Android/i.test(navigator.userAgent)
+                ? {}
+                : {
+                    sound: /Macintosh|Mac OS X/i.test(navigator.userAgent)
+                      ? 'NSUserNotificationDefaultSoundName'
+                      : 'Default',
+                  }),
             },
           }).catch(() => {});
         });
