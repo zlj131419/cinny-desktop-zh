@@ -528,7 +528,7 @@ export function Space() {
                   <RoomNavItem
                     room={room}
                     selected={selectedRoomId === roomId}
-                    showAvatar={mDirects.has(roomId)}
+                    showAvatar
                     direct={mDirects.has(roomId)}
                     linkPath={getToLink(roomId)}
                     notificationMode={getRoomNotificationMode(notificationPreferences, room.roomId)}
