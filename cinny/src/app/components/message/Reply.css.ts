@@ -21,7 +21,8 @@ export const ThreadIndicator = style({
 export const Reply = style({
   marginBottom: toRem(1),
   minWidth: 0,
-  maxWidth: 'calc(100vw - 14rem)',
+  // 按容器列宽封顶（容器已改为撑满列宽、宽度确定）；早先用 vw 算宽会在桌面端超列溢出、用 % 又因容器收缩而失效
+  maxWidth: '100%',
   minHeight: config.lineHeight.T300,
   overflow: 'hidden',
   selectors: {
