@@ -24,23 +24,31 @@ export function initTauriNotificationShim(attempt = 0) {
   // 建一个高优先级（Importance.High=4）的专用渠道，消息通知都走它，横幅才能弹出。
   // 桌面端没有建渠道命令，调用失败静默忽略、通知照常发（桌面忽略 channelId）。
   const MESSAGE_CHANNEL_ID = 'siyu_messages';
-  let channelReady: Promise<void> | null = null;
+  // 注意：create_channel 的参数必须平铺传（插件官方 JS 就是 {...channel}），
+  // 包一层 {channel: {...}} 会被 Rust 端拒掉、渠道建不出来，之后带 channelId 的
+  // 通知会被安卓直接丢弃（无声无横幅）。2026-10-21 实锤此坑。
+  let channelOk = false;
+  let channelAttempt: Promise<void> | null = null;
   const ensureMessageChannel = (): Promise<void> => {
-    if (!channelReady) {
-      channelReady = invoke('plugin:notification|create_channel', {
-        channel: {
-          id: MESSAGE_CHANNEL_ID,
-          name: '消息提醒',
-          description: '新消息通知（横幅弹出）',
-          importance: 4,
-          visibility: 1,
-          vibration: true,
-        },
+    if (channelOk) return Promise.resolve();
+    if (!channelAttempt) {
+      channelAttempt = invoke('plugin:notification|create_channel', {
+        id: MESSAGE_CHANNEL_ID,
+        name: '消息提醒',
+        description: '新消息通知（横幅弹出）',
+        importance: 4,
+        visibility: 1,
+        vibration: true,
       })
-        .then(() => undefined)
-        .catch(() => undefined);
+        .then(() => {
+          channelOk = true;
+        })
+        .catch(() => {
+          // 建失败不静默放弃：下次发通知时重试；本次通知退回默认渠道（至少有声）
+          channelAttempt = null;
+        });
     }
-    return channelReady;
+    return channelAttempt;
   };
   void ensureMessageChannel();
 
@@ -76,7 +84,8 @@ export function initTauriNotificationShim(attempt = 0) {
             notification: {
               title,
               body: options?.body ?? '',
-              channelId: MESSAGE_CHANNEL_ID,
+              // 渠道没建成时不带 channelId：带一个不存在的渠道 ID 会被安卓丢弃
+              ...(channelOk ? { channelId: MESSAGE_CHANNEL_ID } : {}),
             },
           }).catch(() => {});
         });
