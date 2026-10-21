@@ -23,6 +23,7 @@ import {
 } from '../../../utils/webPush';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { NOTIFICATION_SOUNDS, getNotificationSoundSrc } from './notificationSounds';
+import { playWebAudioSound } from '../../../utils/webAudioSound';
 
 function SoundSelector() {
   const [notificationSoundId, setNotificationSoundId] = useSetting(
@@ -41,8 +42,8 @@ function SoundSelector() {
   const handleSelect = (id: string) => {
     setMenuCords(undefined);
     setNotificationSoundId(id);
-    const el = new Audio(getNotificationSoundSrc(id));
-    el.play().catch(() => {});
+    // 试听也走 Web Audio：用 new Audio() 播同样会在 iOS 上登记假媒体会话
+    void playWebAudioSound(getNotificationSoundSrc(id));
   };
 
   return (
