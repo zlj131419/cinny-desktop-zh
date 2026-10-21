@@ -30,6 +30,7 @@ import { mDirectAtom } from '../../../state/mDirectList';
 import { BreakWord, LineClamp3 } from '../../../styles/Text.css';
 import { LINKIFY_OPTS } from '../../../plugins/react-custom-html-parser';
 import { RoomAvatar, RoomIcon } from '../../../components/room-avatar';
+import { nameInitials } from '../../../utils/common';
 import { mxcUrlToHttp } from '../../../utils/matrix';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { useMediaAuthentication } from '../../../hooks/useMediaAuthentication';
@@ -200,12 +201,9 @@ export function RoomProfileEdit({
               src={avatarUrl}
               alt={name}
               renderFallback={() => (
-                <RoomIcon
-                  roomType={room.getType()}
-                  size="400"
-                  joinRule={joinRule?.join_rule ?? JoinRule.Invite}
-                  filled
-                />
+                <Text as="span" size="H2">
+                  {nameInitials(name)}
+                </Text>
               )}
             />
           </Avatar>
@@ -344,12 +342,9 @@ export function RoomProfile({ permissions }: RoomProfileProps) {
                   src={avatarUrl}
                   alt={name}
                   renderFallback={() => (
-                    <RoomIcon
-                      roomType={room.getType()}
-                      size="400"
-                      joinRule={joinRule?.join_rule ?? JoinRule.Invite}
-                      filled
-                    />
+                    <Text as="span" size="H2">
+                      {nameInitials(name)}
+                    </Text>
                   )}
                 />
               </Avatar>
