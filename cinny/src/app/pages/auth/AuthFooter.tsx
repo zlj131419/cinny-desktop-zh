@@ -12,7 +12,7 @@ export function AuthFooter() {
       <Text
         as="a"
         size="T300"
-        href="https://chat.xxqw.net/public/download.html"
+        href="/public/download.html"
         target="_blank"
         rel="noreferrer"
       >
