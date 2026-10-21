@@ -4,9 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebView
 import app.tauri.annotation.Command
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
+import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 
 /**
@@ -22,6 +26,46 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
         KeepAlivePrefs.setEnabled(context, true)
         startKeepAlive(context)
         invoke.resolve()
+    }
+
+    /**
+     * 量 WebView 顶部被系统状态栏挡住的真实高度（返回 CSS px/dp）。
+     * 老安卓 WebView 的 env(safe-area-inset-top) 报的是刘海高度（无刘海=0），
+     * 前端拿不到状态栏真值：这里用系统资源里的状态栏高度减去 WebView 在屏幕
+     * 上的实际 y 坐标——WebView 已被系统让开时结果为 0，不会重复让位。
+     */
+    @Command
+    fun topInset(invoke: Invoke) {
+        val result = JSObject()
+        result.put("height", computeTopInsetDp())
+        invoke.resolve(result)
+    }
+
+    private fun computeTopInsetDp(): Double {
+        val res = activity.resources
+        val density = res.displayMetrics.density
+        val sbId = res.getIdentifier("status_bar_height", "dimen", "android")
+        val sbPx = if (sbId > 0) res.getDimensionPixelSize(sbId) else 0
+        if (sbPx <= 0) return 0.0
+        val webView = findWebView(activity.window.decorView)
+        var covered = sbPx
+        if (webView != null) {
+            val loc = IntArray(2)
+            webView.getLocationOnScreen(loc)
+            covered = (sbPx - loc[1]).coerceAtLeast(0)
+        }
+        return if (density > 0) covered / density else covered.toDouble()
+    }
+
+    private fun findWebView(view: View): WebView? {
+        if (view is WebView) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val found = findWebView(view.getChildAt(i))
+                if (found != null) return found
+            }
+        }
+        return null
     }
 
     @Command
