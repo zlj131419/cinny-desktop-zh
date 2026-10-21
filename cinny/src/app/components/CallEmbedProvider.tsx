@@ -50,6 +50,7 @@ import { mxcUrlToHttp } from '../utils/matrix';
 import { RoomAvatar, RoomIcon } from './room-avatar';
 import { useRoomNavigate } from '../hooks/useRoomNavigate';
 import { getStateEvent } from '../utils/room';
+import { nameInitials } from '../utils/common';
 import { StateEvent } from '../../types/matrix/room';
 import { getPowersLevelFromMatrixEvent } from '../hooks/usePowerLevels';
 import { getRoomCreatorsForRoomId } from '../hooks/useRoomCreators';
@@ -140,12 +141,9 @@ function IncomingCall({ dm, info, onIgnore, onAnswer, onReject }: IncomingCallPr
                         src={avatarUrl}
                         alt={roomName}
                         renderFallback={() => (
-                          <RoomIcon
-                            roomType={room.getType()}
-                            size="400"
-                            joinRule={room.getJoinRule()}
-                            filled
-                          />
+                          <Text as="span" size="H2">
+                            {nameInitials(roomName)}
+                          </Text>
                         )}
                       />
                     </Avatar>
