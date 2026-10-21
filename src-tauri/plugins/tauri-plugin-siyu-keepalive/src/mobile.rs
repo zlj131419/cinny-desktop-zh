@@ -47,4 +47,18 @@ impl<R: Runtime> SiyuKeepalive<R> {
         }
         Ok(())
     }
+
+    /// 量 WebView 顶部被状态栏挡住的高度（CSS px），供前端给顶栏让位。
+    pub fn top_inset(&self) -> Result<f64, String> {
+        if let Some(handle) = &self.0 {
+            let v = handle
+                .run_mobile_plugin::<serde_json::Value>("topInset", serde_json::json!({}))
+                .map_err(|e| e.to_string())?;
+            return Ok(v
+                .get("height")
+                .and_then(|h| h.as_f64())
+                .unwrap_or(0.0));
+        }
+        Ok(0.0)
+    }
 }
