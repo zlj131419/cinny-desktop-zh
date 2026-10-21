@@ -416,11 +416,8 @@ export function RoomViewHeader({ callView }: { callView?: boolean }) {
   const encryptionEvent = useStateEvent(room, StateEvent.RoomEncryption);
   const encryptedRoom = !!encryptionEvent;
   const avatarMxc = useRoomAvatar(room, direct);
-  // 一对一私聊时标题栏头像代表对方，加在线状态点
-  const dmPartnerId =
-    direct && room.getJoinedMembers().length === 2
-      ? room.getAvatarFallbackMember()?.userId
-      : undefined;
+  // 私聊（含群聊私聊）标题栏头像代表对方成员，加在线状态点
+  const dmPartnerId = direct ? room.getAvatarFallbackMember()?.userId : undefined;
   const name = useRoomName(room);
   const topic = useRoomTopic(room);
   const avatarUrl = avatarMxc
