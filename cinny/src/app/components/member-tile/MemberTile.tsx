@@ -4,6 +4,7 @@ import { MatrixClient, Room, RoomMember } from 'matrix-js-sdk';
 import { getMemberDisplayName } from '../../utils/room';
 import { getMxIdLocalPart } from '../../utils/matrix';
 import { UserAvatar } from '../user-avatar';
+import { PresenceAvatar } from '../presence';
 import { useIsDeactivated } from '../../features/admin/useDeactivated';
 import * as css from './style.css';
 
@@ -31,6 +32,7 @@ export const MemberTile = as<'button', MemberTileProps>(
 
     return (
       <AsMemberTile className={css.MemberTile} {...props} ref={ref}>
+        <PresenceAvatar userId={member.userId}>
         <Avatar size="300" radii="400">
           <UserAvatar
             userId={member.userId}
@@ -43,6 +45,7 @@ export const MemberTile = as<'button', MemberTileProps>(
             )}
           />
         </Avatar>
+        </PresenceAvatar>
         <Box grow="Yes" as="span" direction="Column">
           <Text as="span" size="T300" truncate style={deactivated ? { opacity: 0.55 } : undefined}>
             <b>{name}</b>
