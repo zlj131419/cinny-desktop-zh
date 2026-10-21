@@ -226,6 +226,22 @@
     }
     showToast('链接：' + shareData.url);
   });
+
+  // 在 App 内置 WebView 里点下载直链会被吞（没反应）：检测到 Tauri 环境时
+  // 改走系统浏览器打开下载链接；普通浏览器里不拦截、保持默认下载行为
+  document.querySelectorAll('a[href*="/releases/download/"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var t = window.__TAURI__;
+      if (!t) return;
+      var url = a.href;
+      var opened = false;
+      try {
+        if (t.shell && t.shell.open) { t.shell.open(url); opened = true; }
+        else if (t.opener && t.opener.openUrl) { t.opener.openUrl(url); opened = true; }
+      } catch (err) { /* 忽略，走默认行为 */ }
+      if (opened) e.preventDefault();
+    });
+  });
 </script>
 <script>
   // 二维码按每张卡主链接实时生成：链接换版本，二维码自动跟着变
