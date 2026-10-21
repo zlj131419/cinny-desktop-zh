@@ -8,7 +8,7 @@ const LogoSVG = '/public/siyu-icon-200.png';
 const LogoUnreadSVG = '/public/siyu-icon-200.png';
 const LogoHighlightSVG = '/public/siyu-icon-200.png';
 import { getNotificationSoundSrc } from '../../features/settings/notifications/notificationSounds';
-import InviteSound from '../../../../public/sound/invite.ogg';
+import InviteSound from '../../../../public/sound/invite.wav';
 import { notificationPermission, setFavicon } from '../../utils/dom';
 import { useSetting } from '../../state/hooks/settings';
 import { settingsAtom } from '../../state/settings';
