@@ -16,18 +16,23 @@ export function initExternalLinks(): void {
   document.addEventListener('click', (e) => {
     const a = (e.target as HTMLElement | null)?.closest?.('a');
     if (!a || !a.href || !isDownloadUrl(a.href)) return;
-    let opened = false;
-    try {
-      if (tauri.shell?.open) {
-        tauri.shell.open(a.href);
-        opened = true;
-      } else if (tauri.opener?.openUrl) {
-        tauri.opener.openUrl(a.href);
-        opened = true;
+    // 先拦下默认导航，再异步走系统浏览器；两个通道都失败才放行默认行为。
+    // （旧写法没 await：shell 异步被拒时点击已被吞、页面也不动，等于死按钮。）
+    e.preventDefault();
+    void (async () => {
+      try {
+        if (tauri.shell?.open) {
+          await tauri.shell.open(a.href);
+          return;
+        }
+        if (tauri.opener?.openUrl) {
+          await tauri.opener.openUrl(a.href);
+          return;
+        }
+      } catch {
+        /* 落到下面放行默认导航 */
       }
-    } catch {
-      /* 忽略，走默认行为 */
-    }
-    if (opened) e.preventDefault();
+      window.location.href = a.href;
+    })();
   });
 }
