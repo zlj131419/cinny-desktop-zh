@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>下载私语 Siyu 桌面客户端</title>
 <link rel="shortcut icon" href="./favicon.ico" />
 <meta property="og:title" content="下载私语 Siyu" />
@@ -17,13 +17,13 @@
     background: linear-gradient(160deg, #191a3d 0%, #2b1a4d 52%, #17275f 100%);
     min-height: 100vh; color: #fff;
     display: flex; flex-direction: column; align-items: center;
-    padding: 56px 20px 48px;
+    padding: calc(56px + env(safe-area-inset-top, 0px)) 20px 48px;
     -webkit-font-smoothing: antialiased;
   }
   .topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 40;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; pointer-events: none;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; pointer-events: none;
   }
   .topbar button {
     pointer-events: auto; cursor: pointer; border-radius: 999px;
