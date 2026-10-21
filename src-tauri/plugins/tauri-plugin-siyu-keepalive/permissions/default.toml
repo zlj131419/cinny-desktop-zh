@@ -2,4 +2,4 @@
 
 [default]
 description = "Allows starting and stopping the Android keep-alive foreground service."
-permissions = ["allow-start", "allow-stop"]
+permissions = ["allow-start", "allow-stop", "allow-top-inset"]
