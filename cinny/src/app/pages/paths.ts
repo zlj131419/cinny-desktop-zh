@@ -64,6 +64,7 @@ export const _FEATURED_PATH = 'featured/';
 export const _MANAGE_PATH = 'manage/';
 export const _SERVER_PATH = ':server/';
 export const EXPLORE_PATH = '/explore/';
+export const ME_PATH = '/me/';
 export const EXPLORE_FEATURED_PATH = `/explore/${_FEATURED_PATH}`;
 export const EXPLORE_MANAGE_PATH = `/explore/${_MANAGE_PATH}`;
 
