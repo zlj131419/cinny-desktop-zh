@@ -280,6 +280,9 @@ jobs:
           m = m.replace('android:usesCleartextTraffic="false"', 'android:usesCleartextTraffic="true"')
           if 'usesCleartextTraffic' not in m:
               m = m.replace('<application ', '<application android:usesCleartextTraffic="true" ', 1)
+          # 录音权限：语音消息需要 RECORD_AUDIO（WebView getUserMedia 的前置）
+          if 'RECORD_AUDIO' not in m:
+              m = m.replace('<application', '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application', 1)
           open(man, 'w').write(m)
           print('release fixes applied:', ver, code)
           PYEOF_FIX
@@ -288,6 +291,7 @@ jobs:
           grep -rn "tauri.android.versionName" src-tauri/gen/android/app/build.gradle.kts src-tauri/gen/android/app/tauri.properties || true
           { grep -q "tauri.android.versionName\", \"$TAG\"" src-tauri/gen/android/app/build.gradle.kts || grep -q "tauri.android.versionName=$TAG" src-tauri/gen/android/app/tauri.properties; } || { echo "VERSION FIX DID NOT LAND"; exit 1; }
           grep -q 'usesCleartextTraffic="true"' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "CLEARTEXT FIX DID NOT LAND"; exit 1; }
+          grep -q 'android.permission.RECORD_AUDIO' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "RECORD_AUDIO DID NOT LAND"; exit 1; }
       - name: Build Android APK
         run: |
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
@@ -304,6 +308,7 @@ jobs:
             LINE=$("$AAPT" dump xmltree --file AndroidManifest.xml "$APK" | grep "usesCleartextTraffic" | head -1)
             echo "cleartext attr: $LINE"
             echo "$LINE" | grep -Eq "=true|0xffffffff" || { echo "APK cleartext NOT true"; exit 1; }
+            "$AAPT" dump badging "$APK" | grep -q "android.permission.RECORD_AUDIO" || { echo "APK missing RECORD_AUDIO"; exit 1; }
             echo "APK values verified OK"
           else
             echo "aapt2 not found, skipping in-CI verification"
