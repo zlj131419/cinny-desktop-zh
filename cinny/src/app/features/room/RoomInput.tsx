@@ -744,6 +744,18 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                       >
                         <Text size="T300">投票</Text>
                       </MenuItem>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          setToolbar(!toolbar);
+                        }}
+                        before={<Icon src={toolbar ? Icons.AlphabetUnderline : Icons.Alphabet} />}
+                      >
+                        <Text size="T300">文本格式化{toolbar ? '（已开启）' : ''}</Text>
+                      </MenuItem>
                     </Menu>
                   </FocusTrap>
                 }
@@ -775,14 +787,6 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
           }
           after={
             <>
-              <IconButton
-                variant="SurfaceVariant"
-                size="300"
-                radii="300"
-                onClick={() => setToolbar(!toolbar)}
-              >
-                <Icon src={toolbar ? Icons.AlphabetUnderline : Icons.Alphabet} />
-              </IconButton>
               <UseStateProvider initial={undefined}>
                 {(emojiBoardTab: EmojiBoardTab | undefined, setEmojiBoardTab) => (
                   <PopOut
