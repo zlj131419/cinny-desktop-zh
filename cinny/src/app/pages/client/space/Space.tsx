@@ -39,7 +39,9 @@ import {
   NavItemContent,
   NavLink,
 } from '../../../components/nav';
-import { getSpaceLobbyPath, getSpaceRoomPath, getSpaceSearchPath } from '../../pathUtils';
+import { getHomePath, getSpaceLobbyPath, getSpaceRoomPath, getSpaceSearchPath } from '../../pathUtils';
+import { useNavigate } from 'react-router-dom';
+import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { getCanonicalAliasOrRoomId, isRoomAlias } from '../../../utils/matrix';
 import { useSelectedRoom } from '../../../hooks/router/useSelectedRoom';
 import {
@@ -249,6 +251,12 @@ const SpaceMenu = forwardRef<HTMLDivElement, SpaceMenuProps>(({ room, requestClo
 function SpaceHeader() {
   const space = useSpace();
   const spaceName = useRoomName(space);
+  const screenSize = useScreenSizeContext();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if ((window.history.state as { idx?: number } | null)?.idx) navigate(-1);
+    else navigate(getHomePath());
+  };
   const [menuAnchor, setMenuAnchor] = useState<RectCords>();
 
   const joinRules = useStateEvent(
@@ -268,6 +276,13 @@ function SpaceHeader() {
     <>
       <PageNavHeader>
         <Box alignItems="Center" grow="Yes" gap="300">
+          {screenSize === ScreenSize.Mobile && (
+            <Box shrink="No" alignItems="Center">
+              <IconButton fill="None" onClick={goBack}>
+                <Icon src={Icons.ArrowLeft} />
+              </IconButton>
+            </Box>
+          )}
           <Box grow="Yes" alignItems="Center" gap="100">
             <Text size="H4" truncate>
               {spaceName}
