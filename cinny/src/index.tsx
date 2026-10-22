@@ -2,9 +2,11 @@
 import './polyfills';
 import { initTauriNotificationShim } from './tauriNotificationShim';
 import { initExternalLinks } from './app/utils/externalLinks';
+import { initAppViewport } from './app/utils/appViewport';
 
 initTauriNotificationShim();
 initExternalLinks();
+initAppViewport();
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
