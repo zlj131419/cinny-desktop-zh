@@ -83,6 +83,7 @@ export const Page = as<'div'>(({ className, ...props }, ref) => (
   <Box
     grow="Yes"
     direction="Column"
+    style={{ minWidth: 0 }}
     className={classNames(ContainerColor({ variant: 'Surface' }), className)}
     {...props}
     ref={ref}
