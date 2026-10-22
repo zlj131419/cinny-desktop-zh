@@ -66,9 +66,31 @@ async fn request_microphone<R: Runtime>(app: tauri::AppHandle<R>) -> Result<bool
     }
 }
 
+/// 设置桌面图标未读角标数（0=清除）。桌面端无此概念，恒为 false。
+#[tauri::command]
+async fn set_badge<R: Runtime>(app: tauri::AppHandle<R>, count: i32) -> Result<bool, String> {
+    #[cfg(mobile)]
+    {
+        let handle = app.state::<SiyuKeepalive<R>>();
+        return handle.set_badge(count);
+    }
+    #[cfg(not(mobile))]
+    {
+        let _ = &app;
+        let _ = count;
+        Ok(false)
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("siyu-keepalive")
-        .invoke_handler(tauri::generate_handler![start, stop, top_inset, request_microphone])
+        .invoke_handler(tauri::generate_handler![
+            start,
+            stop,
+            top_inset,
+            request_microphone,
+            set_badge
+        ])
         .setup(|app, api| {
             #[cfg(mobile)]
             {
