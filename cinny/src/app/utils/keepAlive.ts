@@ -83,3 +83,21 @@ export async function ensureMicrophonePermission(): Promise<boolean> {
     return true;
   }
 }
+
+/**
+ * 桌面图标未读角标：安卓没有统一 API，原生侧按厂商接口设置（华为官方角标
+ * 接口 + 通用广播兜底）。未读总数变化时由底栏调用同步；0 表示清除。
+ * 非安卓 App 环境直接跳过；旧版 App 无此命令时静默（不影响使用）。
+ */
+let lastBadgeCount = -1;
+export async function setAppBadge(count: number): Promise<void> {
+  if (!keepAliveAvailable()) return;
+  if (count === lastBadgeCount) return;
+  lastBadgeCount = count;
+  try {
+    const tauri = (window as unknown as Record<string, any>).__TAURI__;
+    await tauri.core.invoke('plugin:siyu-keepalive|set_badge', { count });
+  } catch {
+    /* 旧版本 App 无此命令，静默 */
+  }
+}
