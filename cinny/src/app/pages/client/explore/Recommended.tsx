@@ -19,7 +19,7 @@ import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { BackRouteHandler } from '../../../components/BackRouteHandler';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { FeaturedEntry, useAdminService } from '../../../features/admin/useAdminService';
-import { FeaturedRooms } from './Featured';
+import { FeaturedContent, FeaturedRooms } from './Featured';
 
 function FeaturedEntryCards({
   entries,
@@ -55,11 +55,10 @@ function FeaturedEntryCards({
   );
 }
 
-export function RecommendedList() {
+export function RecommendedContent({ compact }: { compact?: boolean }) {
   const { t } = useTranslation();
   const { enabled, fetchFeatured } = useAdminService();
   const allRooms = useAtomValue(allRoomsAtom);
-  const screenSize = useScreenSizeContext();
   const { navigateSpace, navigateRoom } = useRoomNavigate();
 
   const [featuredState, loadFeatured] = useAsyncCallback(fetchFeatured);
@@ -76,6 +75,91 @@ export function RecommendedList() {
   const renderTopicViewer = (name: string, topic: string, requestClose: () => void) => (
     <RoomTopicViewer name={name} topic={topic} requestClose={requestClose} />
   );
+
+  return (
+    <Box direction="Column" gap="200">
+      {compact ? (
+        <Box direction="Column" gap="100">
+          <Box alignItems="Center" gap="200">
+            <Icon size="300" src={Icons.Bulb} />
+            <Text size="H4">{t('pages:client.explore.recommended')}</Text>
+          </Box>
+          <Text size="T300" priority="400">
+            {t('pages:client.explore.recommended_desc')}
+          </Text>
+        </Box>
+      ) : (
+        <PageHeroSection>
+          <PageHero
+            icon={<Icon size="600" src={Icons.Bulb} />}
+            title={t('pages:client.explore.recommended')}
+            subTitle={t('pages:client.explore.recommended_desc')}
+          />
+        </PageHeroSection>
+      )}
+      <Box direction="Column" gap={compact ? '300' : '700'}>
+        {featuredState.status === AsyncStatus.Loading && (
+          <Box justifyContent="Center" style={{ padding: compact ? '16px 0' : '32px 0' }}>
+            <Spinner variant="Secondary" size="400" />
+          </Box>
+        )}
+        {featuredState.status === AsyncStatus.Error && (
+          <Box
+            className={css.RoomsInfoCard}
+            direction="Column"
+            justifyContent="Center"
+            alignItems="Center"
+            gap="200"
+          >
+            <Icon size="400" src={Icons.Info} />
+            <Text size="T300" align="Center" style={{ color: color.Critical.Main }}>
+              {t('pages:client.explore.load_featured_failed')}
+            </Text>
+          </Box>
+        )}
+        {data && spaces.length > 0 && (
+          <Box direction="Column" gap={compact ? '200' : '400'}>
+            <Text size="H4">{t('pages:client.explore.featured_spaces')}</Text>
+            <FeaturedEntryCards
+              entries={spaces}
+              allRooms={allRooms}
+              onView={navigateSpace}
+              renderTopicViewer={renderTopicViewer}
+            />
+          </Box>
+        )}
+        {data && rooms.length > 0 && (
+          <Box direction="Column" gap={compact ? '200' : '400'}>
+            <Text size="H4">{t('pages:client.explore.featured_rooms')}</Text>
+            <FeaturedEntryCards
+              entries={rooms}
+              allRooms={allRooms}
+              onView={navigateRoom}
+              renderTopicViewer={renderTopicViewer}
+            />
+          </Box>
+        )}
+        {data && spaces.length === 0 && rooms.length === 0 && (
+          <Box
+            className={css.RoomsInfoCard}
+            direction="Column"
+            justifyContent="Center"
+            alignItems="Center"
+            gap="200"
+          >
+            <Icon size="400" src={Icons.Info} />
+            <Text size="T300" align="Center">
+              {t('pages:client.explore.no_rooms_or_spaces_featured')}
+            </Text>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+export function RecommendedList() {
+  const screenSize = useScreenSizeContext();
 
   return (
     <Page>
@@ -96,72 +180,7 @@ export function RecommendedList() {
         <Scroll hideTrack visibility="Hover">
           <PageContent>
             <PageContentCenter>
-              <Box direction="Column" gap="200">
-                <PageHeroSection>
-                  <PageHero
-                    icon={<Icon size="600" src={Icons.Bulb} />}
-                    title={t('pages:client.explore.recommended')}
-                    subTitle={t('pages:client.explore.recommended_desc')}
-                  />
-                </PageHeroSection>
-                <Box direction="Column" gap="700">
-                  {featuredState.status === AsyncStatus.Loading && (
-                    <Box justifyContent="Center" style={{ padding: '32px 0' }}>
-                      <Spinner variant="Secondary" size="400" />
-                    </Box>
-                  )}
-                  {featuredState.status === AsyncStatus.Error && (
-                    <Box
-                      className={css.RoomsInfoCard}
-                      direction="Column"
-                      justifyContent="Center"
-                      alignItems="Center"
-                      gap="200"
-                    >
-                      <Icon size="400" src={Icons.Info} />
-                      <Text size="T300" align="Center" style={{ color: color.Critical.Main }}>
-                        {t('pages:client.explore.load_featured_failed')}
-                      </Text>
-                    </Box>
-                  )}
-                  {data && spaces.length > 0 && (
-                    <Box direction="Column" gap="400">
-                      <Text size="H4">{t('pages:client.explore.featured_spaces')}</Text>
-                      <FeaturedEntryCards
-                        entries={spaces}
-                        allRooms={allRooms}
-                        onView={navigateSpace}
-                        renderTopicViewer={renderTopicViewer}
-                      />
-                    </Box>
-                  )}
-                  {data && rooms.length > 0 && (
-                    <Box direction="Column" gap="400">
-                      <Text size="H4">{t('pages:client.explore.featured_rooms')}</Text>
-                      <FeaturedEntryCards
-                        entries={rooms}
-                        allRooms={allRooms}
-                        onView={navigateRoom}
-                        renderTopicViewer={renderTopicViewer}
-                      />
-                    </Box>
-                  )}
-                  {data && spaces.length === 0 && rooms.length === 0 && (
-                    <Box
-                      className={css.RoomsInfoCard}
-                      direction="Column"
-                      justifyContent="Center"
-                      alignItems="Center"
-                      gap="200"
-                    >
-                      <Icon size="400" src={Icons.Info} />
-                      <Text size="T300" align="Center">
-                        {t('pages:client.explore.no_rooms_or_spaces_featured')}
-                      </Text>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
+              <RecommendedContent />
             </PageContentCenter>
           </PageContent>
         </Scroll>
@@ -177,4 +196,11 @@ export function FeaturedOrRecommended() {
   const { enabled } = useAdminService();
   if (enabled) return <RecommendedList />;
   return <FeaturedRooms />;
+}
+
+// 无页面外壳的内容版：手机版发现页把推荐内容直接嵌在导航列表下方默认展示
+export function FeaturedOrRecommendedContent({ compact }: { compact?: boolean }) {
+  const { enabled } = useAdminService();
+  if (enabled) return <RecommendedContent compact={compact} />;
+  return <FeaturedContent compact={compact} />;
 }
