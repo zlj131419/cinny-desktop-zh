@@ -107,6 +107,8 @@ import { getMemberDisplayName, getMentionContent, trimReplyFromBody } from '../.
 import { CommandAutocomplete } from './CommandAutocomplete';
 import { VoiceRecorderBar } from './VoiceRecorder';
 import { CreatePoll } from './CreatePoll';
+import FocusTrap from 'focus-trap-react';
+import { stopPropagation } from '../../utils/keyboard';
 import { Command, SHRUG, TABLEFLIP, UNFLIP, useCommands } from '../../hooks/useCommands';
 import { mobileOrTablet } from '../../utils/user-agent';
 import { useElementSizeObserver } from '../../hooks/useElementSizeObserver';
@@ -678,53 +680,79 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                 align="Start"
                 anchor={plusAnchor}
                 content={
-                  <Menu style={{ padding: config.space.S100, minWidth: toRem(210) }}>
-                    <MenuItem
-                      onClick={() => {
-                        setPlusAnchor(undefined);
-                        pickCaptureFile('image/*', 'environment');
-                      }}
-                      before={<Icon src={Icons.Camera} />}
-                    >
-                      <Text size="T300">拍摄照片</Text>
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setPlusAnchor(undefined);
-                        pickCaptureFile('video/*', 'environment');
-                      }}
-                      before={<Icon src={Icons.VideoCamera} />}
-                    >
-                      <Text size="T300">录制视频</Text>
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setPlusAnchor(undefined);
-                        pickCaptureFile('image/*,video/*');
-                      }}
-                      before={<Icon src={Icons.Photo} />}
-                    >
-                      <Text size="T300">照片和影视库</Text>
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setPlusAnchor(undefined);
-                        pickFile('*');
-                      }}
-                      before={<Icon src={Icons.Attachment} />}
-                    >
-                      <Text size="T300">附件</Text>
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setPlusAnchor(undefined);
-                        setPollOpen(true);
-                      }}
-                      before={<Icon src={Icons.List} />}
-                    >
-                      <Text size="T300">投票</Text>
-                    </MenuItem>
-                  </Menu>
+                  <FocusTrap
+                    focusTrapOptions={{
+                      initialFocus: false,
+                      onDeactivate: () => setPlusAnchor(undefined),
+                      clickOutsideDeactivates: true,
+                      isKeyForward: (evt: KeyboardEvent) => evt.key === 'ArrowDown',
+                      isKeyBackward: (evt: KeyboardEvent) => evt.key === 'ArrowUp',
+                      escapeDeactivates: stopPropagation,
+                    }}
+                  >
+                    <Menu style={{ padding: config.space.S100, minWidth: toRem(210) }}>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          pickCaptureFile('image/*', 'environment');
+                        }}
+                        before={<Icon src={Icons.Camera} />}
+                      >
+                        <Text size="T300">拍摄照片</Text>
+                      </MenuItem>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          pickCaptureFile('video/*', 'environment');
+                        }}
+                        before={<Icon src={Icons.VideoCamera} />}
+                      >
+                        <Text size="T300">录制视频</Text>
+                      </MenuItem>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          pickCaptureFile('image/*,video/*');
+                        }}
+                        before={<Icon src={Icons.Photo} />}
+                      >
+                        <Text size="T300">照片和影视库</Text>
+                      </MenuItem>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          pickFile('*');
+                        }}
+                        before={<Icon src={Icons.Attachment} />}
+                      >
+                        <Text size="T300">附件</Text>
+                      </MenuItem>
+                      <MenuItem
+                        variant="Surface"
+                        size="300"
+                        radii="300"
+                        onClick={() => {
+                          setPlusAnchor(undefined);
+                          setPollOpen(true);
+                        }}
+                        before={<Icon src={Icons.List} />}
+                      >
+                        <Text size="T300">投票</Text>
+                      </MenuItem>
+                    </Menu>
+                  </FocusTrap>
                 }
               >
                 <IconButton
