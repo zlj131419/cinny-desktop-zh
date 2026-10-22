@@ -50,9 +50,25 @@ async fn top_inset<R: Runtime>(app: tauri::AppHandle<R>) -> Result<f64, String> 
     }
 }
 
+/// 请求安卓录音运行时权限（点录音按钮时调；未授权会弹系统授权框）。
+/// 返回调用前是否已授权。桌面端恒为 false（桌面不需要）。
+#[tauri::command]
+async fn request_microphone<R: Runtime>(app: tauri::AppHandle<R>) -> Result<bool, String> {
+    #[cfg(mobile)]
+    {
+        let handle = app.state::<SiyuKeepalive<R>>();
+        return handle.request_microphone();
+    }
+    #[cfg(not(mobile))]
+    {
+        let _ = &app;
+        Ok(false)
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("siyu-keepalive")
-        .invoke_handler(tauri::generate_handler![start, stop, top_inset])
+        .invoke_handler(tauri::generate_handler![start, stop, top_inset, request_microphone])
         .setup(|app, api| {
             #[cfg(mobile)]
             {
