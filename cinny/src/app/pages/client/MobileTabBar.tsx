@@ -12,6 +12,7 @@ import { UserAvatar } from '../../components/user-avatar';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { nameInitials } from '../../utils/common';
+import { setAppBadge } from '../../utils/keepAlive';
 
 /**
  * 手机版底部导航（微信式）：私语 / 通讯录 / 发现 / 我。
@@ -60,6 +61,11 @@ export function MobileTabBar() {
       ),
     [roomToUnread]
   );
+
+  // 桌面图标角标与未读总数同步（仅安卓 App 实际生效，其余环境自动跳过）
+  useEffect(() => {
+    void setAppBadge(unreadTotal);
+  }, [unreadTotal]);
 
   // 点「私语」：有未读就依次跳到下一个未读会话（按最近活跃排序、循环）；没有未读回首页
   const handleHomeTab = () => {
