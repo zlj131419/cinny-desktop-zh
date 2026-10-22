@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>私语 · 检测工具</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; padding: 20px 16px 40px; background: #f4f4f5; color: #18181b; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .sub { color: #52525b; font-size: 13px; line-height: 1.6; margin: 0 0 18px; }
+  .tool { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .tool h2 { font-size: 16px; margin: 0 0 4px; }
+  .tool p { color: #52525b; font-size: 13px; margin: 0 0 10px; line-height: 1.5; }
+  button { padding: 10px 18px; font-size: 15px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; margin-right: 8px; }
+  button.ghost { background: #e4e4e7; color: #18181b; }
+  button:active { opacity: .8; }
+  pre { background: #18181b; color: #d4f7d4; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; margin: 12px 0 0; display: none; }
+  a.back { color: #2563eb; text-decoration: none; font-size: 14px; }
+</style>
+</head>
+<body>
+<a class="back" href="download.html">← 返回下载页</a>
+<h1 style="margin-top:10px;">私语 · 检测工具</h1>
+<p class="sub">本页在浏览器里直接运行，测的是当前浏览器 / PWA 的真实环境，结果复制发回即可。安卓 App 内部的问题请用 App 里「开发者工具」的远程小工具测（同一套工具）。</p>
+
+<div class="tool">
+  <h2>🎤 麦克风检测</h2>
+  <p>逐层检测录音链：接口是否存在 → 权限 → 实际调用麦克风。</p>
+  <button data-run="mic">开始检测</button>
+  <button class="ghost" data-copy="mic" style="display:none;">复制结果</button>
+  <pre id="out-mic"></pre>
+</div>
+
+<div class="tool">
+  <h2>📐 环境与布局</h2>
+  <p>屏幕、视口、安全区、底部导航位置实测，用于贴底和键盘类问题定位。</p>
+  <button data-run="env">开始检测</button>
+  <button class="ghost" data-copy="env" style="display:none;">复制结果</button>
+  <pre id="out-env"></pre>
+</div>
+
+<script>
+function makeReporter(id) {
+  var pre = document.getElementById('out-' + id);
+  pre.style.display = 'block';
+  pre.textContent = '';
+  document.querySelector('[data-copy="' + id + '"]').style.display = '';
+  return function (line) { pre.textContent += (pre.textContent ? '\n' : '') + line; };
+}
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = document.getElementById('out-' + btn.getAttribute('data-copy'));
+    if (navigator.clipboard) navigator.clipboard.writeText(pre.textContent);
+  });
+});
+
+var runners = {
+  mic: async function (report) {
+    report('UA：' + navigator.userAgent);
+    report('页面协议：' + location.protocol);
+    report('MediaRecorder 接口：' + typeof MediaRecorder);
+    report('getUserMedia 接口：' + (navigator.mediaDevices ? typeof navigator.mediaDevices.getUserMedia : 'mediaDevices 不存在'));
+    var inTauri = '__TAURI__' in window;
+    report('运行环境：' + (inTauri ? 'App（Tauri）' : '浏览器/PWA'));
+    if (inTauri && window.__TAURI__.core && window.__TAURI__.core.invoke) {
+      try {
+        var g = await window.__TAURI__.core.invoke('plugin:siyu-keepalive|request_microphone');
+        report('App 录音权限命令返回：' + JSON.stringify(g));
+      } catch (e) { report('App 录音权限命令异常：' + ((e && e.message) || e)); }
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      report('结论：当前环境没有 getUserMedia，录音不可用（旧 WebView 或非 https）');
+      return;
+    }
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      var tracks = stream.getAudioTracks();
+      report('getUserMedia：成功，音频轨道 ' + tracks.length + ' 条' + (tracks[0] && tracks[0].label ? '（' + tracks[0].label + '）' : ''));
+      tracks.forEach(function (t) { t.stop(); });
+      report(typeof MediaRecorder === 'undefined' ? '结论：麦克风能打开，但没有 MediaRecorder，网页录音条不可用' : '结论：录音链全部通过 ✓');
+    } catch (e) {
+      report('getUserMedia：失败 ' + ((e && e.name) || '') + ' ' + ((e && e.message) || e));
+      if (e && e.name === 'NotAllowedError') report('结论：权限被拒——查系统设置里浏览器/应用的麦克风权限');
+      if (e && e.name === 'NotFoundError') report('结论：没有找到麦克风设备');
+      if (e && e.name === 'NotReadableError') report('结论：麦克风被占用或被系统拦截');
+    }
+  },
+  env: async function (report) {
+    var vv = window.visualViewport;
+    function rectOf(el) {
+      if (!el) return '无';
+      var r = el.getBoundingClientRect();
+      return 'top=' + Math.round(r.top) + ' bottom=' + Math.round(r.bottom) + ' h=' + Math.round(r.height);
+    }
+    report('UA：' + navigator.userAgent);
+    report('运行环境：' + ('__TAURI__' in window ? 'App（Tauri）' : '浏览器/PWA'));
+    report('屏幕：' + screen.width + 'x' + screen.height);
+    report('窗口 inner：' + window.innerWidth + 'x' + window.innerHeight);
+    report('visualViewport：' + (vv ? Math.round(vv.width) + 'x' + Math.round(vv.height) + ' offsetTop=' + Math.round(vv.offsetTop) : '无'));
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);visibility:hidden;';
+    document.body.appendChild(probe);
+    var pcs = getComputedStyle(probe);
+    report('env(safe-area-inset)：top=' + pcs.paddingTop + ' bottom=' + pcs.paddingBottom);
+    probe.remove();
+    report('显示模式 standalone：' + (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true));
+    report('本页地址：' + location.href);
+  }
+};
+
+document.querySelectorAll('[data-run]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var id = btn.getAttribute('data-run');
+    runners[id](makeReporter(id));
+  });
+});
+</script>
+</body>
+</html>
