@@ -35,6 +35,8 @@ import {
   getHomeCreatePath,
   getHomeRoomPath,
   getDirectRoomPath,
+  getDirectCreatePath,
+  getCreatePath,
   getSpacePath,
   getSpaceRoomPath,
   getHomeSearchPath,
@@ -56,6 +58,8 @@ import { siyuTouchDrag } from '../../../utils/siyuDrag';
 import { makeNavCategoryId } from '../../../state/closedNavCategories';
 import { roomToUnreadAtom } from '../../../state/room/roomToUnread';
 import { mDirectAtom } from '../../../state/mDirectList';
+import { homeFilterAtom } from '../../../state/homeFilter';
+import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { isSpace, getRoomToParents, getAllParents } from '../../../utils/room';
 import { useCategoryHandler } from '../../../hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '../../../hooks/useNavToActivePathMapper';
@@ -110,9 +114,111 @@ const HomeMenu = forwardRef<HTMLDivElement, HomeMenuProps>(({ requestClose }, re
   );
 });
 
+function MobileHomeHeader() {
+  const navigate = useNavigate();
+  const [anchor, setAnchor] = useState<RectCords>();
+  const [filter, setFilter] = useAtom(homeFilterAtom);
+  const favourite = filter === 'favourite';
+  const close = () => setAnchor(undefined);
+
+  const createItems: Array<{
+    label: string;
+    icon: typeof Icons.Message;
+    action: () => void;
+  }> = [
+    {
+      label: '创建私聊',
+      icon: Icons.Message,
+      action: () => navigate(getDirectCreatePath()),
+    },
+    {
+      label: '创建房间',
+      icon: Icons.Hash,
+      action: () => navigate(getHomeCreatePath()),
+    },
+    {
+      label: '创建空间',
+      icon: Icons.Space,
+      action: () => navigate(getCreatePath()),
+    },
+  ];
+
+  return (
+    <>
+      <PageNavHeader>
+        <Box alignItems="Center" grow="Yes" gap="200">
+          <IconButton
+            variant="Background"
+            onClick={() => setFilter(favourite ? 'all' : 'favourite')}
+            aria-pressed={favourite}
+            aria-label="收藏"
+          >
+            <Icon src={Icons.Star} size="200" filled={favourite} />
+          </IconButton>
+          <Box grow="Yes" justifyContent="Center">
+            <Text size="H4">私语</Text>
+          </Box>
+          <IconButton
+            variant="Background"
+            onClick={(evt) =>
+              setAnchor(anchor ? undefined : evt.currentTarget.getBoundingClientRect())
+            }
+            aria-pressed={!!anchor}
+            aria-label="创建"
+          >
+            <Icon src={Icons.Plus} size="200" />
+          </IconButton>
+        </Box>
+      </PageNavHeader>
+      <PopOut
+        anchor={anchor}
+        position="Bottom"
+        align="End"
+        offset={6}
+        content={
+          <FocusTrap
+            focusTrapOptions={{
+              initialFocus: false,
+              returnFocusOnDeactivate: false,
+              onDeactivate: close,
+              clickOutsideDeactivates: true,
+              isKeyForward: (evt: KeyboardEvent) => evt.key === 'ArrowDown',
+              isKeyBackward: (evt: KeyboardEvent) => evt.key === 'ArrowUp',
+              escapeDeactivates: stopPropagation,
+            }}
+          >
+            <Menu style={{ padding: config.space.S100, minWidth: toRem(190) }}>
+              {createItems.map((item) => (
+                <MenuItem
+                  key={item.label}
+                  variant="Surface"
+                  size="300"
+                  radii="300"
+                  before={<Icon src={item.icon} />}
+                  onClick={() => {
+                    close();
+                    item.action();
+                  }}
+                >
+                  <Text size="T300">{item.label}</Text>
+                </MenuItem>
+              ))}
+            </Menu>
+          </FocusTrap>
+        }
+      />
+    </>
+  );
+}
+
 function HomeHeader() {
   const { t } = useTranslation();
+  const screenSize = useScreenSizeContext();
   const [menuAnchor, setMenuAnchor] = useState<RectCords>();
+
+  if (screenSize === ScreenSize.Mobile) {
+    return <MobileHomeHeader />;
+  }
   const handleOpenMenu: MouseEventHandler<HTMLButtonElement> = (evt) => {
     const cords = evt.currentTarget.getBoundingClientRect();
     setMenuAnchor((currentState) => {
@@ -213,7 +319,7 @@ export function Home() {
   const orphanRooms = useHomeRooms();
   const allRoomIds = useAllRooms();
   const mDirects = useAtomValue(mDirectAtom);
-  const [filter, setFilter] = useState<'all' | 'favourite' | 'rooms' | 'friends' | 'spaces' | 'unread' | 'mentions'>('all');
+  const [filter, setFilter] = useAtom(homeFilterAtom);
   // 分组折叠状态（本地记忆）
   const [closedGroups, setClosedGroups] = useState<Set<string>>(() => {
     try {
