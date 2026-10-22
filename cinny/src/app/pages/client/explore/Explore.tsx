@@ -18,6 +18,7 @@ import {
   Text,
   color,
   config,
+  toRem,
 } from 'folds';
 import {
   NavCategory,
@@ -26,7 +27,14 @@ import {
   NavItemContent,
   NavLink,
 } from '../../../components/nav';
-import { getExploreFeaturedPath, getExploreManagePath, getExploreServerPath } from '../../pathUtils';
+import { getExploreFeaturedPath, getExploreManagePath, getExploreServerPath, getHomeSearchPath, getSpacePath } from '../../pathUtils';
+import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
+import { Room } from 'matrix-js-sdk';
+import { allRoomsAtom } from '../../../state/room-list/roomList';
+import { isSpace } from '../../../utils/room';
+import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { useClientConfig } from '../../../hooks/useClientConfig';
 import { useAdminService } from '../../../features/admin/useAdminService';
 import {
@@ -169,6 +177,13 @@ export function Explore() {
   const servers =
     clientConfig.featuredCommunities?.servers?.filter((server) => server !== userServer) ?? [];
 
+  const screenSize = useScreenSizeContext();
+  const allRooms = useAtomValue(allRoomsAtom);
+  const mySpaces = useMemo(
+    () => allRooms.map((roomId) => mx.getRoom(roomId)).filter((r): r is Room => !!r && isSpace(r)),
+    [allRooms, mx]
+  );
+  const navigate = useNavigate();
   const featuredSelected = useExploreFeaturedSelected();
   const manageSelected = useExploreManageSelected();
   const selectedServer = useExploreServer();
@@ -188,6 +203,26 @@ export function Explore() {
 
       <PageNavContent>
         <Box direction="Column" gap="300">
+          {screenSize === ScreenSize.Mobile && (
+            <Box
+              as="button"
+              onClick={() => navigate(getHomeSearchPath())}
+              alignItems="Center"
+              gap="200"
+              style={{
+                width: '100%',
+                padding: `${toRem(10)} ${toRem(12)}`,
+                borderRadius: toRem(10),
+                border: `1px solid ${color.SurfaceVariant.ContainerLine}`,
+                cursor: 'pointer',
+                backgroundColor: color.Surface.Container,
+                color: color.SurfaceVariant.OnContainer,
+              }}
+            >
+              <Icon src={Icons.Search} size="100" />
+              <Text size="T300">搜索</Text>
+            </Box>
+          )}
           <NavCategory>
             <NavItem variant="Background" radii="400" aria-selected={featuredSelected}>
               <NavLink to={getExploreFeaturedPath()}>
@@ -252,6 +287,33 @@ export function Explore() {
               </NavItem>
             )}
           </NavCategory>
+          {screenSize === ScreenSize.Mobile && mySpaces.length > 0 && (
+            <NavCategory>
+              <NavCategoryHeader>
+                <Text size="O400" style={{ paddingLeft: config.space.S200 }}>
+                  我的空间
+                </Text>
+              </NavCategoryHeader>
+              {mySpaces.map((room) => (
+                <NavItem key={room.roomId} variant="Background" radii="400">
+                  <NavLink to={getSpacePath(room.roomId)}>
+                    <NavItemContent>
+                      <Box as="span" grow="Yes" alignItems="Center" gap="200">
+                        <Avatar size="200" radii="400">
+                          <Icon src={Icons.Space} size="100" />
+                        </Avatar>
+                        <Box as="span" grow="Yes">
+                          <Text as="span" size="Inherit" truncate>
+                            {room.name}
+                          </Text>
+                        </Box>
+                      </Box>
+                    </NavItemContent>
+                  </NavLink>
+                </NavItem>
+              ))}
+            </NavCategory>
+          )}
           {servers.length > 0 && (
             <NavCategory>
               <NavCategoryHeader>
