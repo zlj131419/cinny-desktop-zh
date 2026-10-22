@@ -40,7 +40,16 @@
 
 html {
   height: 100%;
+  /* iOS Safari/PWA 里 100% 取的是布局视口高度、比可见高度矮一截，页面够不到屏幕底；
+     dvh 是动态视口高度（当前真正可见的高度），支持的浏览器以它为准 */
+  height: 100dvh;
   overflow: hidden;
+  /* 页面根背景先行上色：iOS 上应用高度与屏幕有偏差时，露出的区域不再是白条 */
+  background-color: #f4f4f5;
+}
+.dark-theme,
+.butter-theme {
+  background-color: #101014;
 }
 
 body {
