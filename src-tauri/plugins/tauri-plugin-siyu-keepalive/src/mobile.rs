@@ -75,4 +75,18 @@ impl<R: Runtime> SiyuKeepalive<R> {
         }
         Ok(0.0)
     }
+
+    /// 设置桌面图标未读角标数（0=清除）。返回厂商接口是否受理。
+    pub fn set_badge(&self, count: i32) -> Result<bool, String> {
+        if let Some(handle) = &self.0 {
+            let v = handle
+                .run_mobile_plugin::<serde_json::Value>(
+                    "setBadge",
+                    serde_json::json!({ "count": count }),
+                )
+                .map_err(|e| e.to_string())?;
+            return Ok(v.get("ok").and_then(|o| o.as_bool()).unwrap_or(false));
+        }
+        Ok(false)
+    }
 }
