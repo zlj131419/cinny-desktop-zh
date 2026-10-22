@@ -143,10 +143,11 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
                               flexDirection: 'column',
                               height: '100%',
                               minHeight: 0,
+                              minWidth: 0,
                               flex: 1,
                             }}
                           >
-                            <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+                            <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex' }}>
                               <Outlet />
                             </div>
                             <MobileTabBar />
