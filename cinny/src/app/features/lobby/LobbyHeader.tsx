@@ -32,7 +32,8 @@ import { UseStateProvider } from '../../components/UseStateProvider';
 import { LeaveSpacePrompt } from '../../components/leave-space-prompt';
 import { stopPropagation } from '../../utils/keyboard';
 import { ScreenSize, useScreenSizeContext } from '../../hooks/useScreenSize';
-import { BackRouteHandler } from '../../components/BackRouteHandler';
+import { useNavigate } from 'react-router-dom';
+import { getHomePath } from '../../pages/pathUtils';
 import { mxcUrlToHttp } from '../../utils/matrix';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { useOpenSpaceSettings } from '../../state/hooks/spaceSettings';
@@ -149,6 +150,11 @@ export function LobbyHeader({ showProfile, powerLevels }: LobbyHeaderProps) {
   const setPeopleDrawer = useSetSetting(settingsAtom, 'isPeopleDrawer');
   const [menuAnchor, setMenuAnchor] = useState<RectCords>();
   const screenSize = useScreenSizeContext();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if ((window.history.state as { idx?: number } | null)?.idx) navigate(-1);
+    else navigate(getHomePath());
+  };
 
   const name = useRoomName(space);
   const avatarMxc = useRoomAvatar(space);
@@ -166,13 +172,9 @@ export function LobbyHeader({ showProfile, powerLevels }: LobbyHeaderProps) {
         {screenSize === ScreenSize.Mobile ? (
           <>
             <Box shrink="No">
-              <BackRouteHandler>
-                {(onBack) => (
-                  <IconButton fill="None" onClick={onBack}>
-                    <Icon src={Icons.ArrowLeft} />
-                  </IconButton>
-                )}
-              </BackRouteHandler>
+              <IconButton fill="None" onClick={goBack}>
+                <Icon src={Icons.ArrowLeft} />
+              </IconButton>
             </Box>
             <Box grow="Yes" justifyContent="Center">
               {showProfile && (
