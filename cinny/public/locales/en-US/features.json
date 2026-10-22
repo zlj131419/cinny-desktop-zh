@@ -719,7 +719,8 @@
     "voice_mic_error": "Cannot access microphone. Check the browser permission.",
     "voice_delete": "Delete recording",
     "voice_send": "Send voice message",
-    "voice_stop": "Stop recording"
+    "voice_stop": "Stop recording",
+    "voice_processing": "Processing"
   },
   "room-nav": {
     "live": "Live",
