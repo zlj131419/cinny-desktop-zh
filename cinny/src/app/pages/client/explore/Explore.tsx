@@ -37,6 +37,7 @@ import { isSpace } from '../../../utils/room';
 import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { useClientConfig } from '../../../hooks/useClientConfig';
 import { useAdminService } from '../../../features/admin/useAdminService';
+import { FeaturedOrRecommendedContent } from './Recommended';
 import {
   useExploreFeaturedSelected,
   useExploreManageSelected,
@@ -349,6 +350,11 @@ export function Explore() {
           <Box direction="Column">
             <AddServer />
           </Box>
+          {screenSize === ScreenSize.Mobile && (
+            <Box direction="Column" style={{ marginTop: toRem(16) }}>
+              <FeaturedOrRecommendedContent compact />
+            </Box>
+          )}
         </Box>
       </PageNavContent>
     </PageNav>
