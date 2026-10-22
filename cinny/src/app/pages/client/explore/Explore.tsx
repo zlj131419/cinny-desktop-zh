@@ -38,6 +38,7 @@ import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { useClientConfig } from '../../../hooks/useClientConfig';
 import { useAdminService } from '../../../features/admin/useAdminService';
 import { FeaturedOrRecommendedContent } from './Recommended';
+import { ContainerColor } from '../../../styles/ContainerColor.css';
 import {
   useExploreFeaturedSelected,
   useExploreManageSelected,
@@ -351,7 +352,11 @@ export function Explore() {
             <AddServer />
           </Box>
           {screenSize === ScreenSize.Mobile && (
-            <Box direction="Column" style={{ marginTop: toRem(16) }}>
+            <Box
+              direction="Column"
+              className={ContainerColor({ variant: 'Background' })}
+              style={{ marginTop: toRem(16), padding: toRem(12), borderRadius: toRem(16) }}
+            >
               <FeaturedOrRecommendedContent compact />
             </Box>
           )}
