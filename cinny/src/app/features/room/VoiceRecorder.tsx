@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Icon, IconButton, Icons, Text, color, toRem } from 'folds';
 import { useTranslation } from 'react-i18next';
+import { ensureMicrophonePermission } from '../../utils/keepAlive';
 
 /**
  * 语音录音条（参照 Element 的语音消息交互）：
@@ -225,6 +226,8 @@ export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
         if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
           throw new Error('unsupported');
         }
+        // 安卓 App：先确保 RECORD_AUDIO 运行时权限（未授权会弹系统框，授权后重试即可）
+        await ensureMicrophonePermission();
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         if (disposed) {
           stream.getTracks().forEach((tr) => tr.stop());
