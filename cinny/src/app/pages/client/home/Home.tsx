@@ -12,6 +12,7 @@ import {
   PopOut,
   RectCords,
   Text,
+  color,
   config,
   toRem,
 } from 'folds';
@@ -117,6 +118,7 @@ const HomeMenu = forwardRef<HTMLDivElement, HomeMenuProps>(({ requestClose }, re
 function MobileHomeHeader() {
   const navigate = useNavigate();
   const [anchor, setAnchor] = useState<RectCords>();
+  const [joinOpen, setJoinOpen] = useState(false);
   const [filter, setFilter] = useAtom(homeFilterAtom);
   const favourite = filter === 'favourite';
   const close = () => setAnchor(undefined);
@@ -140,6 +142,11 @@ function MobileHomeHeader() {
       label: '创建空间',
       icon: Icons.Space,
       action: () => navigate(getCreatePath()),
+    },
+    {
+      label: '使用地址加入',
+      icon: Icons.Link,
+      action: () => setJoinOpen(true),
     },
   ];
 
@@ -187,7 +194,7 @@ function MobileHomeHeader() {
               escapeDeactivates: stopPropagation,
             }}
           >
-            <Menu style={{ padding: config.space.S100, minWidth: toRem(190) }}>
+            <Menu style={{ padding: config.space.S100, minWidth: toRem(148) }}>
               {createItems.map((item) => (
                 <MenuItem
                   key={item.label}
@@ -207,6 +214,22 @@ function MobileHomeHeader() {
           </FocusTrap>
         }
       />
+      {joinOpen && (
+        <JoinAddressPrompt
+          onCancel={() => setJoinOpen(false)}
+          onOpen={(roomIdOrAlias, viaServers, eventId) => {
+            setJoinOpen(false);
+            const path = getHomeRoomPath(roomIdOrAlias, eventId);
+            navigate(
+              viaServers
+                ? withSearchParam<_RoomSearchParams>(path, {
+                    viaServers: encodeSearchParamValueArray(viaServers),
+                  })
+                : path
+            );
+          }}
+        />
+      )}
     </>
   );
 }
@@ -314,6 +337,7 @@ const DEFAULT_CATEGORY_ID = makeNavCategoryId('home', 'room');
 export function Home() {
   const { t } = useTranslation();
   const mx = useMatrixClient();
+  const screenSize = useScreenSizeContext();
   useNavToActivePathMapper('home');
   const scrollRef = useRef<HTMLDivElement>(null);
   const orphanRooms = useHomeRooms();
@@ -459,9 +483,7 @@ export function Home() {
     
     // 筛选（带空检查）
     try {
-      if (filter === 'unread' && roomToUnread) {
-        items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
-      } else if (filter === 'friends' && mDirects) {
+      if (filter === 'friends' && mDirects) {
         items = items.filter((rId) => typeof rId === 'string' && mDirects.has(rId));
       } else if (filter === 'rooms' && mDirects) {
         // 房间：非私聊、非空间
@@ -484,8 +506,6 @@ export function Home() {
             return false;
           }
         });
-      } else if (filter === 'mentions' && roomToUnread) {
-        items = items.filter((rId) => typeof rId === 'string' && roomToUnread.has(rId));
       } else if (filter === 'favourite') {
         items = items.filter((rId) => {
           if (typeof rId !== 'string') return false;
@@ -607,8 +627,17 @@ export function Home() {
     <PageNav>
       <HomeHeader />
       <Box direction="Column" gap="100" style={{ padding: `${config.space.S100} ${config.space.S300}`, maxWidth: '100%', overflow: 'hidden' }}>
-          <Box direction="Row" gap="100" wrap="Wrap" style={{ maxWidth: '100%' }}>
-            {(['all', 'favourite', 'rooms', 'friends', 'spaces', 'unread', 'mentions'] as const).map((f) => (
+          <Box
+            direction="Row"
+            gap="100"
+            wrap={screenSize === ScreenSize.Mobile ? 'NoWrap' : 'Wrap'}
+            style={
+              screenSize === ScreenSize.Mobile
+                ? { width: '100%', maxWidth: '100%' }
+                : { maxWidth: '100%' }
+            }
+          >
+            {(['all', 'favourite', 'rooms', 'friends', 'spaces'] as const).map((f) => (
               <Button
                 key={f}
                 size="300"
@@ -616,10 +645,14 @@ export function Home() {
                 fill={filter === f ? 'Solid' : 'None'}
                 radii="400"
                 onClick={() => setFilter(f)}
-                style={{ flexShrink: 0 }}
+                style={
+                  screenSize === ScreenSize.Mobile
+                    ? { flex: '1 1 0', minWidth: 0, height: toRem(24), padding: '0 4px' }
+                    : { flexShrink: 0 }
+                }
               >
-                <Text size="T300">
-                  {f === 'all' ? '全部' : f === 'favourite' ? '收藏' : f === 'rooms' ? '房间' : f === 'friends' ? '好友' : f === 'spaces' ? '空间' : f === 'unread' ? '未读' : '提及'}
+                <Text size={screenSize === ScreenSize.Mobile ? 'T200' : 'T300'}>
+                  {f === 'all' ? '全部' : f === 'favourite' ? '收藏' : f === 'rooms' ? '房间' : f === 'friends' ? '好友' : '空间'}
                 </Text>
               </Button>
             ))}
@@ -630,6 +663,7 @@ export function Home() {
       ) : (
         <PageNavContent scrollRef={scrollRef}>
           <Box direction="Column" gap="300">
+            {screenSize !== ScreenSize.Mobile && (
             <NavCategory>
               <NavItem variant="Background" radii="400" aria-selected={createRoomSelected}>
                 <NavButton onClick={() => navigate(getHomeCreatePath())}>
@@ -702,7 +736,9 @@ export function Home() {
                 </NavLink>
               </NavItem>
             </NavCategory>
+            )}
             <NavCategory>
+              {screenSize !== ScreenSize.Mobile && (
               <NavCategoryHeader>
                 <div
                   data-siyu-drop="__ungroup__"
@@ -722,18 +758,11 @@ export function Home() {
                 >
                   {/* 「所有」标题去掉，换成一条居中粗横线（宽 90%）；外层 div 仍是拖出分组的落点 */}
                   <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '4px 0' }}>
-                    <div
-                      style={{
-                        width: '90%',
-                        height: 4,
-                        borderRadius: 2,
-                        background: 'currentColor',
-                        opacity: 0.85,
-                      }}
-                    />
+
                   </div>
                 </div>
               </NavCategoryHeader>
+              )}
               <div
                 style={{
                   position: 'relative',
