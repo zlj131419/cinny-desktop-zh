@@ -29,6 +29,86 @@ const pickMime = (): { mime?: string; ext: string } => {
   return { ext: 'webm' };
 };
 
+// ===== 格式统一：录音一律转码为 WAV(16kHz 单声道 PCM) 再发送 =====
+// 各浏览器 MediaRecorder 产物不同（Chrome=webm/opus、Safari=mp4/aac），跨平台播不了；
+// WAV 所有平台与 WebView 都能解码。转码失败时回退发送原始录音，不丢消息。
+
+const TARGET_SAMPLE_RATE = 16000;
+
+const encodeWav = (buffer: AudioBuffer): Blob => {
+  const channel = buffer.getChannelData(0);
+  const bytes = 44 + channel.length * 2;
+  const ab = new ArrayBuffer(bytes);
+  const view = new DataView(ab);
+  const writeStr = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i += 1) view.setUint8(off + i, s.charCodeAt(i));
+  };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, bytes - 8, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, buffer.sampleRate, true);
+  view.setUint32(28, buffer.sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, channel.length * 2, true);
+  let off = 44;
+  for (let i = 0; i < channel.length; i += 1, off += 2) {
+    const s = Math.max(-1, Math.min(1, channel[i]));
+    view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+};
+
+const waveformFromBuffer = (buffer: AudioBuffer): number[] => {
+  const channel = buffer.getChannelData(0);
+  const out: number[] = [];
+  const bucket = Math.max(1, Math.floor(channel.length / MAX_SAMPLES));
+  for (let i = 0; i < channel.length; i += bucket) {
+    let peak = 0;
+    for (let j = i; j < Math.min(i + bucket, channel.length); j += 1) {
+      peak = Math.max(peak, Math.abs(channel[j]));
+    }
+    out.push(Math.round(Math.min(1, peak * 1.4) * 1024));
+    if (out.length >= MAX_SAMPLES) break;
+  }
+  return out;
+};
+
+const transcodeToWav = async (
+  blob: Blob
+): Promise<{ blob: Blob; durationMs: number; waveform: number[] }> => {
+  const AC: typeof AudioContext | undefined =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AC) throw new Error('no AudioContext');
+  const decodeCtx = new AC();
+  try {
+    const decoded = await decodeCtx.decodeAudioData(await blob.arrayBuffer());
+    let finalBuffer = decoded;
+    if (decoded.sampleRate !== TARGET_SAMPLE_RATE && typeof OfflineAudioContext !== 'undefined') {
+      const len = Math.ceil((decoded.duration * TARGET_SAMPLE_RATE) / 1);
+      const offline = new OfflineAudioContext(1, len, TARGET_SAMPLE_RATE);
+      const src = offline.createBufferSource();
+      src.buffer = decoded;
+      src.connect(offline.destination);
+      src.start();
+      finalBuffer = await offline.startRendering();
+    }
+    return {
+      blob: encodeWav(finalBuffer),
+      durationMs: Math.round(finalBuffer.duration * 1000),
+      waveform: waveformFromBuffer(finalBuffer),
+    };
+  } finally {
+    void decodeCtx.close().catch(() => undefined);
+  }
+};
+
 const formatTime = (s: number) => {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
@@ -78,7 +158,9 @@ type VoiceRecorderBarProps = {
 
 export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'starting' | 'recording' | 'preview' | 'error'>('starting');
+  const [phase, setPhase] = useState<'starting' | 'recording' | 'processing' | 'preview' | 'error'>(
+    'starting'
+  );
   const [elapsed, setElapsed] = useState(0);
   const [samples, setSamples] = useState<number[]>([]);
   const [playing, setPlaying] = useState(false);
@@ -91,6 +173,7 @@ export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
   const startedAtRef = useRef(0);
   const samplesRef = useRef<number[]>([]);
   const fileRef = useRef<File>();
+  const processedWaveformRef = useRef<number[]>();
   const previewUrlRef = useRef<string>();
   const audioRef = useRef<HTMLAudioElement>(null);
   const sentRef = useRef(false);
@@ -157,15 +240,29 @@ export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
         };
         rec.onstop = () => {
           const type = rec.mimeType || mime || 'audio/webm';
-          const blob = new Blob(chunksRef.current, { type });
-          const file = new File([blob], `voice-${Date.now()}.${ext}`, { type });
-          fileRef.current = file;
-          previewUrlRef.current = URL.createObjectURL(blob);
+          const rawBlob = new Blob(chunksRef.current, { type });
           stream.getTracks().forEach((tr) => tr.stop());
           if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
             void audioCtxRef.current.close().catch(() => undefined);
           }
-          setPhase('preview');
+          setPhase('processing');
+          void (async () => {
+            try {
+              // 统一转码 WAV，并以解码数据为准重算时长与波形
+              const out = await transcodeToWav(rawBlob);
+              fileRef.current = new File([out.blob], `voice-${Date.now()}.wav`, {
+                type: 'audio/wav',
+              });
+              processedWaveformRef.current = out.waveform;
+              previewUrlRef.current = URL.createObjectURL(out.blob);
+              setElapsed(out.durationMs / 1000);
+            } catch {
+              // 转码失败回退原始录音，保证消息不丢
+              fileRef.current = new File([rawBlob], `voice-${Date.now()}.${ext}`, { type });
+              previewUrlRef.current = URL.createObjectURL(rawBlob);
+            }
+            setPhase('preview');
+          })();
         };
         startedAtRef.current = Date.now();
         rec.start(250);
@@ -219,7 +316,8 @@ export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
     if (!file) return;
     sentRef.current = true;
     const durationMs = Math.round(elapsed * 1000);
-    const waveform = samplesRef.current.map((v) => Math.round(v * 1024));
+    const waveform =
+      processedWaveformRef.current ?? samplesRef.current.map((v) => Math.round(v * 1024));
     cleanupCapture();
     onSend(file, durationMs, waveform);
   };
@@ -305,7 +403,9 @@ export function VoiceRecorderBar({ onCancel, onSend }: VoiceRecorderBarProps) {
           />
           <style>{'@keyframes siyu-rec-pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.25 } }'}</style>
           <Text size="T300" style={{ flexShrink: 0 }}>
-            {t('features:room.voice_recording')} {formatTime(elapsed)}
+            {phase === 'processing'
+              ? t('features:room.voice_processing')
+              : `${t('features:room.voice_recording')} ${formatTime(elapsed)}`}
           </Text>
           <Waveform samples={samples} />
           <IconButton
