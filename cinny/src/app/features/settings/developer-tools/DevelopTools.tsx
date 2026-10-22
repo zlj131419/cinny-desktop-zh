@@ -13,6 +13,7 @@ import {
   AccountDataSubmitCallback,
 } from '../../../components/AccountDataEditor';
 import { copyToClipboard } from '../../../utils/dom';
+import { ensureMicrophonePermission } from '../../../utils/keepAlive';
 import { AccountData } from './AccountData';
 
 // 屏幕/布局诊断：真机上量视口、根容器和底部导航的真实位置（env 安全区等），截图或复制发回即可定位贴底问题
@@ -102,6 +103,68 @@ function LayoutDiagnostics() {
   );
 }
 
+// 麦克风自检：逐层验证录音链（MediaRecorder 支持 → 安卓权限 → getUserMedia 实际结果），
+// 点一次就知道卡在哪一层，不用猜
+function MicDiagnostics() {
+  const [report, setReport] = useState<string>('尚未检测，点下面按钮开始');
+  const run = async () => {
+    const lines: string[] = [];
+    lines.push(`MediaRecorder：${typeof MediaRecorder}`);
+    lines.push(`getUserMedia：${typeof navigator.mediaDevices?.getUserMedia}`);
+    const inTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+    lines.push(`运行环境：${inTauri ? 'App（Tauri）' : '浏览器/PWA'}`);
+    if (inTauri) {
+      const granted = await ensureMicrophonePermission();
+      lines.push(`安卓录音权限命令返回：${granted ? '已授权' : '未授权（已尝试拉起系统授权框）'}`);
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const tracks = stream.getAudioTracks();
+      lines.push(`getUserMedia：成功，音频轨道 ${tracks.length} 条`);
+      tracks.forEach((tr) => tr.stop());
+      stream.getTracks().forEach((tr) => tr.stop());
+    } catch (e) {
+      const err = e as Error;
+      lines.push(`getUserMedia：失败 ${err?.name ?? ''} ${err?.message ?? e}`);
+    }
+    setReport(lines.join('\n'));
+  };
+  return (
+    <Box direction="Column" gap="100">
+      <Text size="L400">麦克风自检（录音问题定位）</Text>
+      <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column" gap="400">
+        <Box direction="Column" gap="200">
+          <Text size="T300" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {report}
+          </Text>
+          <Box gap="200">
+            <Button
+              onClick={() => void run()}
+              variant="Secondary"
+              fill="Soft"
+              size="300"
+              radii="300"
+              outlined
+            >
+              <Text size="B300">开始检测</Text>
+            </Button>
+            <Button
+              onClick={() => copyToClipboard(report)}
+              variant="Secondary"
+              fill="Soft"
+              size="300"
+              radii="300"
+              outlined
+            >
+              <Text size="B300">复制结果</Text>
+            </Button>
+          </Box>
+        </Box>
+      </SequenceCard>
+    </Box>
+  );
+}
+
 type DeveloperToolsProps = {
   requestClose: () => void;
 };
@@ -151,6 +214,7 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
           <PageContent>
             <Box direction="Column" gap="700">
               <LayoutDiagnostics />
+              <MicDiagnostics />
               <Box direction="Column" gap="100">
                 <Text size="L400">{t('features:settings.developer-tools.options')}</Text>
                 <SequenceCard
