@@ -719,7 +719,8 @@
     "voice_mic_error": "无法使用麦克风，请检查浏览器权限。",
     "voice_delete": "删除录音",
     "voice_send": "发送语音",
-    "voice_stop": "停止录音"
+    "voice_stop": "停止录音",
+    "voice_processing": "正在处理"
   },
   "room-nav": {
     "live": "直播",
