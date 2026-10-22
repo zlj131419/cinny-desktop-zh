@@ -281,8 +281,12 @@ jobs:
           if 'usesCleartextTraffic' not in m:
               m = m.replace('<application ', '<application android:usesCleartextTraffic="true" ', 1)
           # 录音权限：语音消息需要 RECORD_AUDIO（WebView getUserMedia 的前置）
+          # MODIFY_AUDIO_SETTINGS 必须一并声明：wry 的 RustWebChromeClient 在
+          # onPermissionRequest 里对 AUDIO_CAPTURE 固定申请 [MODIFY_AUDIO_SETTINGS,
+          # RECORD_AUDIO] 两个权限，缺任何一个（未在清单声明）整单被系统秒拒，
+          # getUserMedia 直接 NotAllowedError 且不弹框——1.0.41 就栽在这里
           if 'RECORD_AUDIO' not in m:
-              m = m.replace('<application', '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application', 1)
+              m = m.replace('<application', '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <application', 1)
           open(man, 'w').write(m)
           print('release fixes applied:', ver, code)
           PYEOF_FIX
@@ -292,6 +296,7 @@ jobs:
           { grep -q "tauri.android.versionName\", \"$TAG\"" src-tauri/gen/android/app/build.gradle.kts || grep -q "tauri.android.versionName=$TAG" src-tauri/gen/android/app/tauri.properties; } || { echo "VERSION FIX DID NOT LAND"; exit 1; }
           grep -q 'usesCleartextTraffic="true"' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "CLEARTEXT FIX DID NOT LAND"; exit 1; }
           grep -q 'android.permission.RECORD_AUDIO' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "RECORD_AUDIO DID NOT LAND"; exit 1; }
+          grep -q 'android.permission.MODIFY_AUDIO_SETTINGS' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "MODIFY_AUDIO_SETTINGS DID NOT LAND"; exit 1; }
       - name: Build Android APK
         run: |
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
@@ -309,6 +314,7 @@ jobs:
             echo "cleartext attr: $LINE"
             echo "$LINE" | grep -Eq "=true|0xffffffff" || { echo "APK cleartext NOT true"; exit 1; }
             "$AAPT" dump badging "$APK" | grep -q "android.permission.RECORD_AUDIO" || { echo "APK missing RECORD_AUDIO"; exit 1; }
+            "$AAPT" dump badging "$APK" | grep -q "android.permission.MODIFY_AUDIO_SETTINGS" || { echo "APK missing MODIFY_AUDIO_SETTINGS"; exit 1; }
             echo "APK values verified OK"
           else
             echo "aapt2 not found, skipping in-CI verification"
