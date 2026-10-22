@@ -155,3 +155,9 @@ li p::before {
   content: '';
   display: inline-block;
 }
+
+/* 移动端：html 高度跟随 visualViewport 实测值（appViewport.ts 写入 --siyu-vh），
+   冷启动即贴底、键盘弹起时整列随之变矮，输入框直接坐在键盘上 */
+html.siyu-vv {
+  height: var(--siyu-vh, 100dvh);
+}
