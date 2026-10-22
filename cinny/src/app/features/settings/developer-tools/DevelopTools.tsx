@@ -15,6 +15,93 @@ import {
 import { copyToClipboard } from '../../../utils/dom';
 import { AccountData } from './AccountData';
 
+// 屏幕/布局诊断：真机上量视口、根容器和底部导航的真实位置（env 安全区等），截图或复制发回即可定位贴底问题
+function measureLayout(): string {
+  const lines: Array<[string, string]> = [];
+  const push = (k: string, v: unknown) => lines.push([k, String(v)]);
+  try {
+    push('屏幕', `${screen.width}×${screen.height}`);
+    push('窗口', `${window.innerWidth}×${window.innerHeight}`);
+    push(
+      '可视区',
+      window.visualViewport
+        ? `${Math.round(window.visualViewport.width)}×${Math.round(window.visualViewport.height)}`
+        : '无'
+    );
+    push('html高', document.documentElement.clientHeight);
+    push('html计算高', getComputedStyle(document.documentElement).height);
+    const root = document.getElementById('root');
+    if (root) {
+      const r = root.getBoundingClientRect();
+      push('#root', `top=${Math.round(r.top)} bottom=${Math.round(r.bottom)} h=${Math.round(r.height)}`);
+    }
+    const btn = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent?.trim() === '通讯录'
+    );
+    let bar: Element | null = btn ?? null;
+    while (bar && bar.getBoundingClientRect().width < window.innerWidth * 0.9) {
+      bar = bar.parentElement;
+    }
+    if (bar) {
+      const r = bar.getBoundingClientRect();
+      push('底栏', `top=${Math.round(r.top)} bottom=${Math.round(r.bottom)} h=${Math.round(r.height)}`);
+    } else {
+      push('底栏', '未找到');
+    }
+    const probe = document.createElement('div');
+    probe.style.cssText =
+      'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);';
+    document.body.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    push('安全区上', cs.paddingTop);
+    push('安全区下', cs.paddingBottom);
+    probe.remove();
+    push('桌面图标模式', (navigator as unknown as { standalone?: boolean }).standalone ?? '?');
+    push('UA', navigator.userAgent);
+  } catch (e) {
+    push('出错', e instanceof Error ? e.message : e);
+  }
+  return lines.map(([k, v]) => `${k}：${v}`).join('\n');
+}
+
+function LayoutDiagnostics() {
+  const [report, setReport] = useState<string>(() => measureLayout());
+  return (
+    <Box direction="Column" gap="100">
+      <Text size="L400">屏幕诊断（贴底问题定位）</Text>
+      <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column" gap="400">
+        <Box direction="Column" gap="200">
+          <Text size="T300" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {report}
+          </Text>
+          <Box gap="200">
+            <Button
+              onClick={() => setReport(measureLayout())}
+              variant="Secondary"
+              fill="Soft"
+              size="300"
+              radii="300"
+              outlined
+            >
+              <Text size="B300">重新测量</Text>
+            </Button>
+            <Button
+              onClick={() => copyToClipboard(report)}
+              variant="Secondary"
+              fill="Soft"
+              size="300"
+              radii="300"
+              outlined
+            >
+              <Text size="B300">复制诊断</Text>
+            </Button>
+          </Box>
+        </Box>
+      </SequenceCard>
+    </Box>
+  );
+}
+
 type DeveloperToolsProps = {
   requestClose: () => void;
 };
@@ -63,6 +150,7 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
         <Scroll hideTrack visibility="Hover">
           <PageContent>
             <Box direction="Column" gap="700">
+              <LayoutDiagnostics />
               <Box direction="Column" gap="100">
                 <Text size="L400">{t('features:settings.developer-tools.options')}</Text>
                 <SequenceCard
