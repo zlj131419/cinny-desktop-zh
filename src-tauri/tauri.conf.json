@@ -9,7 +9,7 @@
       "wix": {
         "bannerPath": "wix/banner.bmp",
         "dialogImagePath": "wix/dialogImage.bmp",
-     "language": "zh-CN"
+        "language": "zh-CN"
       }
     },
     "icon": [
@@ -48,7 +48,7 @@
   },
   "productName": "私语",
   "mainBinaryName": "siyu",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "identifier": "net.xxqw.siyu",
   "plugins": {
     "updater": {
