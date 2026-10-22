@@ -1,8 +1,10 @@
 package net.xxqw.siyu.keepalive
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
@@ -66,6 +68,24 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
         return null
+    }
+
+    /**
+     * 录音权限：WebView 里 getUserMedia 需要 App 先持有 RECORD_AUDIO 运行时权限，
+     * 否则请求会被直接拒绝且不弹系统授权框。未授权时在此拉起系统授权框，
+     * 返回调用前的授权状态（刚授权完前端重试一次录音即可）。
+     */
+    @Command
+    fun requestMicrophone(invoke: Invoke) {
+        val granted =
+            activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 9401)
+        }
+        val result = JSObject()
+        result.put("granted", granted)
+        invoke.resolve(result)
     }
 
     @Command
