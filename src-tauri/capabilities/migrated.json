@@ -92,6 +92,7 @@
     },
     "siyu-keepalive:allow-start",
     "siyu-keepalive:allow-stop",
-    "siyu-keepalive:allow-top-inset"
+    "siyu-keepalive:allow-top-inset",
+    "siyu-keepalive:allow-request-microphone"
   ]
 }
