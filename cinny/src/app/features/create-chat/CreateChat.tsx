@@ -58,9 +58,15 @@ export function CreateChat({ defaultUserId }: CreateChatProps) {
 
     const target = evt.target as HTMLFormElement | undefined;
     const userIdInput = target?.userIdInput as HTMLInputElement | undefined;
-    const userId = userIdInput?.value.trim();
+    const rawUserId = userIdInput?.value.trim();
 
-    if (!userIdInput || !userId) return;
+    if (!userIdInput || !rawUserId) return;
+
+    // 支持只输入用户名：自动补 @ 和本服务器域名，完整 ID 照常
+    const bare = rawUserId.replace(/^@/, '');
+    const ownDomain = mx.getUserId()?.split(':').slice(1).join(':');
+    const userId = bare.includes(':') || !ownDomain ? `@${bare}` : `@${bare}:${ownDomain}`;
+
     if (!isUserId(userId)) {
       setInvalidUserId(true);
       return;
