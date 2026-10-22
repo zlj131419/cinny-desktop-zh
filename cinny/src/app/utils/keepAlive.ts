@@ -66,3 +66,20 @@ export function startKeepAlive(): Promise<void> {
 export function stopKeepAlive(): Promise<void> {
   return invokeKeepAlive('stop');
 }
+
+/**
+ * 安卓录音前置：WebView 的 getUserMedia 在 App 没拿到 RECORD_AUDIO 运行时权限时
+ * 会被直接拒绝、且不弹系统框。录音开始前先调原生 request_microphone：已授权
+ * 返回 true；未授权会拉起系统授权框并返回 false（用户授权后重试录音即可）。
+ * 非安卓 App 环境恒返回 true（浏览器自己管权限）。
+ */
+export async function ensureMicrophonePermission(): Promise<boolean> {
+  if (!keepAliveAvailable()) return true;
+  try {
+    const tauri = (window as unknown as Record<string, any>).__TAURI__;
+    const granted = await tauri.core.invoke('plugin:siyu-keepalive|request_microphone');
+    return granted === true;
+  } catch {
+    return true;
+  }
+}
