@@ -9,6 +9,10 @@ import { createListAtom } from '../list';
 
 export type TUploadMetadata = {
   markedAsSpoiler: boolean;
+  // 语音消息专用：录音时长（毫秒）、MSC1767 波形采样（0..1024）、语音标记
+  audioDuration?: number;
+  voiceMessage?: boolean;
+  waveform?: number[];
 };
 
 export type TUploadItem = {
