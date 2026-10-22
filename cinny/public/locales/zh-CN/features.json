@@ -528,7 +528,7 @@
     "once_this_feature_is_enabled": "一旦启用此功能，房间创建后将无法禁用加密。",
     "server_rate_limited": "服务器限制了您的请求，{{minutes}} 分钟内无法操作！",
     "create": "创建",
-    "username_server": "@用户名:服务器"
+    "username_server": "输入用户名即可，如 wanda"
   },
   "create-room": {
     "create_room": "创建房间",
