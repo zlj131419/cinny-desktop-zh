@@ -42,6 +42,17 @@ const copyFiles = {
       src: 'public/locales',
       dest: 'public/',
     },
+    {
+      // 自建诊断小工具（远程脚本版）：随网页包进服务器 public/tools/，
+      // App/网页的开发者工具运行时从服务器现拉现跑，新增检测不用等发版
+      src: 'public/tools',
+      dest: 'public/',
+    },
+    {
+      // 独立检测工具页（下载页底部入口）：单文件，浏览器打开即用
+      src: 'public/tools.html',
+      dest: 'public/',
+    },
   ],
 };
 
