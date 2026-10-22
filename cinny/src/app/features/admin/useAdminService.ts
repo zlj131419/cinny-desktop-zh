@@ -9,6 +9,8 @@ export type FeaturedEntry = {
   kind: FeaturedKind;
   added_by?: string;
   added_at?: number;
+  // 置顶分值 1-10（服务端 pin 接口写入；越大越靠前，0/缺失=未置顶）
+  pin_score?: number;
   // 服务端经 Synapse admin API 补齐的展示字段（未加入房间也能显示名字）
   name?: string;
   topic?: string;
@@ -121,6 +123,12 @@ export function useAdminService() {
     [post]
   );
 
+  const pin = useCallback(
+    (roomId: string, kind: FeaturedKind, score: number) =>
+      post<{ ok: boolean }>('/api/featured/pin', { room_id: roomId, kind, score }),
+    [post]
+  );
+
   const block = useCallback(
     (roomId: string) => post<{ ok: boolean }>('/api/featured/block', { room_id: roomId }),
     [post]
@@ -195,6 +203,7 @@ export function useAdminService() {
       fetchFeatured,
       recommend,
       unrecommend,
+      pin,
       block,
       unblock,
       deactivateUser,
@@ -212,6 +221,7 @@ export function useAdminService() {
       fetchFeatured,
       recommend,
       unrecommend,
+      pin,
       block,
       unblock,
       deactivateUser,
