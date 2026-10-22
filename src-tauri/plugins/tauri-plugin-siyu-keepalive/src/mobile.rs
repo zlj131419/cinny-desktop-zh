@@ -48,6 +48,20 @@ impl<R: Runtime> SiyuKeepalive<R> {
         Ok(())
     }
 
+    /// 请求录音运行时权限（WebView getUserMedia 前置）。返回调用前是否已授权。
+    pub fn request_microphone(&self) -> Result<bool, String> {
+        if let Some(handle) = &self.0 {
+            let v = handle
+                .run_mobile_plugin::<serde_json::Value>("requestMicrophone", serde_json::json!({}))
+                .map_err(|e| e.to_string())?;
+            return Ok(v
+                .get("granted")
+                .and_then(|g| g.as_bool())
+                .unwrap_or(false));
+        }
+        Ok(false)
+    }
+
     /// 量 WebView 顶部被状态栏挡住的高度（CSS px），供前端给顶栏让位。
     pub fn top_inset(&self) -> Result<f64, String> {
         if let Some(handle) = &self.0 {
