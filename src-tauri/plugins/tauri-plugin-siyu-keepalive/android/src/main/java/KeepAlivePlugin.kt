@@ -5,15 +5,23 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import app.tauri.annotation.Command
+import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+
+@InvokeArg
+class SetBadgeArgs {
+    var count: Int = 0
+}
 
 /**
  * 私语后台保活插件：登录后启动前台服务，让进程保持前台级优先级，
@@ -94,6 +102,53 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
         KeepAlivePrefs.setEnabled(context, false)
         context.stopService(Intent(context, KeepAliveService::class.java))
         invoke.resolve()
+    }
+
+    /**
+     * 桌面图标未读角标：安卓没有统一角标 API，按厂商接口逐个尝试——
+     * 华为走官方 content provider（change_badge，需清单声明
+     * com.huawei.android.launcher.permission.CHANGE_BADGE）；再补一条通用
+     * BADGE_COUNT_UPDATE 广播（三星/HTC 等老桌面认）。count=0 清除角标。
+     */
+    @Command
+    fun setBadge(invoke: Invoke) {
+        val args = invoke.getArgs(SetBadgeArgs::class.java)
+        val count = if (args.count < 0) 0 else args.count
+        val context = activity.applicationContext
+        var ok = false
+        try {
+            val bundle = Bundle()
+            bundle.putString("package", context.packageName)
+            bundle.putString("class", launcherClassName(context))
+            bundle.putInt("badgenumber", count)
+            context.contentResolver.call(
+                Uri.parse("content://com.huawei.android.launcher.settings/badge/"),
+                "change_badge",
+                null,
+                bundle
+            )
+            ok = true
+        } catch (e: Exception) {
+            // 非华为桌面没有这个 provider，忽略，靠下面的广播兜底
+        }
+        try {
+            val intent = Intent("android.intent.action.BADGE_COUNT_UPDATE")
+            intent.putExtra("badge_count", count)
+            intent.putExtra("badge_count_package_name", context.packageName)
+            intent.putExtra("badge_count_class_name", launcherClassName(context))
+            context.sendBroadcast(intent)
+        } catch (e: Exception) {
+            // 无桌面认领这条广播时静默
+        }
+        val result = JSObject()
+        result.put("ok", ok)
+        invoke.resolve(result)
+    }
+
+    private fun launcherClassName(context: Context): String {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val component = launchIntent?.component
+        return component?.className ?: (context.packageName + ".MainActivity")
     }
 
     companion object {
