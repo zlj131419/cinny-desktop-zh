@@ -8,6 +8,7 @@ import { SettingTile } from '../../../components/setting-tile';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
 import { useRoom } from '../../../hooks/useRoom';
 import { useIsRoomCreator } from '../../../hooks/useIsRoomCreator';
+import { useRoomCreators } from '../../../hooks/useRoomCreators';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useAdminService } from '../../admin/useAdminService';
 
@@ -16,7 +17,14 @@ export function RoomRecommend() {
   const mx = useMatrixClient();
   const room = useRoom();
   // 用服务端判断创建者（有数据库兜底），比客户端可靠
-  const { isCreator, loading: creatorLoading } = useIsRoomCreator(room);
+  const { isCreator: isCreatorServer, loading: creatorLoadingServer } = useIsRoomCreator(room);
+  // 服务端创建者库对新房间可能没有记录（接口失败也判否），本地用 m.room.create
+  // 事件的发送者兜底：本地能证明是创建者时直接放行，不再被服务端缺记录卡住
+  const localCreators = useRoomCreators(room);
+  const myUserId = mx.getUserId();
+  const isCreatorLocal = !!myUserId && localCreators.has(myUserId);
+  const isCreator = isCreatorServer || isCreatorLocal;
+  const creatorLoading = creatorLoadingServer && !isCreatorLocal;
   const { enabled, fetchFeatured, recommend, unrecommend } = useAdminService();
 
   // 只有公开房间才允许推荐到探索页
