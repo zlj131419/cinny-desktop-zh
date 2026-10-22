@@ -14,6 +14,7 @@ import {
   EXPLORE_PATH,
   HOME_PATH,
   LOGIN_PATH,
+  ME_PATH,
   INBOX_PATH,
   REGISTER_PATH,
   RESET_PASSWORD_PATH,
@@ -51,6 +52,8 @@ import { Room } from '../features/room';
 import { Lobby } from '../features/lobby';
 import { WelcomePage } from './client/WelcomePage';
 import { SidebarNav } from './client/SidebarNav';
+import { MobileTabBar } from './client/MobileTabBar';
+import { MePage } from './client/MePage';
 import { PageRoot } from '../components/page';
 import { ScreenSize } from '../hooks/useScreenSize';
 import { MobileFriendlyPageNav, MobileFriendlyClientNav } from './MobileFriendly';
@@ -134,7 +137,20 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
                             </MobileFriendlyClientNav>
                           }
                         >
-                          <Outlet />
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              height: '100%',
+                              minHeight: 0,
+                              flex: 1,
+                            }}
+                          >
+                            <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+                              <Outlet />
+                            </div>
+                            <MobileTabBar />
+                          </div>
                         </ClientLayout>
                         <CallStatusRenderer />
                       </CallEmbedProvider>
@@ -271,6 +287,7 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
           <Route path={_MANAGE_PATH} element={<AdminManagePage />} />
           <Route path={_SERVER_PATH} element={<PublicRooms />} />
         </Route>
+        <Route path={ME_PATH} element={<MePage />} />
         <Route path={CREATE_PATH} element={<Create />} />
         <Route
           path={INBOX_PATH}
