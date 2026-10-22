@@ -29,6 +29,8 @@ import { FALLBACK_MIMETYPE, getBlobSafeMimeType } from '../../utils/mimeTypes';
 import { parseGeoUri, scaleYDimension } from '../../utils/common';
 import { Attachment, AttachmentBox, AttachmentContent, AttachmentHeader } from './attachment';
 import { FileHeader, FileDownloadButton } from './FileHeader';
+import { VoiceMessageContent } from './content/VoiceMessageContent';
+import { EncryptedAttachmentInfo } from 'browser-encrypt-attachment';
 
 export function MBadEncrypted() {
   return (
@@ -316,6 +318,24 @@ export function MAudio({ content, renderAsFile, renderAudioContent, outlined }: 
   }
 
   const filename = content.filename ?? content.body ?? 'Audio';
+
+  // 语音消息（MSC3245 标记或带 MSC1767 音频数据）：渲染成紧凑语音条，不走文件附件样式
+  const rawContent = content as unknown as Record<string, unknown>;
+  const msc1767Audio = rawContent['org.matrix.msc1767.audio'] as
+    | { waveform?: number[] }
+    | undefined;
+  if (rawContent['org.matrix.msc3245.voice'] || msc1767Audio) {
+    return (
+      <VoiceMessageContent
+        mimeType={safeMimeType}
+        url={mxcUrl}
+        info={audioInfo}
+        encInfo={content.file as EncryptedAttachmentInfo | undefined}
+        waveform={msc1767Audio?.waveform}
+      />
+    );
+  }
+
   return (
     <Attachment outlined={outlined}>
       <AttachmentHeader>
