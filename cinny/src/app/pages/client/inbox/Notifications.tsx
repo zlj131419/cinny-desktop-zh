@@ -167,7 +167,7 @@ const useNotificationTimeline = (
         paginationLimit,
         onlyHighlight ? 'highlight' : undefined
       );
-      const groups = groupNotifications(data.notifications, allJoinedRooms);
+      const groups = groupNotifications(data.notifications.filter((n) => !n.read), allJoinedRooms);
 
       setNotificationTimeline((currentTimeline) => {
         if (currentTimeline.nextToken === from) {
@@ -192,7 +192,7 @@ const useNotificationTimeline = (
       paginationLimit,
       onlyHighlight ? 'highlight' : undefined
     );
-    const groups = groupNotifications(data.notifications, allJoinedRooms);
+    const groups = groupNotifications(data.notifications.filter((n) => !n.read), allJoinedRooms);
     setNotificationTimeline({
       nextToken: data.next_token,
       groups,
