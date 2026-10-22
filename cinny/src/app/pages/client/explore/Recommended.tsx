@@ -1,5 +1,20 @@
-import React, { useEffect } from 'react';
-import { Box, Icon, IconButton, Icons, Scroll, Spinner, Text, color } from 'folds';
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Button,
+  Dialog,
+  Icon,
+  IconButton,
+  Icons,
+  Overlay,
+  OverlayBackdrop,
+  OverlayCenter,
+  Scroll,
+  Spinner,
+  Text,
+  color,
+} from 'folds';
+import FocusTrap from 'focus-trap-react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { RoomCard, RoomCardGrid } from '../../../components/room-card';
@@ -18,6 +33,7 @@ import { useRoomNavigate } from '../../../hooks/useRoomNavigate';
 import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import { BackRouteHandler } from '../../../components/BackRouteHandler';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
+import { stopPropagation } from '../../../utils/keyboard';
 import { FeaturedEntry, useAdminService } from '../../../features/admin/useAdminService';
 import { FeaturedContent, FeaturedRooms } from './Featured';
 
@@ -26,12 +42,15 @@ function FeaturedEntryCards({
   allRooms,
   onView,
   renderTopicViewer,
+  onPinClick,
 }: {
   entries: FeaturedEntry[];
   allRooms: string[];
   onView: (roomId: string) => void;
   renderTopicViewer: (name: string, topic: string, requestClose: () => void) => React.ReactNode;
+  onPinClick?: (entry: FeaturedEntry) => void;
 }) {
+  const { t } = useTranslation();
   // 直接用服务端补齐的名字/简介/头像/人数，同步渲染，不再异步调 summary 接口，
   // 避免首次打开时先闪一下房间 ID。
   // 已加入的房间 RoomCard 内部会用本地实时名字覆盖。
@@ -39,27 +58,164 @@ function FeaturedEntryCards({
   return (
     <RoomCardGrid>
       {entries.map((entry) => (
-        <RoomCard
-          key={entry.room_id}
-          roomIdOrAlias={entry.room_id}
-          allRooms={allRooms}
-          avatarUrl={entry.avatar_url}
-          name={entry.name}
-          topic={entry.topic}
-          memberCount={entry.member_count}
-          onView={onView}
-          renderTopicViewer={renderTopicViewer}
-        />
+        <Box key={entry.room_id} direction="Column" gap="100">
+          <RoomCard
+            roomIdOrAlias={entry.room_id}
+            allRooms={allRooms}
+            avatarUrl={entry.avatar_url}
+            name={entry.name}
+            topic={entry.topic}
+            memberCount={entry.member_count}
+            onView={onView}
+            renderTopicViewer={renderTopicViewer}
+          />
+          {onPinClick && (
+            <Box alignItems="Center" gap="100">
+              <Icon size="200" src={Icons.Pin} />
+              <Text size="T200" priority="400">
+                {entry.pin_score
+                  ? `${t('pages:client.explore.pin_pinned')} · ${entry.pin_score}`
+                  : t('pages:client.explore.pin_unpinned')}
+              </Text>
+              <Button
+                size="300"
+                variant="Secondary"
+                fill="Soft"
+                radii="300"
+                outlined
+                onClick={() => onPinClick(entry)}
+              >
+                <Text size="B300">
+                  {entry.pin_score
+                    ? t('pages:client.explore.pin_set_score')
+                    : t('pages:client.explore.pin')}
+                </Text>
+              </Button>
+            </Box>
+          )}
+        </Box>
       ))}
     </RoomCardGrid>
   );
 }
 
+// 超级管理员置顶设置：选 1-10 分，分值越高在推荐页越靠前；保存走管理服务 pin 接口
+function PinDialog({
+  entry,
+  onClose,
+  onSave,
+}: {
+  entry: FeaturedEntry;
+  onClose: () => void;
+  onSave: (score: number) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [score, setScore] = useState(
+    entry.pin_score && entry.pin_score > 0 ? entry.pin_score : 5
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (value: number) => {
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(value);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Overlay open backdrop={<OverlayBackdrop />}>
+      <OverlayCenter>
+        <FocusTrap
+          focusTrapOptions={{
+            initialFocus: false,
+            clickOutsideDeactivates: true,
+            onDeactivate: onClose,
+            escapeDeactivates: stopPropagation,
+          }}
+        >
+          <Dialog variant="Surface">
+            <Box style={{ padding: '16px', minWidth: '280px' }} direction="Column" gap="400">
+              <Box direction="Column" gap="100">
+                <Text size="H4">{t('pages:client.explore.pin_title')}</Text>
+                <Text size="T300" priority="400">
+                  {entry.name ?? entry.room_id}
+                </Text>
+                <Text size="T300" priority="400">
+                  {t('pages:client.explore.pin_score_label')}
+                </Text>
+              </Box>
+              <Box gap="100" style={{ flexWrap: 'wrap' }}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <Button
+                    key={n}
+                    size="300"
+                    radii="300"
+                    variant={score === n ? 'Primary' : 'Secondary'}
+                    fill={score === n ? 'Solid' : 'Soft'}
+                    onClick={() => setScore(n)}
+                  >
+                    <Text size="B300">{n}</Text>
+                  </Button>
+                ))}
+              </Box>
+              {error && (
+                <Text size="T300" style={{ color: color.Critical.Main }}>
+                  {t('pages:client.explore.pin_failed')}：{error}
+                </Text>
+              )}
+              <Box gap="200" justifyContent="End">
+                {!!entry.pin_score && (
+                  <Button
+                    size="400"
+                    variant="Critical"
+                    fill="Soft"
+                    radii="300"
+                    onClick={() => void save(0)}
+                    disabled={saving}
+                  >
+                    <Text size="B400">{t('pages:client.explore.pin_unpin')}</Text>
+                  </Button>
+                )}
+                <Button
+                  size="400"
+                  variant="Secondary"
+                  fill="Soft"
+                  radii="300"
+                  onClick={onClose}
+                  disabled={saving}
+                >
+                  <Text size="B400">{t('pages:client.explore.cancel')}</Text>
+                </Button>
+                <Button
+                  size="400"
+                  variant="Primary"
+                  radii="300"
+                  onClick={() => void save(score)}
+                  disabled={saving}
+                >
+                  <Text size="B400">{t('pages:client.explore.pin_save')}</Text>
+                </Button>
+              </Box>
+            </Box>
+          </Dialog>
+        </FocusTrap>
+      </OverlayCenter>
+    </Overlay>
+  );
+}
+
 export function RecommendedContent({ compact }: { compact?: boolean }) {
   const { t } = useTranslation();
-  const { enabled, fetchFeatured } = useAdminService();
+  const { enabled, fetchFeatured, isSuperAdmin, pin } = useAdminService();
   const allRooms = useAtomValue(allRoomsAtom);
   const { navigateSpace, navigateRoom } = useRoomNavigate();
+  const [pinTarget, setPinTarget] = useState<FeaturedEntry | null>(null);
 
   const [featuredState, loadFeatured] = useAsyncCallback(fetchFeatured);
 
@@ -69,8 +225,15 @@ export function RecommendedContent({ compact }: { compact?: boolean }) {
 
   const data = featuredState.status === AsyncStatus.Success ? featuredState.data : undefined;
   const blockedIds = new Set((data?.blocked ?? []).map((b) => b.room_id));
-  const spaces = (data?.spaces ?? []).filter((s) => !blockedIds.has(s.room_id));
-  const rooms = (data?.rooms ?? []).filter((r) => !blockedIds.has(r.room_id));
+  // 置顶排序：分值高的在前；同分保持服务端原顺序（sort 是稳定排序）
+  const byPinScore = (a: FeaturedEntry, b: FeaturedEntry) =>
+    (b.pin_score ?? 0) - (a.pin_score ?? 0);
+  const spaces = [...(data?.spaces ?? [])]
+    .filter((s) => !blockedIds.has(s.room_id))
+    .sort(byPinScore);
+  const rooms = [...(data?.rooms ?? [])]
+    .filter((r) => !blockedIds.has(r.room_id))
+    .sort(byPinScore);
 
   const renderTopicViewer = (name: string, topic: string, requestClose: () => void) => (
     <RoomTopicViewer name={name} topic={topic} requestClose={requestClose} />
@@ -125,6 +288,7 @@ export function RecommendedContent({ compact }: { compact?: boolean }) {
               allRooms={allRooms}
               onView={navigateSpace}
               renderTopicViewer={renderTopicViewer}
+              onPinClick={isSuperAdmin ? setPinTarget : undefined}
             />
           </Box>
         )}
@@ -136,6 +300,7 @@ export function RecommendedContent({ compact }: { compact?: boolean }) {
               allRooms={allRooms}
               onView={navigateRoom}
               renderTopicViewer={renderTopicViewer}
+              onPinClick={isSuperAdmin ? setPinTarget : undefined}
             />
           </Box>
         )}
@@ -154,6 +319,16 @@ export function RecommendedContent({ compact }: { compact?: boolean }) {
           </Box>
         )}
       </Box>
+      {pinTarget && (
+        <PinDialog
+          entry={pinTarget}
+          onClose={() => setPinTarget(null)}
+          onSave={async (score) => {
+            await pin(pinTarget.room_id, pinTarget.kind, score);
+            loadFeatured();
+          }}
+        />
+      )}
     </Box>
   );
 }
