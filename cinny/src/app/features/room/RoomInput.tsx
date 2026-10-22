@@ -20,10 +20,13 @@ import {
   IconButton,
   Icons,
   Line,
+  Menu,
+  MenuItem,
   Overlay,
   OverlayBackdrop,
   OverlayCenter,
   PopOut,
+  RectCords,
   Scroll,
   Text,
   config,
@@ -102,6 +105,8 @@ import {
 } from './msgContent';
 import { getMemberDisplayName, getMentionContent, trimReplyFromBody } from '../../utils/room';
 import { CommandAutocomplete } from './CommandAutocomplete';
+import { VoiceRecorderBar } from './VoiceRecorder';
+import { CreatePoll } from './CreatePoll';
 import { Command, SHRUG, TABLEFLIP, UNFLIP, useCommands } from '../../hooks/useCommands';
 import { mobileOrTablet } from '../../utils/user-agent';
 import { useElementSizeObserver } from '../../hooks/useElementSizeObserver';
@@ -216,6 +221,84 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       [setSelectedFiles, room]
     );
     const pickFile = useFilePicker(handleFiles, true);
+
+    const [recording, setRecording] = useState(false);
+    const [plusAnchor, setPlusAnchor] = useState<RectCords>();
+    const [pollOpen, setPollOpen] = useState(false);
+
+    // 语音录音产物走现有附件管线（加密房自动加密），带时长/波形/语音标记
+    const handleVoiceFile = useCallback(
+      async (file: File, durationMs: number, waveform: number[]) => {
+        setRecording(false);
+        setUploadBoard(true);
+        const safe = safeFile(file);
+        const metadata = {
+          markedAsSpoiler: false,
+          audioDuration: durationMs,
+          voiceMessage: true,
+          waveform,
+        };
+        if (room.hasEncryptionStateEvent()) {
+          const ef = await encryptFile(safe).catch(() => undefined);
+          if (ef) {
+            setSelectedFiles({ type: 'PUT', item: [{ ...ef, metadata }] });
+          }
+          return;
+        }
+        setSelectedFiles({
+          type: 'PUT',
+          item: [{ file: safe, originalFile: safe, encInfo: undefined, metadata }],
+        });
+      },
+      [room, setSelectedFiles]
+    );
+
+    // 带 capture 的文件选择（拍摄照片/录制视频）：移动端调起相机，桌面端退化为文件选择
+    const pickCaptureFile = useCallback(
+      (accept: string, capture?: string) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = accept;
+        if (capture) {
+          input.setAttribute('capture', capture);
+        } else {
+          input.multiple = true;
+        }
+        input.style.display = 'none';
+        input.onchange = () => {
+          const files = input.files ? Array.from(input.files) : [];
+          input.remove();
+          if (files.length > 0) void handleFiles(files);
+        };
+        document.body.appendChild(input);
+        input.click();
+      },
+      [handleFiles]
+    );
+
+    // 发起投票（MSC3381 m.poll.start，与 Element 互通）
+    const handleCreatePoll = useCallback(
+      (question: string, options: string[]) => {
+        setPollOpen(false);
+        const answers = options.map((text, i) => ({
+          id: `opt${i}_${Math.random().toString(36).slice(2, 8)}`,
+          'org.matrix.msc1767.text': text,
+        }));
+        const fallbackText = [question, ...options.map((o, i) => `${i + 1}. ${o}`)].join('\n');
+        void mx
+          .sendEvent(roomId, 'm.poll.start' as unknown as EventType, {
+            'org.matrix.msc3381.poll.start': {
+              question: { 'org.matrix.msc1767.text': question },
+              kind: 'org.matrix.msc3381.poll.disclosed',
+              max_selections: 1,
+              answers,
+            },
+            'org.matrix.msc1767.text': fallbackText,
+          })
+          .catch(() => undefined);
+      },
+      [mx, roomId]
+    );
     const handlePaste = useFilePasteHandler(handleFiles);
     const dropZoneVisible = useFileDropZone(fileDropContainerRef, handleFiles);
     const [hideStickerBtn, setHideStickerBtn] = useState(document.body.clientWidth < 500);
@@ -538,6 +621,9 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
             requestClose={handleCloseAutocomplete}
           />
         )}
+        {recording ? (
+          <VoiceRecorderBar onCancel={() => setRecording(false)} onSend={handleVoiceFile} />
+        ) : (
         <CustomEditor
           editableName="RoomInput"
           editor={editor}
@@ -585,14 +671,86 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
             )
           }
           before={
-            <IconButton
-              onClick={() => pickFile('*')}
-              variant="SurfaceVariant"
-              size="300"
-              radii="300"
-            >
-              <Icon src={Icons.PlusCircle} />
-            </IconButton>
+            <>
+              <PopOut
+                offset={16}
+                position="Top"
+                align="Start"
+                anchor={plusAnchor}
+                content={
+                  <Menu style={{ padding: config.space.S100, minWidth: toRem(210) }}>
+                    <MenuItem
+                      onClick={() => {
+                        setPlusAnchor(undefined);
+                        pickCaptureFile('image/*', 'environment');
+                      }}
+                      before={<Icon src={Icons.Camera} />}
+                    >
+                      <Text size="T300">拍摄照片</Text>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setPlusAnchor(undefined);
+                        pickCaptureFile('video/*', 'environment');
+                      }}
+                      before={<Icon src={Icons.VideoCamera} />}
+                    >
+                      <Text size="T300">录制视频</Text>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setPlusAnchor(undefined);
+                        pickCaptureFile('image/*,video/*');
+                      }}
+                      before={<Icon src={Icons.Photo} />}
+                    >
+                      <Text size="T300">照片和影视库</Text>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setPlusAnchor(undefined);
+                        pickFile('*');
+                      }}
+                      before={<Icon src={Icons.Attachment} />}
+                    >
+                      <Text size="T300">附件</Text>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setPlusAnchor(undefined);
+                        setPollOpen(true);
+                      }}
+                      before={<Icon src={Icons.List} />}
+                    >
+                      <Text size="T300">投票</Text>
+                    </MenuItem>
+                  </Menu>
+                }
+              >
+                <IconButton
+                  onClick={(evt) =>
+                    setPlusAnchor(
+                      plusAnchor ? undefined : evt.currentTarget.getBoundingClientRect()
+                    )
+                  }
+                  variant="SurfaceVariant"
+                  size="300"
+                  radii="300"
+                  aria-label="更多选项"
+                >
+                  <Icon src={Icons.PlusCircle} />
+                </IconButton>
+              </PopOut>
+              <IconButton
+                onClick={() => setRecording(true)}
+                variant="SurfaceVariant"
+                size="300"
+                radii="300"
+                aria-label={t('features:room.voice_message')}
+              >
+                <Icon src={Icons.Mic} />
+              </IconButton>
+            </>
           }
           after={
             <>
@@ -685,6 +843,8 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
             )
           }
         />
+        )}
+        <CreatePoll open={pollOpen} onClose={() => setPollOpen(false)} onCreate={handleCreatePoll} />
       </div>
     );
   }
