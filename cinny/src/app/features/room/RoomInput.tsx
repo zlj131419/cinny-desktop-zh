@@ -111,7 +111,6 @@ import FocusTrap from 'focus-trap-react';
 import { stopPropagation } from '../../utils/keyboard';
 import { Command, SHRUG, TABLEFLIP, UNFLIP, useCommands } from '../../hooks/useCommands';
 import { mobileOrTablet } from '../../utils/user-agent';
-import { useElementSizeObserver } from '../../hooks/useElementSizeObserver';
 import { ReplyLayout, ThreadIndicator } from '../../components/message';
 import { roomToParentsAtom } from '../../state/room/roomToParents';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
@@ -303,14 +302,8 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
     );
     const handlePaste = useFilePasteHandler(handleFiles);
     const dropZoneVisible = useFileDropZone(fileDropContainerRef, handleFiles);
-    const [hideStickerBtn, setHideStickerBtn] = useState(document.body.clientWidth < 500);
 
     const isComposing = useComposingCheck();
-
-    useElementSizeObserver(
-      useCallback(() => fileDropContainerRef.current, [fileDropContainerRef]),
-      useCallback((width) => setHideStickerBtn(width < 500), [])
-    );
 
     useEffect(() => {
       Transforms.insertFragment(editor, msgDraft);
@@ -699,7 +692,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                           setPlusAnchor(undefined);
                           pickCaptureFile('image/*', 'environment');
                         }}
-                        before={<Icon src={Icons.Camera} />}
+                        before={<Icon src={Icons.Photo} />}
                       >
                         <Text size="T300">拍摄照片</Text>
                       </MenuItem>
@@ -723,7 +716,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                           setPlusAnchor(undefined);
                           pickCaptureFile('image/*,video/*');
                         }}
-                        before={<Icon src={Icons.Photo} />}
+                        before={<Icon src={Icons.Category} />}
                       >
                         <Text size="T300">照片和影视库</Text>
                       </MenuItem>
@@ -747,7 +740,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                           setPlusAnchor(undefined);
                           setPollOpen(true);
                         }}
-                        before={<Icon src={Icons.List} />}
+                        before={<Icon src={Icons.UnorderList} />}
                       >
                         <Text size="T300">投票</Text>
                       </MenuItem>
@@ -823,36 +816,15 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
                       />
                     }
                   >
-                    {!hideStickerBtn && (
-                      <IconButton
-                        aria-pressed={emojiBoardTab === EmojiBoardTab.Sticker}
-                        onClick={() => setEmojiBoardTab(EmojiBoardTab.Sticker)}
-                        variant="SurfaceVariant"
-                        size="300"
-                        radii="300"
-                      >
-                        <Icon
-                          src={Icons.Sticker}
-                          filled={emojiBoardTab === EmojiBoardTab.Sticker}
-                        />
-                      </IconButton>
-                    )}
                     <IconButton
                       ref={emojiBtnRef}
-                      aria-pressed={
-                        hideStickerBtn ? !!emojiBoardTab : emojiBoardTab === EmojiBoardTab.Emoji
-                      }
+                      aria-pressed={emojiBoardTab === EmojiBoardTab.Emoji}
                       onClick={() => setEmojiBoardTab(EmojiBoardTab.Emoji)}
                       variant="SurfaceVariant"
                       size="300"
                       radii="300"
                     >
-                      <Icon
-                        src={Icons.Smile}
-                        filled={
-                          hideStickerBtn ? !!emojiBoardTab : emojiBoardTab === EmojiBoardTab.Emoji
-                        }
-                      />
+                      <Icon src={Icons.Smile} filled={emojiBoardTab === EmojiBoardTab.Emoji} />
                     </IconButton>
                   </PopOut>
                 )}
