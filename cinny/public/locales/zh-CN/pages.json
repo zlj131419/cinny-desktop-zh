@@ -116,7 +116,7 @@
 			"direct_message": "私信",
 			"create_chat": "创建聊天",
 			"chats": "聊天",
-			"start_a_private_encrypted_chat": "输入用户 ID 创建一个加密私信。"
+			"start_a_private_encrypted_chat": "输入用户名或用户 ID 创建一个加密私信。"
 		},
 		"create": {
 			"create_space": "创建空间",
