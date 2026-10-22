@@ -12,16 +12,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import app.tauri.annotation.Command
-import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
-
-@InvokeArg
-class SetBadgeArgs {
-    var count: Int = 0
-}
 
 /**
  * 私语后台保活插件：登录后启动前台服务，让进程保持前台级优先级，
@@ -112,8 +106,8 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
      */
     @Command
     fun setBadge(invoke: Invoke) {
-        val args = invoke.getArgs(SetBadgeArgs::class.java)
-        val count = if (args.count < 0) 0 else args.count
+        val rawCount = invoke.getArgs().optInt("count", 0)
+        val count = if (rawCount < 0) 0 else rawCount
         val context = activity.applicationContext
         var ok = false
         try {
