@@ -155,7 +155,12 @@ export function VoiceMessageContent({
         alignItems="Center"
         gap="100"
         onClick={handleWaveformClick}
-        style={{ height: toRem(28), cursor: srcState.status === AsyncStatus.Success ? 'pointer' : 'default' }}
+        style={{
+          height: toRem(28),
+          minWidth: 0,
+          overflow: 'hidden',
+          cursor: srcState.status === AsyncStatus.Success ? 'pointer' : 'default',
+        }}
         aria-hidden
       >
         {bars.map((v, i) => {
@@ -165,8 +170,9 @@ export function VoiceMessageContent({
               // eslint-disable-next-line react/no-array-index-key
               key={i}
               style={{
-                flexShrink: 0,
-                width: toRem(3),
+                flex: '1 1 0',
+                minWidth: toRem(2),
+                maxWidth: toRem(3),
                 height: toRem(4 + v * 20),
                 borderRadius: toRem(2),
                 backgroundColor: played ? color.Primary.Container : 'rgba(127,127,127,0.55)',
