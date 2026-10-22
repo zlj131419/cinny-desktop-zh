@@ -137,6 +137,16 @@ export const getAudioMsgContent = (item: TUploadItem, mxc: string): IContent => 
       size: file.size,
     },
   };
+  // 语音消息（参照 Element/MSC3245+MSC1767）：带时长与波形，客户端渲染成语音条
+  if (item.metadata.voiceMessage) {
+    const duration = item.metadata.audioDuration ?? 0;
+    content.info = { ...content.info, duration };
+    content['org.matrix.msc3245.voice'] = {};
+    content['org.matrix.msc1767.audio'] = {
+      duration,
+      waveform: item.metadata.waveform ?? [],
+    };
+  }
   if (encInfo) {
     content.file = {
       ...encInfo,
