@@ -1322,7 +1322,7 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
             <EventContent
               messageLayout={messageLayout}
               time={timeJSX}
-              iconSrc={Icons.List}
+              iconSrc={Icons.UnorderList}
               content={<PollTile room={room} mEvent={mEvent} />}
             />
           </Event>
