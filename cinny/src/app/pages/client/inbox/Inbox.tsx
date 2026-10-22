@@ -1,9 +1,11 @@
 import React from 'react';
-import { Avatar, Box, Icon, Icons, Text } from 'folds';
+import { Avatar, Box, Icon, IconButton, Icons, Text } from 'folds';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { NavCategory, NavItem, NavItemContent, NavLink } from '../../../components/nav';
-import { getInboxInvitesPath, getInboxNotificationsPath } from '../../pathUtils';
+import { getHomePath, getInboxInvitesPath, getInboxNotificationsPath } from '../../pathUtils';
+import { useNavigate } from 'react-router-dom';
+import { ScreenSize, useScreenSizeContext } from '../../../hooks/useScreenSize';
 import {
   useInboxInvitesSelected,
   useInboxNotificationsSelected,
@@ -48,12 +50,25 @@ function InvitesNavItem() {
 export function Inbox() {
   const { t } = useTranslation();
   useNavToActivePathMapper('inbox');
+  const screenSize = useScreenSizeContext();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if ((window.history.state as { idx?: number } | null)?.idx) navigate(-1);
+    else navigate(getHomePath());
+  };
   const notificationsSelected = useInboxNotificationsSelected();
 
   return (
     <PageNav>
       <PageNavHeader>
-        <Box grow="Yes" gap="300">
+        <Box alignItems="Center" grow="Yes" gap="300">
+          {screenSize === ScreenSize.Mobile && (
+            <Box shrink="No" alignItems="Center">
+              <IconButton fill="None" onClick={goBack}>
+                <Icon src={Icons.ArrowLeft} />
+              </IconButton>
+            </Box>
+          )}
           <Box grow="Yes">
             <Text size="H4" truncate>
               {t('pages:client.inbox.inbox')}
