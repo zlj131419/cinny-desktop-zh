@@ -8,6 +8,21 @@
  * 真值（矮到全高 85% 以下判定），照用 vv，输入框贴键盘。
  * 安卓 WebView 原生随键盘 resize 窗口，不介入（强钉高度反而压住输入框）。
  */
+/**
+ * 键盘是否弹起（以可视视口为准）：vv 高度矮于屏幕全高 85% 即认为键盘占位。
+ * 判断键盘状态全局只用这一处——历史上输入框组件另用 innerHeight 差值判断，
+ * 在 iOS 上 innerHeight 会随键盘一起缩、差值约 0，两处判断打架，安全区
+ * 垫高收不起来、变成输入框下方的黑带。
+ */
+export function isKeyboardVisuallyOpen(): boolean {
+  if (typeof window === 'undefined' || !window.visualViewport) return false;
+  const portrait = window.matchMedia('(orientation: portrait)').matches;
+  const full = portrait
+    ? Math.max(screen.width, screen.height)
+    : Math.min(screen.width, screen.height);
+  return window.visualViewport.height < full * 0.85;
+}
+
 export function initAppViewport(): void {
   if (typeof window === 'undefined' || !window.visualViewport) return;
   if (!window.matchMedia('(pointer: coarse)').matches) return;
@@ -32,7 +47,7 @@ export function initAppViewport(): void {
     const fullH = portrait ? sLong : sShort;
     const fullW = portrait ? sShort : sLong;
     // vv 矮于全高 85% 才认为键盘占位（键盘开时约 60%，关时约 93%~100%）
-    const keyboardActive = vvH < fullH * 0.85;
+    const keyboardActive = isKeyboardVisuallyOpen();
     let target = vvH;
     if (!keyboardActive && isStandalone && Math.round(vv.width) === fullW) {
       target = fullH;
@@ -40,7 +55,12 @@ export function initAppViewport(): void {
     rootEl.style.setProperty('--siyu-vh', `${target}px`);
     // 外壳是 fixed 定位，top 必须跟住可视视口的偏移：键盘弹起时 iOS 滚动
     // 可视视口（offsetTop 变大），不跟偏移外壳就飞离可见区
-    rootEl.style.setProperty('--siyu-vt', `${Math.round(vv.offsetTop)}px`);
+    // 键盘关闭时强制归零：关闭动画中途若 offsetTop 残值被留住，外壳会被
+    // 整体下推、底部导航沉到屏幕外（v177 实测回归）
+    rootEl.style.setProperty(
+      '--siyu-vt',
+      `${keyboardActive ? Math.round(vv.offsetTop) : 0}px`
+    );
     // 键盘弹起时不抢滚动：系统要把输入框滚进可见区，强行 scrollTo(0,0) 会把
     // 输入框拽到顶、发送按钮滚没（真机实测）
     if (!keyboardActive && window.scrollY !== 0) window.scrollTo(0, 0);
@@ -58,7 +78,10 @@ export function initAppViewport(): void {
     if (!document.hidden) sync();
   });
   document.addEventListener('focusin', () => window.setTimeout(sync, 50));
-  document.addEventListener('focusout', () => window.setTimeout(sync, 50));
+  document.addEventListener('focusout', () => {
+    window.setTimeout(sync, 50);
+    window.setTimeout(sync, 350);
+  });
   const onFirstTouch = () => {
     sync();
     window.removeEventListener('touchstart', onFirstTouch);
