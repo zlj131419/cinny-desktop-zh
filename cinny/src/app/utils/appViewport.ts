@@ -24,6 +24,25 @@ export function initAppViewport(): void {
     if (window.scrollY !== 0) window.scrollTo(0, 0);
   };
   vv.addEventListener('resize', sync);
-  window.addEventListener('orientationchange', () => window.setTimeout(sync, 60));
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(sync, 60);
+    window.setTimeout(sync, 350);
+  });
+  // 冷启动时 iOS 给的 visualViewport 高度会偏小（真机实测 894，真实 956），
+  // 且系统悄悄修正时不一定派发 resize——转屏能恢复就是因为强制重测了。
+  // 在页面显示、回前台、获得焦点、首次触摸时都补测一次，并启动后延迟补测，
+  // 让正确高度自己回来，不用靠用户转屏。
+  window.addEventListener('pageshow', sync);
+  window.addEventListener('focus', sync);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) sync();
+  });
+  const onFirstTouch = () => {
+    sync();
+    window.removeEventListener('touchstart', onFirstTouch);
+  };
+  window.addEventListener('touchstart', onFirstTouch);
   sync();
+  window.setTimeout(sync, 300);
+  window.setTimeout(sync, 1000);
 }
