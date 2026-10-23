@@ -38,12 +38,16 @@ export function initAppViewport(): void {
       target = fullH;
     }
     rootEl.style.setProperty('--siyu-vh', `${target}px`);
+    // 外壳是 fixed 定位，top 必须跟住可视视口的偏移：键盘弹起时 iOS 滚动
+    // 可视视口（offsetTop 变大），不跟偏移外壳就飞离可见区
+    rootEl.style.setProperty('--siyu-vt', `${Math.round(vv.offsetTop)}px`);
     // 键盘弹起时不抢滚动：系统要把输入框滚进可见区，强行 scrollTo(0,0) 会把
     // 输入框拽到顶、发送按钮滚没（真机实测）
     if (!keyboardActive && window.scrollY !== 0) window.scrollTo(0, 0);
   };
 
   vv.addEventListener('resize', sync);
+  vv.addEventListener('scroll', sync);
   window.addEventListener('orientationchange', () => {
     window.setTimeout(sync, 60);
     window.setTimeout(sync, 350);
