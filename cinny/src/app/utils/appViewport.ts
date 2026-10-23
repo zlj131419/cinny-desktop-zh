@@ -53,12 +53,10 @@ export function initAppViewport(): void {
       target = fullH;
     }
     rootEl.style.setProperty('--siyu-vh', `${target}px`);
-    // 外壳是 fixed 定位，top 必须跟住可视视口的偏移：键盘弹起时 iOS 滚动
-    // 可视视口（offsetTop 变大），不跟偏移外壳就飞离可见区
-    // 键盘关闭时强制归零：关闭动画中途若 offsetTop 残值被留住，外壳会被
-    // 整体下推、底部导航沉到屏幕外（v177 实测回归）
+    // 键盘弹起时 iOS 平移可视视口（offsetTop 变大），外壳 transform 同量
+    // 跟随（--siyu-ty）；键盘关闭时强制归零，绝不残留
     rootEl.style.setProperty(
-      '--siyu-vt',
+      '--siyu-ty',
       `${keyboardActive ? Math.round(vv.offsetTop) : 0}px`
     );
     // 键盘弹起时不抢滚动：系统要把输入框滚进可见区，强行 scrollTo(0,0) 会把
