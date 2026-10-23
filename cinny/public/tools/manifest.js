@@ -14,7 +14,7 @@ window.__siyuToolsManifest = [
     name: '环境信息（远程）',
     desc: '屏幕/视口/安全区/底栏位置实测 + 运行环境与版本',
     file: 'env-info.js',
-    version: 2,
+    version: 3,
   },
   {
     id: 'voice-probe',
