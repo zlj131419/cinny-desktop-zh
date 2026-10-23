@@ -13,6 +13,7 @@ import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
 import { nameInitials } from '../../utils/common';
 import { setAppBadge } from '../../utils/keepAlive';
+import { isKeyboardVisuallyOpen } from '../../utils/appViewport';
 
 /**
  * 手机版底部导航（微信式）：私语 / 通讯录 / 发现 / 我。
@@ -29,15 +30,15 @@ type TabDef = {
 };
 
 
-// 键盘是否弹起：iOS 键盘弹起时布局视口高（innerHeight）不变、可视视口
-// （visualViewport）变矮，差值即键盘高度；收起时两者相等。安卓窗口被系统
-// 缩高（adjustResize）时两者同步变化、差值约 0，不受影响。
+// 键盘是否弹起：与 appViewport 共用同一判定（vv 高度 vs 屏幕全高），
+// 避免两处口径不一致——旧版用 innerHeight 差值，iOS 上 innerHeight 随
+// 键盘同缩、差值约 0，垫高永远收不起来（输入框下方黑带的成因之一）
 function useKeyboardOpen(): boolean {
   const [kbOpen, setKbOpen] = useState(false);
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return undefined;
-    const onResize = () => setKbOpen(window.innerHeight - vv.height > 100);
+    const onResize = () => setKbOpen(isKeyboardVisuallyOpen());
     vv.addEventListener('resize', onResize);
     onResize();
     return () => vv.removeEventListener('resize', onResize);
