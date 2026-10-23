@@ -287,6 +287,13 @@ jobs:
           # getUserMedia 直接 NotAllowedError 且不弹框——1.0.41 就栽在这里
           if 'RECORD_AUDIO' not in m:
               m = m.replace('<application', '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />\n    <application', 1)
+          # 键盘避让：MainActivity 必须声明 adjustResize，键盘弹起时系统才把窗口
+          # 缩到键盘上方；1.0.42 成品清单实测未声明，输入框被键盘直接盖住。
+          if 'windowSoftInputMode' not in m:
+              import re as _re
+              m2, nsub = _re.subn(r'(<activity[^>]*MainActivity[^>]*?)(\s*/?>)', r'\1 android:windowSoftInputMode="adjustResize"\2', m, count=1)
+              if nsub:
+                  m = m2
           open(man, 'w').write(m)
           print('release fixes applied:', ver, code)
           PYEOF_FIX
@@ -298,6 +305,7 @@ jobs:
           grep -q 'android.permission.RECORD_AUDIO' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "RECORD_AUDIO DID NOT LAND"; exit 1; }
           grep -q 'android.permission.MODIFY_AUDIO_SETTINGS' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "MODIFY_AUDIO_SETTINGS DID NOT LAND"; exit 1; }
           grep -q 'com.huawei.android.launcher.permission.CHANGE_BADGE' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "CHANGE_BADGE DID NOT LAND"; exit 1; }
+          grep -q 'windowSoftInputMode="adjustResize"' src-tauri/gen/android/app/src/main/AndroidManifest.xml || { echo "SOFT_INPUT_MODE DID NOT LAND"; exit 1; }
       - name: Build Android APK
         run: |
           npx shx cp config.json cinny/ && npx tauri android build --apk --target aarch64
