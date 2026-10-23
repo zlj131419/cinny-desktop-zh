@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Avatar, Box, Icon, Icons, Text, color, toRem } from 'folds';
 import { useAtomValue } from 'jotai';
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
@@ -28,8 +28,26 @@ type TabDef = {
   avatar?: React.ReactNode;
 };
 
+
+// 键盘是否弹起：iOS 键盘弹起时布局视口高（innerHeight）不变、可视视口
+// （visualViewport）变矮，差值即键盘高度；收起时两者相等。安卓窗口被系统
+// 缩高（adjustResize）时两者同步变化、差值约 0，不受影响。
+function useKeyboardOpen(): boolean {
+  const [kbOpen, setKbOpen] = useState(false);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    const onResize = () => setKbOpen(window.innerHeight - vv.height > 100);
+    vv.addEventListener('resize', onResize);
+    onResize();
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+  return kbOpen;
+}
+
 export function MobileTabBar() {
   const screenSize = useScreenSizeContext();
+  const kbOpen = useKeyboardOpen();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const mx = useMatrixClient();
@@ -129,7 +147,11 @@ export function MobileTabBar() {
   const inRoom =
     /^\/(home|direct)\/[^/]+/.test(pathname) || /^\/space\/[^/]+\/[^/]+/.test(pathname);
   if (inRoom) {
-    return <Box shrink="No" style={{ height: 'env(safe-area-inset-bottom)' }} />;
+    // 键盘弹起时安全区垫高收起：键盘已盖住小横条区，再留 34px 就成了
+    // 输入框与键盘之间的一块黑带；收起键盘时恢复，保证小横条不压内容
+    return (
+      <Box shrink="No" style={{ height: kbOpen ? 0 : 'env(safe-area-inset-bottom)' }} />
+    );
   }
 
   const displayName = profile.displayName ?? getMxIdLocalPart(userId) ?? userId;
