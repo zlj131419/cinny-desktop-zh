@@ -72,7 +72,13 @@
       "use_ctrl_enter": "按 Ctrl + Enter 发送消息，Enter 换行。",
       "markdown_formatting": "Markdown 格式化",
       "hide_typing_read_receipts": "隐藏输入状态和已读回执",
-      "turn_off_both": "停止向他人显示“正在输入”状态与已读回执，保护您的隐私。"
+      "turn_off_both": "停止向他人显示“正在输入”状态与已读回执，保护您的隐私。",
+      "font_size": "字体大小",
+      "font_small": "小",
+      "font_standard": "标准",
+      "font_large": "大",
+      "font_xlarge": "特大",
+      "font_size_preview": "预览：私语 Siyu 聊天界面字体大小"
     },
     "account": {
       "account": "账户",
