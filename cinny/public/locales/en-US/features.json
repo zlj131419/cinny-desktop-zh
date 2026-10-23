@@ -72,7 +72,13 @@
       "use_ctrl_enter": "Use Ctrl + ENTER to send message and ENTER for newline.",
       "markdown_formatting": "Markdown Formatting",
       "hide_typing_read_receipts": "Hide Typing & Read Receipts",
-      "turn_off_both": "Turn off both typing status and read receipts to keep your activity private."
+      "turn_off_both": "Turn off both typing status and read receipts to keep your activity private.",
+      "font_size": "Font Size",
+      "font_small": "Small",
+      "font_standard": "Standard",
+      "font_large": "Large",
+      "font_xlarge": "Extra Large",
+      "font_size_preview": "Preview: Siyu chat interface font size"
     },
     "account": {
       "account": "Account",
