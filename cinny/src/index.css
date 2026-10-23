@@ -156,8 +156,18 @@ li p::before {
   display: inline-block;
 }
 
-/* 移动端：html 高度跟随 visualViewport 实测值（appViewport.ts 写入 --siyu-vh），
-   冷启动即贴底、键盘弹起时整列随之变矮，输入框直接坐在键盘上 */
+/* 移动端（iOS）：外壳 #root 用 fixed 定位直接贴合 visualViewport——top 跟
+   vv.offsetTop（--siyu-vt）、height 跟 --siyu-vh（appViewport.ts 写入）。
+   键盘弹起时 iOS 会滚动可视视口（offsetTop 变大），只改高度不跟偏移的话，
+   外壳还钉在文档顶部，就会出现输入框飞到顶部、下方大片黑区；fixed+偏移
+   跟随让外壳严丝合缝盖住当前可见区，输入框永远坐在键盘上。 */
 html.siyu-vv {
+  height: 100%;
+}
+html.siyu-vv #root {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--siyu-vt, 0px);
   height: var(--siyu-vh, 100dvh);
 }
