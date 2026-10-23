@@ -1,16 +1,16 @@
 /**
- * 移动端视口高度同步（仅触屏设备启用，桌面端不介入）：
- * 1) iOS PWA 冷启动时 100dvh 可能和真实可见高度对不上，底部导航要转一次屏才贴底；
- * 2) 键盘弹起时 dvh 不跟着缩，输入框与键盘之间会空出一大截。
- * visualViewport.height 始终是当前真实可见高度，转屏/键盘开关都会触发它的 resize，
- * 把它同步到 --siyu-vh 让 html 高度以它为准，两个问题一并解决。
+ * 移动端视口高度同步（仅 iOS 启用，桌面/安卓不介入）：
+ * iOS PWA 冷启动会把 visualViewport 高度报矮（真机实测报 894，屏幕真实 956，
+ * 差的 62px 正是顶部安全区高度），且之后不派发任何事件纠正，只有转屏才重报
+ * 真值——页面若照单全收，底部就永远空出一条 62px 的黑带、底栏上浮。
+ * 故：键盘未弹起时，在全屏（standalone）且整屏宽的前提下，直接以屏幕真实
+ * 高度（screen 长短边按方向取）为准摆正，不信 vv 的矮值；键盘弹起时 vv 才是
+ * 真值（矮到全高 85% 以下判定），照用 vv，输入框贴键盘。
+ * 安卓 WebView 原生随键盘 resize 窗口，不介入（强钉高度反而压住输入框）。
  */
 export function initAppViewport(): void {
   if (typeof window === 'undefined' || !window.visualViewport) return;
   if (!window.matchMedia('(pointer: coarse)').matches) return;
-  // 只给 iOS 用：它的 dvh 冷启动对不齐、键盘弹起不缩，必须靠 visualViewport 纠正。
-  // 安卓（浏览器和 App 的 WebView）原生就会随键盘resize窗口，强行钉高度反而会把
-  // 输入框压在键盘下面，故不介入。
   const ua = navigator.userAgent;
   const isIOS =
     /iPhone|iPad|iPod/i.test(ua) ||
@@ -19,24 +19,42 @@ export function initAppViewport(): void {
   const vv = window.visualViewport;
   const rootEl = document.documentElement;
   rootEl.classList.add('siyu-vv');
+
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true;
+
   const sync = () => {
-    rootEl.style.setProperty('--siyu-vh', `${Math.round(vv.height)}px`);
-    if (window.scrollY !== 0) window.scrollTo(0, 0);
+    const vvH = Math.round(vv.height);
+    const portrait = window.matchMedia('(orientation: portrait)').matches;
+    const sLong = Math.max(screen.width, screen.height);
+    const sShort = Math.min(screen.width, screen.height);
+    const fullH = portrait ? sLong : sShort;
+    const fullW = portrait ? sShort : sLong;
+    // vv 矮于全高 85% 才认为键盘占位（键盘开时约 60%，关时约 93%~100%）
+    const keyboardActive = vvH < fullH * 0.85;
+    let target = vvH;
+    if (!keyboardActive && isStandalone && Math.round(vv.width) === fullW) {
+      target = fullH;
+    }
+    rootEl.style.setProperty('--siyu-vh', `${target}px`);
+    // 键盘弹起时不抢滚动：系统要把输入框滚进可见区，强行 scrollTo(0,0) 会把
+    // 输入框拽到顶、发送按钮滚没（真机实测）
+    if (!keyboardActive && window.scrollY !== 0) window.scrollTo(0, 0);
   };
+
   vv.addEventListener('resize', sync);
   window.addEventListener('orientationchange', () => {
     window.setTimeout(sync, 60);
     window.setTimeout(sync, 350);
   });
-  // 冷启动时 iOS 给的 visualViewport 高度会偏小（真机实测 894，真实 956），
-  // 且系统悄悄修正时不一定派发 resize——转屏能恢复就是因为强制重测了。
-  // 在页面显示、回前台、获得焦点、首次触摸时都补测一次，并启动后延迟补测，
-  // 让正确高度自己回来，不用靠用户转屏。
   window.addEventListener('pageshow', sync);
   window.addEventListener('focus', sync);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) sync();
   });
+  document.addEventListener('focusin', () => window.setTimeout(sync, 50));
+  document.addEventListener('focusout', () => window.setTimeout(sync, 50));
   const onFirstTouch = () => {
     sync();
     window.removeEventListener('touchstart', onFirstTouch);
