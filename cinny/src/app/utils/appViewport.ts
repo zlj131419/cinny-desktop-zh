@@ -53,11 +53,14 @@ export function initAppViewport(): void {
       target = fullH;
     }
     rootEl.style.setProperty('--siyu-vh', `${target}px`);
-    // 键盘弹起时 iOS 平移可视视口（offsetTop 变大），外壳 transform 同量
-    // 跟随（--siyu-ty）；键盘关闭时强制归零，绝不残留
+    // 键盘弹起时外壳 transform 跟随页面实际滚动量（--siyu-ty）。注意基准
+    // 必须是 window.scrollY 而非 vv.offsetTop：真机实测（iPhone 18.7）键盘
+    // 打开时 scrollY=373 而 offsetTop=311，差的 62px 正是被吞掉的量——用
+    // offsetTop 时外壳顶 rect=-62、底部空出 62px 黑带；scrollY 与 rect
+    // 完全自洽（311-373=-62）。键盘关闭时强制归零，绝不残留
     rootEl.style.setProperty(
       '--siyu-ty',
-      `${keyboardActive ? Math.round(vv.offsetTop) : 0}px`
+      `${keyboardActive ? Math.round(window.scrollY) : 0}px`
     );
     // 键盘弹起时不抢滚动：系统要把输入框滚进可见区，强行 scrollTo(0,0) 会把
     // 输入框拽到顶、发送按钮滚没（真机实测）
@@ -66,6 +69,8 @@ export function initAppViewport(): void {
 
   vv.addEventListener('resize', sync);
   vv.addEventListener('scroll', sync);
+  // iOS 平移可见区的过程就是 window 在滚动，跟住最终落点
+  window.addEventListener('scroll', sync, { passive: true });
   window.addEventListener('orientationchange', () => {
     window.setTimeout(sync, 60);
     window.setTimeout(sync, 350);
