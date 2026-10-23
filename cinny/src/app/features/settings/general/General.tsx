@@ -359,47 +359,44 @@ function SystemThemePreferences() {
   );
 }
 
-function PageZoomInput() {
+const FONT_SIZE_PRESETS = [
+  { labelKey: 'font_small', zoom: 90 },
+  { labelKey: 'font_standard', zoom: 100 },
+  { labelKey: 'font_large', zoom: 115 },
+  { labelKey: 'font_xlarge', zoom: 130 },
+] as const;
+
+// 字体大小：苹果端网页不跟随系统字体缩放（安卓 WebView 跟随），故提供内置档位。
+// 底层复用页面缩放（pageZoom 改根字号，全站文字/图标/间距按 rem 一起缩放），
+// 这里换成档位按钮，免去手输百分比。
+function FontSizeSelector() {
+  const { t } = useTranslation();
   const [pageZoom, setPageZoom] = useSetting(settingsAtom, 'pageZoom');
-  const [currentZoom, setCurrentZoom] = useState(`${pageZoom}`);
-
-  const handleZoomChange: ChangeEventHandler<HTMLInputElement> = (evt) => {
-    setCurrentZoom(evt.target.value);
-  };
-
-  const handleZoomEnter: KeyboardEventHandler<HTMLInputElement> = (evt) => {
-    if (isKeyHotkey('escape', evt)) {
-      evt.stopPropagation();
-      setCurrentZoom(pageZoom.toString());
-    }
-    if (
-      isKeyHotkey('enter', evt) &&
-      'value' in evt.target &&
-      typeof evt.target.value === 'string'
-    ) {
-      const newZoom = parseInt(evt.target.value, 10);
-      if (Number.isNaN(newZoom)) return;
-      const safeZoom = Math.max(Math.min(newZoom, 150), 75);
-      setPageZoom(safeZoom);
-      setCurrentZoom(safeZoom.toString());
-    }
-  };
-
   return (
-    <Input
-      style={{ width: toRem(100) }}
-      variant={pageZoom === parseInt(currentZoom, 10) ? 'Secondary' : 'Success'}
-      size="300"
-      radii="300"
-      type="number"
-      min="75"
-      max="150"
-      value={currentZoom}
-      onChange={handleZoomChange}
-      onKeyDown={handleZoomEnter}
-      after={<Text size="T300">%</Text>}
-      outlined
-    />
+    <Box direction="Column" gap="300">
+      <Box gap="200">
+        {FONT_SIZE_PRESETS.map((preset) => {
+          const selected = pageZoom === preset.zoom;
+          return (
+            <Button
+              key={preset.zoom}
+              onClick={() => setPageZoom(preset.zoom)}
+              variant={selected ? 'Primary' : 'Secondary'}
+              fill={selected ? 'Solid' : 'Soft'}
+              size="300"
+              radii="300"
+              outlined={!selected}
+              style={{ flex: '1 1 0' }}
+            >
+              <Text size="B300">{t(`features:settings.general.${preset.labelKey}`)}</Text>
+            </Button>
+          );
+        })}
+      </Box>
+      <Text size="T300" priority="400">
+        {t('features:settings.general.font_size_preview')}
+      </Text>
+    </Box>
   );
 }
 
@@ -449,7 +446,10 @@ function Appearance() {
       </SequenceCard>
 
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
-        <SettingTile title={t('features:settings.general.page_zoom')} after={<PageZoomInput />} />
+        <Box direction="Column" gap="300">
+          <SettingTile title={t('features:settings.general.font_size')} />
+          <FontSizeSelector />
+        </Box>
       </SequenceCard>
     </Box>
   );
