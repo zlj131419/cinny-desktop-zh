@@ -14,6 +14,13 @@ window.__siyuToolsManifest = [
     name: '环境信息（远程）',
     desc: '屏幕/视口/安全区/底栏位置实测 + 运行环境与版本',
     file: 'env-info.js',
+    version: 2,
+  },
+  {
+    id: 'voice-probe',
+    name: '语音播放诊断',
+    desc: '复刻语音条播放器行为，定位"点播放转两圈后无声"的真因（需在出问题的设备上跑）',
+    file: 'voice-probe.js',
     version: 1,
   },
 ];
