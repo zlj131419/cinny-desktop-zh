@@ -162,12 +162,12 @@ li p::before {
    外壳还钉在文档顶部，就会出现输入框飞到顶部、下方大片黑区；fixed+偏移
    跟随让外壳严丝合缝盖住当前可见区，输入框永远坐在键盘上。 */
 html.siyu-vv {
-  height: 100%;
-}
-html.siyu-vv #root {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: var(--siyu-vt, 0px);
   height: var(--siyu-vh, 100dvh);
+}
+/* 键盘弹起时 iOS 会平移可视视口（vv.offsetTop），外壳用 transform 同量跟随
+   （--siyu-ty，键盘关闭时恒为 0）。注意不能用 position:fixed 给外壳定高：
+   冷启动报矮状态下 fixed 的包含块只有报矮的高度，外壳底部连同底部导航
+   会沉到可见区外（v177/v178 实测回归，导航消失） */
+html.siyu-vv #root {
+  transform: translateY(var(--siyu-ty, 0px));
 }
