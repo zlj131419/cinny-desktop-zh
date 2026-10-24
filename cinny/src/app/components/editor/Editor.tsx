@@ -122,7 +122,9 @@ export const CustomEditor = forwardRef<HTMLDivElement, CustomEditorProps>(
       <div className={css.Editor} ref={ref}>
         <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
           {top}
-          <Box alignItems="Start">
+          {/* 底对齐：输入框随多行文本长高时，左右按钮组（＋/麦克风/表情/发送）
+              必须钉在输入框底部，而不是顶对齐浮在上方（用户明确规格） */}
+          <Box alignItems="End">
             {before && (
               <Box className={css.EditorOptions} alignItems="Center" gap="100" shrink="No">
                 {before}
