@@ -91,7 +91,7 @@ async fn set_badge<R: Runtime>(app: tauri::AppHandle<R>, count: i32) -> Result<b
                 None
             };
             return window
-                .set_overlay_icon(icon.as_ref())
+                .set_overlay_icon(icon)
                 .map(|_| true)
                 .map_err(|e| e.to_string());
         }
