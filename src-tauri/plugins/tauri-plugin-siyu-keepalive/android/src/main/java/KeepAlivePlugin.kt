@@ -62,7 +62,15 @@ class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
                     val fullHeight = decorView.height
                     val targetHeight =
                         if (fullHeight - visibleHeight > thresholdPx) {
-                            visibleHeight
+                            // 底边贴到可见区底边（键盘顶）：WebView 从屏幕顶 y=0 开始
+                            // （全面屏），而 rect.top 是不透明状态栏高度——只给
+                            // rect.height() 会让底边比键盘顶短一截状态栏高度，露出
+                            // 的窗口底色就是输入框下那条黑边（2026-10-24：1.0.46
+                            // 实报，前端修多少次都没用，因它在 WebView 外面）。
+                            // rect.top=0 的设备上与旧行为一致。
+                            val loc = IntArray(2)
+                            webView.getLocationOnScreen(loc)
+                            (rect.bottom - loc[1]).coerceAtLeast(0)
                         } else {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         }
