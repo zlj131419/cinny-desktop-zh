@@ -76,6 +76,16 @@ impl<R: Runtime> SiyuKeepalive<R> {
         Ok(0.0)
     }
 
+    /// 安卓键盘遮挡兜底：打开原生侧的键盘高度监听（见 Kotlin enableKeyboardResize）。
+    pub fn enable_keyboard_resize(&self) -> Result<(), String> {
+        if let Some(handle) = &self.0 {
+            handle
+                .run_mobile_plugin::<serde_json::Value>("enableKeyboardResize", serde_json::json!({}))
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+
     /// 设置桌面图标未读角标数（0=清除）。返回厂商接口是否受理。
     pub fn set_badge(&self, count: i32) -> Result<bool, String> {
         if let Some(handle) = &self.0 {
