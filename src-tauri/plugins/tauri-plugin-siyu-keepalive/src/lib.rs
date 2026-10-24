@@ -71,6 +71,20 @@ async fn request_microphone<R: Runtime>(app: tauri::AppHandle<R>) -> Result<bool
 /// - Windows：系统没有数字角标 API，用任务栏覆盖图标实现（运行时绘制数字
 ///   徽章图，见 badge_image；>9 显示 9+，0 清除覆盖图）
 /// - macOS：窗口原生角标（Dock 图标）
+/// 安卓键盘遮挡兜底：打开原生侧的键盘高度监听（见 Kotlin enableKeyboardResize）。
+/// 桌面端无此概念，直接成功返回。
+#[tauri::command]
+async fn enable_keyboard_resize<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        let handle = app.state::<SiyuKeepalive<R>>();
+        return handle.enable_keyboard_resize();
+    }
+    #[cfg(not(mobile))]
+    let _ = &app;
+    Ok(())
+}
+
 #[tauri::command]
 async fn set_badge<R: Runtime>(app: tauri::AppHandle<R>, count: i32) -> Result<bool, String> {
     #[cfg(mobile)]
@@ -200,7 +214,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             stop,
             top_inset,
             request_microphone,
-            set_badge
+            set_badge,
+            enable_keyboard_resize
         ])
         .setup(|app, api| {
             #[cfg(mobile)]
