@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, config } from 'folds';
 import { EventType } from 'matrix-js-sdk';
@@ -18,6 +18,7 @@ import { RoomViewFollowing, RoomViewFollowingPlaceholder } from './RoomViewFollo
 import { Page } from '../../components/page';
 import { useKeyDown } from '../../hooks/useKeyDown';
 import { editableActiveElement } from '../../utils/dom';
+import { isKeyboardVisuallyOpen } from '../../utils/appViewport';
 import { settingsAtom } from '../../state/settings';
 import { useSetting } from '../../state/hooks/settings';
 import { useRoomPermissions } from '../../hooks/useRoomPermissions';
@@ -92,6 +93,41 @@ export function RoomView({ eventId }: { eventId?: string }) {
     )
   );
 
+  // 键盘弹起时收起输入框下方「正在关注」行：它在输入框下方恒占 28px
+  // （Surface.Container 底色，无人关注时也是空条），输入框弹起后它就成了
+  // 输入框与键盘之间的一条黑带（2026-10-24：1.0.45 实报，垫高双信号已进包、
+  // 黑带仍在，排除后剩它）。判定用双信号：输入框聚焦，或视口高度明显收缩；
+  // 失焦且视口恢复后还原。仅触屏设备启用，桌面端行为不动。
+  const [hideFollowing, setHideFollowing] = useState(false);
+  useEffect(() => {
+    if (!window.matchMedia('(pointer: coarse)').matches) return undefined;
+    const vv = window.visualViewport;
+    const isEditable = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      return (
+        !!node &&
+        (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.isContentEditable)
+      );
+    };
+    const update = () =>
+      setHideFollowing(isEditable(document.activeElement) || isKeyboardVisuallyOpen());
+    const onFocusIn = (e: FocusEvent) => {
+      if (isEditable(e.target)) setHideFollowing(true);
+    };
+    const onFocusOut = () => {
+      window.setTimeout(update, 50);
+    };
+    const onVvResize = () => update();
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    vv?.addEventListener('resize', onVvResize);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+      vv?.removeEventListener('resize', onVvResize);
+    };
+  }, []);
+
   return (
     <Page ref={roomViewRef}>
       <Box grow="Yes" direction="Column" style={{ minWidth: 0 }}>
@@ -135,7 +171,11 @@ export function RoomView({ eventId }: { eventId?: string }) {
             </>
           )}
         </div>
-        {hideActivity ? <RoomViewFollowingPlaceholder /> : <RoomViewFollowing room={room} />}
+        {hideFollowing
+          ? null
+          : hideActivity
+            ? <RoomViewFollowingPlaceholder />
+            : <RoomViewFollowing room={room} />}
       </Box>
     </Page>
   );
