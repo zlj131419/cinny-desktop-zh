@@ -619,234 +619,232 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
         {recording ? (
           <VoiceRecorderBar onCancel={() => setRecording(false)} onSend={handleVoiceFile} />
         ) : (
-        <CustomEditor
-          editableName="RoomInput"
-          editor={editor}
-          placeholder={t('features:room.send_a_message')}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          onPaste={handlePaste}
-          top={
-            replyDraft && (
-              <div>
-                <Box
-                  alignItems="Center"
-                  gap="300"
-                  style={{ padding: `${config.space.S200} ${config.space.S300} 0` }}
-                >
-                  <IconButton
-                    onClick={() => setReplyDraft(undefined)}
-                    variant="SurfaceVariant"
-                    size="300"
-                    radii="300"
-                  >
-                    <Icon src={Icons.Cross} size="50" />
-                  </IconButton>
-                  <Box direction="Row" gap="200" alignItems="Center">
-                    {replyDraft.relation?.rel_type === RelationType.Thread && <ThreadIndicator />}
-                    <ReplyLayout
-                      userColor={replyUsernameColor}
-                      username={
-                        <Text size="T300" truncate>
-                          <b>
-                            {getMemberDisplayName(room, replyDraft.userId) ??
-                              getMxIdLocalPart(replyDraft.userId) ??
-                              replyDraft.userId}
-                          </b>
-                        </Text>
-                      }
-                    >
-                      <Text size="T300" truncate>
-                        {trimReplyFromBody(replyDraft.body)}
-                      </Text>
-                    </ReplyLayout>
-                  </Box>
-                </Box>
-              </div>
-            )
-          }
-          before={
-            <>
-              <PopOut
-                offset={16}
-                position="Top"
-                align="Start"
-                anchor={plusAnchor}
-                content={
-                  <FocusTrap
-                    focusTrapOptions={{
-                      initialFocus: false,
-                      onDeactivate: () => setPlusAnchor(undefined),
-                      clickOutsideDeactivates: true,
-                      isKeyForward: (evt: KeyboardEvent) => evt.key === 'ArrowDown',
-                      isKeyBackward: (evt: KeyboardEvent) => evt.key === 'ArrowUp',
-                      escapeDeactivates: stopPropagation,
-                    }}
-                  >
-                    <Menu style={{ padding: config.space.S100, minWidth: toRem(210) }}>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          pickCaptureFile('image/*', 'environment');
-                        }}
-                        before={<Icon src={Icons.Photo} />}
-                      >
-                        <Text size="T300">拍摄照片</Text>
-                      </MenuItem>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          pickCaptureFile('video/*', 'environment');
-                        }}
-                        before={<Icon src={Icons.VideoCamera} />}
-                      >
-                        <Text size="T300">录制视频</Text>
-                      </MenuItem>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          pickCaptureFile('image/*,video/*');
-                        }}
-                        before={<Icon src={Icons.Category} />}
-                      >
-                        <Text size="T300">照片和影视库</Text>
-                      </MenuItem>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          pickFile('*');
-                        }}
-                        before={<Icon src={Icons.Attachment} />}
-                      >
-                        <Text size="T300">附件</Text>
-                      </MenuItem>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          setPollOpen(true);
-                        }}
-                        before={<Icon src={Icons.UnorderList} />}
-                      >
-                        <Text size="T300">投票</Text>
-                      </MenuItem>
-                      <MenuItem
-                        variant="Surface"
-                        size="300"
-                        radii="300"
-                        onClick={() => {
-                          setPlusAnchor(undefined);
-                          setToolbar(!toolbar);
-                        }}
-                        before={<Icon src={toolbar ? Icons.AlphabetUnderline : Icons.Alphabet} />}
-                      >
-                        <Text size="T300">文本格式化{toolbar ? '（已开启）' : ''}</Text>
-                      </MenuItem>
-                    </Menu>
-                  </FocusTrap>
-                }
-              >
-                <IconButton
-                  onClick={(evt) =>
-                    setPlusAnchor(
-                      plusAnchor ? undefined : evt.currentTarget.getBoundingClientRect()
-                    )
-                  }
-                  variant="SurfaceVariant"
-                  size="300"
-                  radii="300"
-                  aria-label="更多选项"
-                >
-                  <Icon src={Icons.PlusCircle} />
-                </IconButton>
-              </PopOut>
+        <Box direction="Row" alignItems="End" gap="100">
+              {/* 微信式布局（用户选定方案 2）：按钮全部在输入框外，
+                  白框里只放文字；两侧按钮与框体底对齐，多行时不产生框内空白 */}
               <IconButton
-                onClick={() => setRecording(true)}
-                variant="SurfaceVariant"
-                size="300"
-                radii="300"
-                aria-label={t('features:room.voice_message')}
-              >
-                <Icon src={Icons.Mic} />
-              </IconButton>
-            </>
-          }
-          after={
-            <>
-              <UseStateProvider initial={undefined}>
-                {(emojiBoardTab: EmojiBoardTab | undefined, setEmojiBoardTab) => (
-                  <PopOut
-                    offset={16}
-                    alignOffset={-44}
-                    position="Top"
-                    align="End"
-                    anchor={
-                      emojiBoardTab === undefined
-                        ? undefined
-                        : emojiBtnRef.current?.getBoundingClientRect() ?? undefined
-                    }
-                    content={
-                      <EmojiBoard
-                        tab={emojiBoardTab}
-                        onTabChange={setEmojiBoardTab}
-                        imagePackRooms={imagePackRooms}
-                        returnFocusOnDeactivate={false}
-                        onEmojiSelect={handleEmoticonSelect}
-                        onCustomEmojiSelect={handleEmoticonSelect}
-                        onStickerSelect={handleStickerSelect}
-                        requestClose={() => {
-                          setEmojiBoardTab((t) => {
-                            if (t) {
-                              if (!mobileOrTablet()) ReactEditor.focus(editor);
-                              return undefined;
-                            }
-                            return t;
-                          });
-                        }}
-                      />
-                    }
-                  >
-                    <IconButton
-                      ref={emojiBtnRef}
-                      aria-pressed={emojiBoardTab === EmojiBoardTab.Emoji}
-                      onClick={() => setEmojiBoardTab(EmojiBoardTab.Emoji)}
-                      variant="SurfaceVariant"
-                      size="300"
-                      radii="300"
-                    >
-                      <Icon src={Icons.Smile} filled={emojiBoardTab === EmojiBoardTab.Emoji} />
-                    </IconButton>
-                  </PopOut>
-                )}
-              </UseStateProvider>
-              <IconButton onClick={submit} variant="SurfaceVariant" size="300" radii="300">
-                <Icon src={Icons.Send} />
-              </IconButton>
-            </>
-          }
-          bottom={
-            toolbar && (
-              <div>
-                <Line variant="SurfaceVariant" size="300" />
-                <Toolbar />
+                              onClick={() => setRecording(true)}
+                              variant="SurfaceVariant"
+                              size="300"
+                              radii="300"
+                              aria-label={t('features:room.voice_message')}
+                            >
+                              <Icon src={Icons.Mic} />
+                            </IconButton>
+              <div style={{ flexGrow: 1, minWidth: 0 }}>
+                <CustomEditor
+                          editableName="RoomInput"
+                          editor={editor}
+                          placeholder={t('features:room.send_a_message')}
+                          onKeyDown={handleKeyDown}
+                          onKeyUp={handleKeyUp}
+                          onPaste={handlePaste}
+                          top={
+                            replyDraft && (
+                              <div>
+                                <Box
+                                  alignItems="Center"
+                                  gap="300"
+                                  style={{ padding: `${config.space.S200} ${config.space.S300} 0` }}
+                                >
+                                  <IconButton
+                                    onClick={() => setReplyDraft(undefined)}
+                                    variant="SurfaceVariant"
+                                    size="300"
+                                    radii="300"
+                                  >
+                                    <Icon src={Icons.Cross} size="50" />
+                                  </IconButton>
+                                  <Box direction="Row" gap="200" alignItems="Center">
+                                    {replyDraft.relation?.rel_type === RelationType.Thread && <ThreadIndicator />}
+                                    <ReplyLayout
+                                      userColor={replyUsernameColor}
+                                      username={
+                                        <Text size="T300" truncate>
+                                          <b>
+                                            {getMemberDisplayName(room, replyDraft.userId) ??
+                                              getMxIdLocalPart(replyDraft.userId) ??
+                                              replyDraft.userId}
+                                          </b>
+                                        </Text>
+                                      }
+                                    >
+                                      <Text size="T300" truncate>
+                                        {trimReplyFromBody(replyDraft.body)}
+                                      </Text>
+                                    </ReplyLayout>
+                                  </Box>
+                                </Box>
+                              </div>
+                            )
+                          }
+                          bottom={
+                            toolbar && (
+                              <div>
+                                <Line variant="SurfaceVariant" size="300" />
+                                <Toolbar />
+                              </div>
+                            )
+                          }
+                />
               </div>
-            )
-          }
-        />
+              <UseStateProvider initial={undefined}>
+                              {(emojiBoardTab: EmojiBoardTab | undefined, setEmojiBoardTab) => (
+                                <PopOut
+                                  offset={16}
+                                  alignOffset={-44}
+                                  position="Top"
+                                  align="End"
+                                  anchor={
+                                    emojiBoardTab === undefined
+                                      ? undefined
+                                      : emojiBtnRef.current?.getBoundingClientRect() ?? undefined
+                                  }
+                                  content={
+                                    <EmojiBoard
+                                      tab={emojiBoardTab}
+                                      onTabChange={setEmojiBoardTab}
+                                      imagePackRooms={imagePackRooms}
+                                      returnFocusOnDeactivate={false}
+                                      onEmojiSelect={handleEmoticonSelect}
+                                      onCustomEmojiSelect={handleEmoticonSelect}
+                                      onStickerSelect={handleStickerSelect}
+                                      requestClose={() => {
+                                        setEmojiBoardTab((t) => {
+                                          if (t) {
+                                            if (!mobileOrTablet()) ReactEditor.focus(editor);
+                                            return undefined;
+                                          }
+                                          return t;
+                                        });
+                                      }}
+                                    />
+                                  }
+                                >
+                                  <IconButton
+                                    ref={emojiBtnRef}
+                                    aria-pressed={emojiBoardTab === EmojiBoardTab.Emoji}
+                                    onClick={() => setEmojiBoardTab(EmojiBoardTab.Emoji)}
+                                    variant="SurfaceVariant"
+                                    size="300"
+                                    radii="300"
+                                  >
+                                    <Icon src={Icons.Smile} filled={emojiBoardTab === EmojiBoardTab.Emoji} />
+                                  </IconButton>
+                                </PopOut>
+                              )}
+                            </UseStateProvider>
+              <PopOut
+                              offset={16}
+                              position="Top"
+                              align="End"
+                              anchor={plusAnchor}
+                              content={
+                                <FocusTrap
+                                  focusTrapOptions={{
+                                    initialFocus: false,
+                                    onDeactivate: () => setPlusAnchor(undefined),
+                                    clickOutsideDeactivates: true,
+                                    isKeyForward: (evt: KeyboardEvent) => evt.key === 'ArrowDown',
+                                    isKeyBackward: (evt: KeyboardEvent) => evt.key === 'ArrowUp',
+                                    escapeDeactivates: stopPropagation,
+                                  }}
+                                >
+                                  <Menu style={{ padding: config.space.S100, minWidth: toRem(210) }}>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        pickCaptureFile('image/*', 'environment');
+                                      }}
+                                      before={<Icon src={Icons.Photo} />}
+                                    >
+                                      <Text size="T300">拍摄照片</Text>
+                                    </MenuItem>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        pickCaptureFile('video/*', 'environment');
+                                      }}
+                                      before={<Icon src={Icons.VideoCamera} />}
+                                    >
+                                      <Text size="T300">录制视频</Text>
+                                    </MenuItem>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        pickCaptureFile('image/*,video/*');
+                                      }}
+                                      before={<Icon src={Icons.Category} />}
+                                    >
+                                      <Text size="T300">照片和影视库</Text>
+                                    </MenuItem>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        pickFile('*');
+                                      }}
+                                      before={<Icon src={Icons.Attachment} />}
+                                    >
+                                      <Text size="T300">附件</Text>
+                                    </MenuItem>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        setPollOpen(true);
+                                      }}
+                                      before={<Icon src={Icons.UnorderList} />}
+                                    >
+                                      <Text size="T300">投票</Text>
+                                    </MenuItem>
+                                    <MenuItem
+                                      variant="Surface"
+                                      size="300"
+                                      radii="300"
+                                      onClick={() => {
+                                        setPlusAnchor(undefined);
+                                        setToolbar(!toolbar);
+                                      }}
+                                      before={<Icon src={toolbar ? Icons.AlphabetUnderline : Icons.Alphabet} />}
+                                    >
+                                      <Text size="T300">文本格式化{toolbar ? '（已开启）' : ''}</Text>
+                                    </MenuItem>
+                                  </Menu>
+                                </FocusTrap>
+                              }
+                            >
+                              <IconButton
+                                onClick={(evt) =>
+                                  setPlusAnchor(
+                                    plusAnchor ? undefined : evt.currentTarget.getBoundingClientRect()
+                                  )
+                                }
+                                variant="SurfaceVariant"
+                                size="300"
+                                radii="300"
+                                aria-label="更多选项"
+                              >
+                                <Icon src={Icons.PlusCircle} />
+                              </IconButton>
+                            </PopOut>
+              <IconButton onClick={submit} variant="SurfaceVariant" size="300" radii="300">
+                              <Icon src={Icons.Send} />
+                            </IconButton>
+            </Box>
         )}
         <CreatePoll open={pollOpen} onClose={() => setPollOpen(false)} onCreate={handleCreatePoll} />
       </div>
