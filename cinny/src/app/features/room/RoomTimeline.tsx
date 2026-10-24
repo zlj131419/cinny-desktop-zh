@@ -707,6 +707,30 @@ export function RoomTimeline({ room, eventId, roomInputRef, editor }: RoomTimeli
     useCallback(() => roomInputRef.current, [roomInputRef])
   );
 
+  // 键盘弹起导致视口收缩时跟到底部（2026-10-24：1.0.44 实测输入框已弹起、
+  // 但时间线不跟——浏览器滚动锚定保的是顶部内容，最新消息沉在新折叠线下、
+  // 看起来仍被键盘/输入框盖着；编辑器 resize 监听覆盖不到视口收缩）。
+  // 布局收缩完再滚（rAF + 50ms），否则 scrollTop 按旧容器高度算、滚不到底。
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    let prev = vv.height;
+    const onResize = () => {
+      const cur = vv.height;
+      if (cur < prev - 50 && atBottomRef.current) {
+        const scrollElement = getScrollElement();
+        if (scrollElement) {
+          requestAnimationFrame(() => {
+            window.setTimeout(() => scrollToBottom(scrollElement), 50);
+          });
+        }
+      }
+      prev = cur;
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, [getScrollElement]);
+
   const tryAutoMarkAsRead = useCallback(() => {
     const readUptoEventId = readUptoEventIdRef.current;
     if (!readUptoEventId) {
