@@ -5,11 +5,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.webkit.WebView
 import app.tauri.annotation.Command
 import app.tauri.annotation.TauriPlugin
@@ -23,6 +25,56 @@ import app.tauri.plugin.Plugin
  */
 @TauriPlugin
 class KeepAlivePlugin(private val activity: Activity) : Plugin(activity) {
+
+    private var keyboardResizeEnabled = false
+
+    /**
+     * 安卓键盘遮挡兜底（2026-10-24 定案：同机华为浏览器正常、App 不正常，
+     * 实锤是壳的问题不是网页的问题）。
+     * Tauri 安卓壳是全面屏模式：清单里的 adjustResize 对 WebView 不起作用，
+     * 键盘弹起时窗口只平移不收缩，输入框和聊天内容就沉在键盘底下。
+     * 这里监听窗口可视区域变化：可视高度比窗口全高矮出 100dp 以上即判定
+     * 键盘开了，把 WebView 高度改成可视高度（底边贴键盘顶，输入框和内容
+     * 跟着抬起来）；键盘收起时恢复 MATCH_PARENT 全高，关闭态布局不动。
+     */
+    @Command
+    fun enableKeyboardResize(invoke: Invoke) {
+        if (keyboardResizeEnabled) {
+            invoke.resolve()
+            return
+        }
+        keyboardResizeEnabled = true
+        val density = activity.resources.displayMetrics.density
+        val thresholdPx = (100 * density).toInt()
+        val decorView = activity.window.decorView
+        decorView.viewTreeObserver.addOnGlobalLayoutListener(
+            object : ViewTreeObserver.OnGlobalLayoutListener {
+                private var lastHeight = -1
+
+                override fun onGlobalLayout() {
+                    val rect = Rect()
+                    decorView.getWindowVisibleDisplayFrame(rect)
+                    val visibleHeight = rect.height()
+                    if (visibleHeight <= 0 || visibleHeight == lastHeight) return
+                    lastHeight = visibleHeight
+                    val webView = findWebView(decorView) ?: return
+                    val params = webView.layoutParams ?: return
+                    val fullHeight = decorView.height
+                    val targetHeight =
+                        if (fullHeight - visibleHeight > thresholdPx) {
+                            visibleHeight
+                        } else {
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        }
+                    if (params.height != targetHeight) {
+                        params.height = targetHeight
+                        webView.layoutParams = params
+                    }
+                }
+            }
+        )
+        invoke.resolve()
+    }
 
     @Command
     fun startService(invoke: Invoke) {
