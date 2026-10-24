@@ -17,8 +17,24 @@
  * 在 iOS 上 innerHeight 会随键盘一起缩、差值约 0，两处判断打架，安全区
  * 垫高收不起来、变成输入框下方的黑带。
  */
+let androidBaseline = { portrait: true, height: 0 };
+
 export function isKeyboardVisuallyOpen(): boolean {
   if (typeof window === 'undefined' || !window.visualViewport) return false;
+  // 安卓：不用 85% 屏高规则——老机器 screen 高度口径不一、键盘高度也不固定，
+  // 阈值一偏，房间底部安全区垫高就收不起来、输入框与键盘之间留一条黑带
+  // （2026-10-24：1.0.44 实测输入框弹起后黑带仍在）。改以实测最大可视高度
+  // 为基准：矮出 100px 以上即判键盘开；转屏重置基准，防横竖屏互污染。
+  if (/Android/i.test(navigator.userAgent)) {
+    const h = window.visualViewport.height;
+    const portrait = window.matchMedia('(orientation: portrait)').matches;
+    if (portrait !== androidBaseline.portrait) {
+      androidBaseline = { portrait, height: h };
+    } else if (h > androidBaseline.height) {
+      androidBaseline.height = h;
+    }
+    return androidBaseline.height > 0 && h < androidBaseline.height - 100;
+  }
   const portrait = window.matchMedia('(orientation: portrait)').matches;
   const full = portrait
     ? Math.max(screen.width, screen.height)
