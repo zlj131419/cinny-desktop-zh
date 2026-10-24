@@ -94,6 +94,7 @@
     "siyu-keepalive:allow-stop",
     "siyu-keepalive:allow-top-inset",
     "siyu-keepalive:allow-request-microphone",
-    "siyu-keepalive:allow-set-badge"
+    "siyu-keepalive:allow-set-badge",
+    "siyu-keepalive:allow-enable-keyboard-resize"
   ]
 }
