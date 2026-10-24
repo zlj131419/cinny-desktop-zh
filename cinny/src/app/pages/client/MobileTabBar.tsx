@@ -86,6 +86,36 @@ export function MobileTabBar() {
     void setAppBadge(unreadTotal);
   }, [unreadTotal]);
 
+  // 键盘是否弹起的确定性信号（房间底部垫高用）：视口高度启发式在老 WebView
+  // 上可能根本不触发（键盘弹起不派发 vv resize，只靠 focusin 才抬得起输入框），
+  // 此时光靠 kbOpen 垫高收不起来、输入框与键盘之间留一条黑带（2026-10-24
+  // v188 实报：内容已能弹起、黑带仍在）。输入框聚焦即键盘开，focusin/
+  // focusout 是确定性信号，与 kbOpen 任一为真即收垫高。
+  const [editorFocused, setEditorFocused] = useState(false);
+  useEffect(() => {
+    const isEditable = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      return (
+        !!node &&
+        (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.isContentEditable)
+      );
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (isEditable(e.target)) setEditorFocused(true);
+    };
+    const onFocusOut = () => {
+      window.setTimeout(() => {
+        if (!isEditable(document.activeElement)) setEditorFocused(false);
+      }, 50);
+    };
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
+
   // 点「私语」：有未读就依次跳到下一个未读会话（按最近活跃排序、循环）；没有未读回首页
   const handleHomeTab = () => {
     if (unreadRoomIds.length === 0) {
@@ -149,9 +179,14 @@ export function MobileTabBar() {
     /^\/(home|direct)\/[^/]+/.test(pathname) || /^\/space\/[^/]+\/[^/]+/.test(pathname);
   if (inRoom) {
     // 键盘弹起时安全区垫高收起：键盘已盖住小横条区，再留 34px 就成了
-    // 输入框与键盘之间的一块黑带；收起键盘时恢复，保证小横条不压内容
+    // 输入框与键盘之间的一块黑带；收起键盘时恢复，保证小横条不压内容。
+    // 判定用 kbOpen 或输入框聚焦任一信号：老 WebView 上键盘弹起可能不派发
+    // vv resize，光靠 kbOpen 会漏判、黑带收不起来（2026-10-24 v188 实报）。
     return (
-      <Box shrink="No" style={{ height: kbOpen ? 0 : 'env(safe-area-inset-bottom)' }} />
+      <Box
+        shrink="No"
+        style={{ height: kbOpen || editorFocused ? 0 : 'env(safe-area-inset-bottom)' }}
+      />
     );
   }
 
