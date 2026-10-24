@@ -7,7 +7,10 @@ export function DownloadTab() {
   const { t } = useTranslation();
 
   const open = async () => {
-    const url = 'https://chat.xxqw.net/public/download.html';
+    const url = 'https://chat.xxqw.net/download.html';
+    // 注意：2026-10-24 实锤：服务器上有两份下载页（根目录 download.html 与
+    // public/download.html），只刷一处必漂移——客户端此前开的是 public/ 那份
+    // 旧页（安卓链接还是本地镜像地址），故改开根目录这份唯一正本。
     const tauri = (window as unknown as Record<string, any>).__TAURI__;
     // App 里必须走系统浏览器：window.open 会被 WebView 接管、把下载页开在 App
     // 内部，而下载页是外来页面没权限再调浏览器，里面的下载按钮就成了死的。
