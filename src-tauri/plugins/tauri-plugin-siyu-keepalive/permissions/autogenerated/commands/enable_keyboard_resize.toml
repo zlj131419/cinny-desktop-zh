@@ -1,0 +1,11 @@
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-enable-keyboard-resize"
+description = "Enables the enable_keyboard_resize command without any pre-configured scope."
+commands.allow = ["enable_keyboard_resize"]
+
+[[permission]]
+identifier = "deny-enable-keyboard-resize"
+description = "Denies the enable_keyboard_resize command without any pre-configured scope."
+commands.deny = ["enable_keyboard_resize"]
