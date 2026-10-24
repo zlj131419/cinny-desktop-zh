@@ -26,7 +26,10 @@ export const EditorTextarea = style([
   {
     flexGrow: 1,
     height: '100%',
-    padding: `${toRem(13)} ${toRem(1)}`,
+    // 单行总高 = 行高 22 + 上下 padding 5×2 = 32px = 2rem，
+    // 与 size 300 图标按钮等高（微信式布局下按钮在框外，框体不得比图标高）
+    lineHeight: toRem(22),
+    padding: `${toRem(5)} ${toRem(1)}`,
     selectors: {
       [`${EditorTextareaScroll}:first-child &`]: {
         paddingLeft: toRem(13),
