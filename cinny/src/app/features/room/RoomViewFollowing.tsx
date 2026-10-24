@@ -18,6 +18,7 @@ import FocusTrap from 'focus-trap-react';
 
 import { getMemberDisplayName } from '../../utils/room';
 import { getMxIdLocalPart } from '../../utils/matrix';
+import { useTheme, ThemeKind } from '../../hooks/useTheme';
 import * as css from './RoomViewFollowing.css';
 import { useMatrixClient } from '../../hooks/useMatrixClient';
 import { useRoomLatestRenderedEvent } from '../../hooks/useRoomLatestRenderedEvent';
@@ -36,6 +37,10 @@ export const RoomViewFollowing = as<'div', RoomViewFollowingProps>(
   ({ className, room, ...props }, ref) => {
     const { t } = useTranslation();
     const mx = useMatrixClient();
+    const theme = useTheme();
+    // 「正在关注」行颜色按主题明暗显式给：浅色 UI 黑字、深色 UI 白字。
+    // 此前继承主题令牌时，浅色 UI 下实际显示为白色、看不见（用户实报），故不再只靠令牌。
+    const followColor = theme.kind === ThemeKind.Dark ? '#FFFFFF' : '#000000';
     const [open, setOpen] = useState(false);
     const latestEvent = useRoomLatestRenderedEvent(room);
     const latestEventReaders = useRoomEventReaders(room, latestEvent?.getId());
@@ -71,6 +76,7 @@ export const RoomViewFollowing = as<'div', RoomViewFollowingProps>(
           as={names.length > 0 ? 'button' : 'div'}
           onClick={names.length > 0 ? () => setOpen(true) : undefined}
           className={classNames(css.RoomViewFollowing({ clickable: names.length > 0 }), className)}
+          style={{ color: followColor }}
           alignItems="Center"
           justifyContent="End"
           gap="200"
