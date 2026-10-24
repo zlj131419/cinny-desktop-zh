@@ -60,7 +60,25 @@ export function initTopInset(): void {
 }
 
 export function startKeepAlive(): Promise<void> {
+  void enableKeyboardResize();
   return invokeKeepAlive('start');
+}
+
+/**
+ * 安卓键盘遮挡兜底：Tauri 安卓壳全面屏模式下清单 adjustResize 对 WebView
+ * 不起作用（同机华为浏览器正常、App 不正常，实锤是壳的问题不是网页的问题）。
+ * 登录后打开原生侧的键盘高度监听：键盘弹起时 WebView 高度改成可视高度，
+ * 输入框和聊天内容跟着抬到键盘上方；键盘收起恢复全高，关闭态布局不动。
+ * 旧版 App 无此命令时静默。
+ */
+export async function enableKeyboardResize(): Promise<void> {
+  if (!keepAliveAvailable()) return;
+  try {
+    const tauri = (window as unknown as Record<string, any>).__TAURI__;
+    await tauri.core.invoke('plugin:siyu-keepalive|enable_keyboard_resize');
+  } catch {
+    // 旧版 App 无此命令时静默
+  }
 }
 
 export function stopKeepAlive(): Promise<void> {
